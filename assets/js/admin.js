@@ -9,7 +9,11 @@ import {
   loadPortfolioContent,
   savePortfolioContent,
   uploadMediaFile,
-  verifyPassword
+  verifyPassword,
+  trackReplacedImage,
+  cleanupExpiredImages,
+  syncAllAssetsToR2,
+  deleteMediaFile
 } from './content-model.js'
 
 ;(() => {
@@ -226,6 +230,11 @@ import {
       }
 
       input.addEventListener('input', () => {
+        const oldVal = getDeepProp(currentContent, path)
+        if (previewSel && oldVal && oldVal !== input.value) {
+          trackReplacedImage(currentContent, oldVal)
+          renderImageArchiveStatus()
+        }
         setDeepProp(currentContent, path, input.value)
         if (previewSel) {
           const previewImg = $(previewSel)
@@ -792,6 +801,10 @@ import {
         const uploadedUrl = await uploadMediaFile(file, currentPassword)
 
         if (directTarget) {
+          const oldUrl = getDeepProp(currentContent, directTarget)
+          if (oldUrl && oldUrl !== uploadedUrl) {
+            trackReplacedImage(currentContent, oldUrl)
+          }
           setDeepProp(currentContent, directTarget, uploadedUrl)
           const boundInput = $(`input[data-bind="${directTarget}"]`)
           if (boundInput) boundInput.value = uploadedUrl
@@ -802,6 +815,10 @@ import {
         } else if (itemType) {
           const idx = parseInt(fileInput.getAttribute('data-index'), 10)
           const prop = fileInput.getAttribute('data-prop')
+          const oldUrl = currentContent[itemType][idx][prop]
+          if (oldUrl && oldUrl !== uploadedUrl) {
+            trackReplacedImage(currentContent, oldUrl)
+          }
           currentContent[itemType][idx][prop] = uploadedUrl
 
           if (itemType === 'projects') renderProjectsList()
@@ -810,11 +827,56 @@ import {
           else if (itemType === 'journal') renderJournalList()
         }
 
+        renderImageArchiveStatus()
         markUnsaved()
         showToast('✓ Image uploaded successfully')
       } catch (err) {
         showToast(`Upload failed: ${err.message}`)
       }
+    })
+  }
+
+  // 9. Render 10-Day Retention Archive Status
+  function renderImageArchiveStatus() {
+    const countText = $('#archiveCountText')
+    const list = $('#archiveList')
+    if (!countText || !list) return
+    list.innerHTML = ''
+
+    const archive = currentContent.imageArchive || []
+    countText.textContent = `${archive.length} image(s) currently preserved in 10-day retention`
+
+    const now = Date.now()
+    archive.forEach((item, idx) => {
+      const remainingMs = item.expiresAt - now
+      const remainingDays = Math.max(0, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)))
+      const row = document.createElement('div')
+      row.style.cssText =
+        'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--border-subtle); padding:8px 12px; border-radius:var(--radius-sm); font-size:12px'
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; overflow:hidden">
+          <img src="${item.url}" style="width:32px; height:32px; border-radius:4px; object-fit:cover; background:#222; flex-shrink:0" alt="" />
+          <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px">
+            <span style="color:#fff">${item.url.split('/').pop()}</span>
+            <div style="color:var(--text-muted); font-size:11px">${remainingDays > 0 ? `Auto-deletes in ${remainingDays} day(s)` : 'Expired — pending cleanup'}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-remove" data-action="delete-archived-img" data-index="${idx}" style="padding:3px 8px; font-size:10px">Delete Now</button>
+      `
+      list.appendChild(row)
+    })
+
+    $$('button[data-action="delete-archived-img"]', list).forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const i = parseInt(btn.getAttribute('data-index'), 10)
+        const removed = currentContent.imageArchive.splice(i, 1)[0]
+        if (removed) {
+          await deleteMediaFile(removed.url, currentPassword)
+        }
+        renderImageArchiveStatus()
+        markUnsaved()
+        showToast('✓ Image deleted from archive & storage')
+      })
     })
   }
 
@@ -846,6 +908,9 @@ import {
     const newToolInput = $('#newToolInput')
     const btnExportJson = $('#btnExportJson')
     const importJsonInput = $('#importJsonInput')
+    const btnSyncAllR2 = $('#btnSyncAllR2')
+    const syncProgressText = $('#syncProgressText')
+    const btnCleanExpiredR2 = $('#btnCleanExpiredR2')
 
     if (btnPublish) {
       btnPublish.addEventListener('click', async () => {
@@ -855,6 +920,7 @@ import {
         try {
           const res = await savePortfolioContent(currentContent, currentPassword)
           markSaved()
+          renderImageArchiveStatus()
           if (res.remoteWarning) {
             showToast(`Saved locally! (${res.remoteWarning})`, 4500)
           } else {
@@ -865,6 +931,57 @@ import {
         } finally {
           btnPublish.textContent = 'Publish Changes 🚀'
           btnPublish.disabled = false
+        }
+      })
+    }
+
+    // Cloudflare R2 Sync All Assets
+    if (btnSyncAllR2) {
+      btnSyncAllR2.addEventListener('click', async () => {
+        btnSyncAllR2.disabled = true
+        btnSyncAllR2.textContent = 'Syncing to Cloudflare R2...'
+        if (syncProgressText) syncProgressText.style.display = 'block'
+
+        try {
+          const result = await syncAllAssetsToR2(currentContent, currentPassword, ({ current, total, url }) => {
+            if (syncProgressText) syncProgressText.textContent = `Uploading [${current}/${total}]: ${url.split('/').pop()}...`
+          })
+
+          renderProjectsList()
+          renderServicesList()
+          renderPlaygroundList()
+          renderJournalList()
+          populateStaticFields()
+          markUnsaved()
+
+          if (syncProgressText) {
+            syncProgressText.textContent = `✓ Synced ${result.synced} assets to Cloudflare R2!`
+          }
+          showToast(`✓ Synced ${result.synced} images to Cloudflare R2!`)
+        } catch (err) {
+          showToast(`Sync failed: ${err.message}`)
+        } finally {
+          btnSyncAllR2.disabled = false
+          btnSyncAllR2.textContent = '☁️ Sync All Assets to Cloudflare R2'
+        }
+      })
+    }
+
+    // Clean Expired Images (>10 days)
+    if (btnCleanExpiredR2) {
+      btnCleanExpiredR2.addEventListener('click', async () => {
+        btnCleanExpiredR2.disabled = true
+        btnCleanExpiredR2.textContent = 'Cleaning...'
+        try {
+          const { cleanedCount } = await cleanupExpiredImages(currentContent, currentPassword)
+          renderImageArchiveStatus()
+          markUnsaved()
+          showToast(cleanedCount > 0 ? `✓ Deleted ${cleanedCount} expired images from R2` : 'No expired images (>10 days) found')
+        } catch (err) {
+          showToast(`Cleanup error: ${err.message}`)
+        } finally {
+          btnCleanExpiredR2.disabled = false
+          btnCleanExpiredR2.textContent = '🗑️ Clean Expired Now'
         }
       })
     }
@@ -1005,6 +1122,7 @@ import {
             renderPlaygroundList()
             renderToolsChips()
             renderJournalList()
+            renderImageArchiveStatus()
             markUnsaved()
             showToast('✓ Content imported successfully')
           } catch (_err) {
@@ -1034,6 +1152,7 @@ import {
     renderPlaygroundList()
     renderToolsChips()
     renderJournalList()
+    renderImageArchiveStatus()
   }
 
   init()

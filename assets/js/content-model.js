@@ -319,11 +319,185 @@ export const DEFAULT_PORTFOLIO_CONTENT = {
     summary: 'UI/UX Designer crafting thoughtful digital experiences. Focused on clarity, purpose and detail — from idea to interface.',
     copyright: '© 2026 Monson Sunny · All rights reserved.',
     tagline: 'Designed with intention · Built with care.'
-  }
+  },
+
+  // Image Retention Archive (Tracks replaced images for 10 days before deletion)
+  imageArchive: []
 }
 
 const STORAGE_KEY = 'portfolio_content_live'
 const AUTH_KEY = 'portfolio_admin_auth'
+const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000
+
+/**
+ * Tracks a replaced image in the 10-day retention archive
+ */
+export function trackReplacedImage(content, oldUrl) {
+  if (!oldUrl || typeof oldUrl !== 'string') return
+  if (!Array.isArray(content.imageArchive)) content.imageArchive = []
+
+  // Ignore data URLs or already archived URLs
+  if (oldUrl.startsWith('data:')) return
+  const existing = content.imageArchive.find((item) => item.url === oldUrl)
+  if (!existing) {
+    content.imageArchive.push({
+      url: oldUrl,
+      replacedAt: Date.now(),
+      expiresAt: Date.now() + TEN_DAYS_MS
+    })
+  }
+}
+
+/**
+ * Returns all active image URLs currently in use across the portfolio
+ */
+export function getAllActiveImageUrls(content) {
+  const urls = new Set()
+  if (content.hero) {
+    if (content.hero.workspaceImage) urls.add(content.hero.workspaceImage)
+    if (content.hero.portraitImage) urls.add(content.hero.portraitImage)
+    if (content.hero.avatarImage) urls.add(content.hero.avatarImage)
+  }
+  if (content.about) {
+    if (content.about.imageMain) urls.add(content.about.imageMain)
+    if (content.about.imageSmall) urls.add(content.about.imageSmall)
+  }
+  if (Array.isArray(content.projects)) {
+    content.projects.forEach((p) => p.image && urls.add(p.image))
+  }
+  if (Array.isArray(content.services)) {
+    content.services.forEach((s) => s.image && urls.add(s.image))
+  }
+  if (Array.isArray(content.playground)) {
+    content.playground.forEach((item) => item.image && urls.add(item.image))
+  }
+  if (Array.isArray(content.journal)) {
+    content.journal.forEach((j) => j.image && urls.add(j.image))
+  }
+  return urls
+}
+
+/**
+ * Scans archive, deletes unused images older than 10 days from R2, and cleans archive
+ */
+export async function cleanupExpiredImages(content, password = '') {
+  if (!Array.isArray(content.imageArchive) || content.imageArchive.length === 0) {
+    return { cleanedCount: 0 }
+  }
+
+  const activeUrls = getAllActiveImageUrls(content)
+  const now = Date.now()
+  const remainingArchive = []
+  let cleanedCount = 0
+
+  for (const item of content.imageArchive) {
+    const isExpired = now >= item.expiresAt
+    const isStillInUse = activeUrls.has(item.url)
+
+    if (isExpired && !isStillInUse) {
+      // Delete from R2 storage
+      try {
+        await deleteMediaFile(item.url, password)
+        cleanedCount++
+      } catch (_e) {
+        // Ignore network delete error
+      }
+    } else {
+      remainingArchive.push(item)
+    }
+  }
+
+  content.imageArchive = remainingArchive
+  return { cleanedCount, remainingCount: remainingArchive.length }
+}
+
+/**
+ * Permanently deletes media file from Cloudflare R2
+ */
+export async function deleteMediaFile(url, password = '') {
+  const token = password || localStorage.getItem(AUTH_KEY) || ''
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ url })
+    })
+    return res.ok
+  } catch (_e) {
+    return false
+  }
+}
+
+/**
+ * Uploads all local/current portfolio images to Cloudflare R2 and switches URLs
+ */
+export async function syncAllAssetsToR2(content, password = '', onProgress = null) {
+  const activeUrls = [...getAllActiveImageUrls(content)]
+  let synced = 0
+
+  for (let i = 0; i < activeUrls.length; i++) {
+    const url = activeUrls[i]
+    if (onProgress) onProgress({ current: i + 1, total: activeUrls.length, url })
+
+    // If already hosted on R2 CDN, skip
+    if (url.includes('.r2.dev') || url.startsWith('http') && !url.includes(location.hostname)) {
+      continue
+    }
+
+    try {
+      const response = await fetch(url)
+      if (!response.ok) continue
+      const blob = await response.blob()
+      const ext = url.split('.').pop() || 'jpg'
+      const file = new File([blob], `asset-${Date.now()}.${ext}`, { type: blob.type })
+      const newUrl = await uploadMediaFile(file, password)
+
+      if (newUrl && newUrl !== url) {
+        replaceImageUrlInContent(content, url, newUrl)
+        synced++
+      }
+    } catch (_err) {
+      // Continue to next asset
+    }
+  }
+
+  return { synced, total: activeUrls.length }
+}
+
+function replaceImageUrlInContent(content, oldUrl, newUrl) {
+  if (content.hero) {
+    if (content.hero.workspaceImage === oldUrl) content.hero.workspaceImage = newUrl
+    if (content.hero.portraitImage === oldUrl) content.hero.portraitImage = newUrl
+    if (content.hero.avatarImage === oldUrl) content.hero.avatarImage = newUrl
+  }
+  if (content.about) {
+    if (content.about.imageMain === oldUrl) content.about.imageMain = newUrl
+    if (content.about.imageSmall === oldUrl) content.about.imageSmall = newUrl
+  }
+  if (Array.isArray(content.projects)) {
+    content.projects.forEach((p) => {
+      if (p.image === oldUrl) p.image = newUrl
+    })
+  }
+  if (Array.isArray(content.services)) {
+    content.services.forEach((s) => {
+      if (s.image === oldUrl) s.image = newUrl
+    })
+  }
+  if (Array.isArray(content.playground)) {
+    content.playground.forEach((item) => {
+      if (item.image === oldUrl) item.image = newUrl
+    })
+  }
+  if (Array.isArray(content.journal)) {
+    content.journal.forEach((j) => {
+      if (j.image === oldUrl) j.image = newUrl
+    })
+  }
+}
 
 /**
  * Loads current portfolio content from API, LocalStorage, or Fallback
@@ -422,6 +596,9 @@ export async function verifyPassword(password) {
  * Saves updated content to Cloudflare KV API and local cache
  */
 export async function savePortfolioContent(content, password = '') {
+  // Auto clean expired 10-day-old images before publishing
+  await cleanupExpiredImages(content, password).catch(() => {})
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(content))
   const token = password || localStorage.getItem(AUTH_KEY) || ''
 

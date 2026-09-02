@@ -542,6 +542,41 @@
           <div class="admin-card">
             <div class="admin-card-header">
               <div>
+                <h2>Cloudflare R2 Asset Sync</h2>
+                <p>Fetch and host all local images directly from your Cloudflare R2 bucket.</p>
+              </div>
+              <button type="button" class="btn-admin-primary" id="btnSyncAllR2">
+                ☁️ Sync All Assets to Cloudflare R2
+              </button>
+            </div>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted)">
+              <p>
+                Clicking this will check all images used in your portfolio. If any local images are found, it will automatically upload them to your Cloudflare R2 bucket and update their URLs to high-speed Cloudflare CDN links.
+              </p>
+              <div id="syncProgressText" style="margin-top: 10px; font-weight: 500; color: var(--accent-gold); display: none"></div>
+            </div>
+          </div>
+
+          <!-- 10-Day Image Retention & Cleanup Manager -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h2>10-Day Image Retention & Lifecycle</h2>
+                <p>When you replace any image, the old version is preserved for 10 days before automatic deletion.</p>
+              </div>
+              <button type="button" class="btn-admin-secondary" id="btnCleanExpiredR2" style="color: var(--accent-red)">
+                🗑️ Clean Expired Now
+              </button>
+            </div>
+            <div id="imageArchiveContainer" style="font-size: 13px; color: var(--text-muted)">
+              <div id="archiveCountText">0 archived images in 10-day retention</div>
+              <div id="archiveList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px"></div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
                 <h2>Cloudflare Storage & Bindings</h2>
                 <p>Verify Cloudflare KV and R2 connections or configure custom endpoints.</p>
               </div>
