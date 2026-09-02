@@ -18,27 +18,17 @@ Production-ready static portfolio for **Monson Sunny — UI/UX Designer**.
 ├── index.html              # canonical entry (semantic, SEO, a11y)
 ├── 404.html                # custom not-found
 ├── assets/
-│   ├── css/style.css       # main stylesheet (with prod hardening)
-│   ├── js/main.js          # IIFE, a11y, rAF, reduced-motion aware
-│   └── images/             # canonical image source
-│       ├── hero-*.jpg
-│       ├── projects/
-│       ├── playground/
-│       ├── journal/
-│       ├── services/
-│       └── avatars/
+│   ├── css/style.css       # main stylesheet
+│   ├── js/main.js          # portfolio interactions & animations
+│   └── images/             # optimized portfolio images
 ├── public/                 # copied verbatim to dist/
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── site.webmanifest
-│   ├── _headers            # Cloudflare/Netlify headers
-│   └── .well-known/security.txt
-├── scripts/optimize-images.mjs
+│   └── _headers
 ├── vite.config.js
-└── netlify.toml / vercel.json
+└── vercel.json
 ```
-
-> **Note:** `images/` at repo root is kept for backward compat and mirrors `assets/images/`. Canonical source is `assets/images/`.
 
 ## Quick Start
 
@@ -56,9 +46,6 @@ npm run preview  # preview dist/
 | `dev` | Vite dev server |
 | `build` | Production build to `dist/` |
 | `preview` | Preview production build |
-| `format` | Prettier |
-| `lint` | ESLint |
-| `optimize:images` | Re-encode JPEGs + generate .webp/.avif |
 
 ## Production Checklist
 

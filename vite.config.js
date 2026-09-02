@@ -7,10 +7,10 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: false,
-    open: false
+    open: false,
   },
   preview: {
-    port: 4173
+    port: 4173,
   },
   build: {
     outDir: 'dist',
@@ -24,7 +24,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        notfound: '404.html'
+        notfound: '404.html',
       },
       output: {
         manualChunks: undefined,
@@ -34,11 +34,11 @@ export default defineConfig({
           if (/\.(css)$/.test(name ?? '')) return 'assets/css/[name]-[hash][extname]'
           if (/\.(png|jpe?g|svg|webp|avif|gif|ico)$/.test(name ?? '')) return 'assets/images/[name]-[hash][extname]'
           return 'assets/[name]-[hash][extname]'
-        }
-      }
+        },
+      },
     },
     reportCompressedSize: true,
-    chunkSizeWarningLimit: 600
+    chunkSizeWarningLimit: 600,
   },
   plugins: [
     ViteImageOptimizer({
@@ -48,15 +48,15 @@ export default defineConfig({
       webp: { quality: 78, lossless: false },
       avif: { quality: 65 },
       svg: {
-        multipass: true
+        multipass: true,
       },
       cache: true,
-      cacheLocation: 'node_modules/.cache/vite-plugin-image-optimizer'
-    })
+      cacheLocation: 'node_modules/.cache/vite-plugin-image-optimizer',
+    }),
   ],
   esbuild: {
     drop: ['debugger'],
     pure: ['console.log', 'console.table', 'console.info', 'console.debug'],
-    legalComments: 'none'
-  }
+    legalComments: 'none',
+  },
 })
