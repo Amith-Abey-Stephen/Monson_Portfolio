@@ -1,0 +1,15 @@
+/* TEAM */
+Designer & Developer: Monson Sunny
+Site: https://monsonsunny.com
+Contact: hello@monsonsunny.com
+Location: India — Remote worldwide
+
+/* THANKS */
+Fonts: Instrument Serif, Cormorant Garamond, Inter, Manrope via Google Fonts
+Built with: Vite, vanilla HTML/CSS/JS
+
+/* SITE */
+Last update: 2026/09/01
+Language: English
+Doctype: HTML5
+Standards: W3C, WCAG 2.2 AA
