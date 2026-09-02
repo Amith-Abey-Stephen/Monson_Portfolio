@@ -24,6 +24,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
+        edit: 'edit/index.html',
         notfound: '404.html',
       },
       output: {

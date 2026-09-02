@@ -31,11 +31,15 @@ ehthumbs.db
 .project
 .classpath
 
-# Env
+# Env & Secrets
 .env
 .env.local
 .env.*.local
 .env.production
+.dev.vars
+.dev.vars.*
+.wrangler/
+.cloudflare/
 
 # Logs
 npm-debug.log*
