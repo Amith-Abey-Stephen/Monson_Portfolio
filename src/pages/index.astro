@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.astro';
+import Hero from '../components/Hero.astro';
+import Intro from '../components/Intro.astro';
+import Work from '../components/Work.astro';
+import Philosophy from '../components/Philosophy.astro';
+import Services from '../components/Services.astro';
+import About from '../components/About.astro';
+import Playground from '../components/Playground.astro';
+import Marquee from '../components/Marquee.astro';
+import Journal from '../components/Journal.astro';
+import Collab from '../components/Collab.astro';
+import Final from '../components/Final.astro';
+import Footer from '../components/Footer.astro';
+import { DEFAULT_PORTFOLIO_CONTENT } from '../lib/content-model';
+
+const content = DEFAULT_PORTFOLIO_CONTENT;
+---
+
+<Layout>
+  <Navigation brand={content.footer.brand} email={content.contact.email} />
+  <main id="main">
+    <Hero content={content.hero} />
+    <Intro />
+    {content.sections.work !== false && <Work projects={content.projects} />}
+    {content.sections.philosophy !== false && <Philosophy content={content.philosophy} />}
+    {content.sections.services !== false && <Services services={content.services} />}
+    {content.sections.about !== false && <About content={content.about} />}
+    {content.sections.playground !== false && <Playground items={content.playground} />}
+    {content.sections.marquee !== false && <Marquee tools={content.tools} />}
+    {content.sections.journal !== false && <Journal articles={content.journal} />}
+    {content.sections.collab !== false && <Collab content={content.collab} />}
+    {content.sections.contact !== false && <Final content={content.contact} socials={content.personal.socials} />}
+  </main>
+  <Footer content={content.footer} />
+</Layout>

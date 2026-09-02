@@ -1,0 +1,34 @@
+---
+import type { ProjectItem } from '../lib/content-model';
+import ProjectCard from './ProjectCard.astro';
+
+interface Props {
+  projects: ProjectItem[];
+}
+
+const { projects } = Astro.props;
+const visibleProjects = projects.filter((p) => p.visible !== false);
+---
+
+<section class="work" id="work" aria-labelledby="work-heading">
+  <div class="work-head">
+    <div>
+      <div class="label">Selected Work · 2024—2026</div>
+      <h2 id="work-heading" class="reveal">
+        Things I've
+        <br />
+        <i>designed.</i>
+      </h2>
+    </div>
+    <div class="reveal" style="font-size: 13px; color: var(--muted); max-width: 280px; line-height: 1.6">
+      A curated selection of recent product, e-commerce and community platforms — focused on clarity, performance
+      and polish.
+    </div>
+  </div>
+
+  <div class="work-grid">
+    {visibleProjects.map((project, idx) => (
+      <ProjectCard project={project} isReverse={idx % 2 === 1} />
+    ))}
+  </div>
+</section>

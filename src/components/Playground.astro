@@ -1,0 +1,48 @@
+---
+import type { PlaygroundItem } from '../lib/content-model';
+
+interface Props {
+  items: PlaygroundItem[];
+}
+
+const { items } = Astro.props;
+const visibleItems = items.filter((item) => item.visible !== false);
+---
+
+<section class="playground" id="playground" aria-labelledby="playground-heading">
+  <div class="playground-head">
+    <div>
+      <div class="label">Playground</div>
+      <h2 id="playground-heading" class="reveal" style="margin-top: 6px">
+        Not everything
+        <br />
+        <i>needs a case study.</i>
+      </h2>
+    </div>
+    <div class="reveal" style="font-size: 13px; color: var(--muted); max-width: 300px; line-height: 1.6">
+      UI explorations, motion studies, typography and 3D experiments — where I play and learn.
+    </div>
+  </div>
+  <div class="pg-track" id="pgTrack">
+    {visibleItems.map((item) => (
+      <div class="pg-card" data-cursor="EXPLORE ↗" tabindex="0" role="button" aria-label={`Open ${item.title}`}>
+        <img
+          loading="lazy"
+          decoding="async"
+          width="600"
+          height="456"
+          src={item.image}
+          alt={`Playground — ${item.title}`}
+        />
+        <div class="pg-overlay">
+          <div>
+            <b>{item.title}</b>
+            <br />
+            <span>{item.category}</span>
+          </div>
+          <span class="pg-pill" aria-hidden="true">↗</span>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>

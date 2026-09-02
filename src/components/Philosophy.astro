@@ -1,0 +1,39 @@
+---
+import type { PhilosophyContent } from '../lib/content-model';
+
+interface Props {
+  content: PhilosophyContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section class="philosophy" id="philosophy" aria-labelledby="philosophy-heading">
+  <div class="label" style="color: rgba(255, 255, 255, 0.5)">How I Think</div>
+  <div class="philo-quote reveal" style="margin-top: 14px" id="philosophy-heading">
+    {content.quote}
+  </div>
+  <p class="philo-sub reveal">
+    {content.subtext}
+  </p>
+  <div class="principles">
+    <div class="reveal">
+      <div class="num" aria-hidden="true">{content.principles.p1Num}</div>
+      <h4>{content.principles.p1Title}</h4>
+      <p>{content.principles.p1Desc}</p>
+      <div class="divider"></div>
+    </div>
+    <div class="reveal">
+      <div class="num" aria-hidden="true">{content.principles.p2Num}</div>
+      <h4>{content.principles.p2Title}</h4>
+      <p>{content.principles.p2Desc}</p>
+      <div class="divider"></div>
+    </div>
+    <div class="reveal">
+      <div class="num" aria-hidden="true">{content.principles.p3Num}</div>
+      <h4>{content.principles.p3Title}</h4>
+      <p>{content.principles.p3Desc}</p>
+      <div class="divider"></div>
+    </div>
+  </div>
+</section>

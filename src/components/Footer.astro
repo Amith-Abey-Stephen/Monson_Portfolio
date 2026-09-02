@@ -1,0 +1,31 @@
+---
+import type { FooterContent } from '../lib/content-model';
+
+interface Props {
+  content: FooterContent;
+}
+
+const { content } = Astro.props;
+---
+
+<footer class="footer" aria-label="Footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">{content.brand}</div>
+      <div class="footer-small">
+        {content.summary}
+      </div>
+    </div>
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="#playground">Playground</a>
+      <a href="#journal">Journal</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+  <div class="footer-bottom">
+    <span>{content.copyright}</span>
+    <span>{content.tagline}</span>
+  </div>
+</footer>

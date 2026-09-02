@@ -1,0 +1,40 @@
+---
+import type { ProjectItem } from '../lib/content-model';
+
+interface Props {
+  project: ProjectItem;
+  isReverse?: boolean;
+}
+
+const { project, isReverse = false } = Astro.props;
+---
+
+<article class={`project ${isReverse ? 'reverse' : ''}`} data-id={project.id}>
+  <div
+    class="p-media"
+    data-cursor="VIEW CASE STUDY ↗"
+    tabindex="0"
+    role="button"
+    aria-label={`View ${project.title} case study`}
+  >
+    <img
+      loading="lazy"
+      decoding="async"
+      width="1200"
+      height="960"
+      src={project.image}
+      alt={`${project.title} — ${project.category}`}
+    />
+    <span class="p-tag">{project.title} — {project.tag}</span>
+    <span class="p-year">{project.year}</span>
+  </div>
+  <div class="p-meta">
+    <div class="p-cat">{project.category}</div>
+    <h3>{project.title}</h3>
+    <p>{project.description}</p>
+    <a class="p-link" href={project.link} aria-label={`View ${project.title} case study`}>
+      {project.linkText || 'View Case Study'}
+      <span class="arr" aria-hidden="true">↗</span>
+    </a>
+  </div>
+</article>

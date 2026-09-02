@@ -1,0 +1,65 @@
+---
+import type { JournalItem } from '../lib/content-model';
+
+interface Props {
+  articles: JournalItem[];
+}
+
+const { articles } = Astro.props;
+const visibleArticles = articles.filter((a) => a.visible !== false);
+---
+
+<section class="journal" id="journal" aria-labelledby="journal-heading">
+  <div>
+    <div class="label">Thoughts & Notes</div>
+    <h2 id="journal-heading" class="reveal" style="margin-top: 8px">
+      Things I'm
+      <br />
+      <i>thinking about.</i>
+    </h2>
+    <p class="sub reveal">Writing about clarity, craft and the space between design and technology.</p>
+    <div class="reveal" style="margin-top: 16px">
+      <a class="btn-ghost" href="#journal">
+        View All Articles
+        <span class="arr" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+  <div class="journal-list">
+    {visibleArticles.map((item) => (
+      <a
+        class="j-row"
+        href={item.link}
+        data-cursor="READ ↗"
+        aria-label={`Read: ${item.title}`}
+      >
+        <div>
+          <div class="j-meta">
+            <span>{item.date}</span>
+            <i aria-hidden="true"></i>
+            <span>{item.tag}</span>
+            <i aria-hidden="true"></i>
+            <span>{item.readTime}</span>
+          </div>
+          <h3>{item.title}</h3>
+          <div class="j-excerpt">
+            {item.excerpt}
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center">
+          <div class="j-thumb">
+            <img
+              loading="lazy"
+              decoding="async"
+              width="300"
+              height="200"
+              src={item.image}
+              alt={`${item.title} cover`}
+            />
+          </div>
+          <span class="j-arrow" aria-hidden="true">↗</span>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
