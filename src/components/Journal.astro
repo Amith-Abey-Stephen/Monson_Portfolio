@@ -9,7 +9,7 @@ const { articles } = Astro.props;
 const visibleArticles = articles.filter((a) => a.visible !== false);
 ---
 
-<section class="journal" id="journal" aria-labelledby="journal-heading">
+<section class="journal" id="journal" aria-labelledby="journal-heading" data-cms-section="journal">
   <div>
     <div class="label">Thoughts & Notes</div>
     <h2 id="journal-heading" class="reveal" style="margin-top: 8px">
@@ -25,24 +25,26 @@ const visibleArticles = articles.filter((a) => a.visible !== false);
       </a>
     </div>
   </div>
-  <div class="journal-list">
-    {visibleArticles.map((item) => (
+  <div class="journal-list" data-cms-grid="journal">
+    {visibleArticles.map((item, idx) => (
       <a
         class="j-row"
         href={item.link}
         data-cursor="READ ↗"
         aria-label={`Read: ${item.title}`}
+        data-cms-item="journal"
+        data-id={item.id}
       >
         <div>
           <div class="j-meta">
-            <span>{item.date}</span>
+            <span data-cms-bind={`journal.${idx}.date`}>{item.date}</span>
             <i aria-hidden="true"></i>
-            <span>{item.tag}</span>
+            <span data-cms-bind={`journal.${idx}.tag`}>{item.tag}</span>
             <i aria-hidden="true"></i>
-            <span>{item.readTime}</span>
+            <span data-cms-bind={`journal.${idx}.readTime`}>{item.readTime}</span>
           </div>
-          <h3>{item.title}</h3>
-          <div class="j-excerpt">
+          <h3 data-cms-bind={`journal.${idx}.title`}>{item.title}</h3>
+          <div class="j-excerpt" data-cms-bind={`journal.${idx}.excerpt`}>
             {item.excerpt}
           </div>
         </div>
@@ -55,6 +57,7 @@ const visibleArticles = articles.filter((a) => a.visible !== false);
               height="200"
               src={item.image}
               alt={`${item.title} cover`}
+              data-cms-image={`journal.${idx}.image`}
             />
           </div>
           <span class="j-arrow" aria-hidden="true">↗</span>

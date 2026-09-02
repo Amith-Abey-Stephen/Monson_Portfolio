@@ -1,637 +1,206 @@
 ---
-import '../../styles/admin.css';
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import Hero from '../../components/Hero.astro';
+import Intro from '../../components/Intro.astro';
+import Work from '../../components/Work.astro';
+import Philosophy from '../../components/Philosophy.astro';
+import Services from '../../components/Services.astro';
+import About from '../../components/About.astro';
+import Playground from '../../components/Playground.astro';
+import Marquee from '../../components/Marquee.astro';
+import Journal from '../../components/Journal.astro';
+import Collab from '../../components/Collab.astro';
+import Final from '../../components/Final.astro';
+import Footer from '../../components/Footer.astro';
+import { DEFAULT_PORTFOLIO_CONTENT } from '../../lib/content-model';
+import '../../styles/visual-cms.css';
+
+const content = DEFAULT_PORTFOLIO_CONTENT;
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio CMS · Visual Editor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="admin-bg-aura"></div>
+<Layout title="Visual CMS · On-Page Portfolio Editor">
+  <!-- Live Visual Website Canvas -->
+  <Navigation brand={content.footer.brand} email={content.contact.email} />
+  
+  <main id="main">
+    <Hero content={content.hero} />
+    <Intro />
+    <Work projects={content.projects} />
+    <Philosophy content={content.philosophy} />
+    <Services services={content.services} />
+    <About content={content.about} />
+    <Playground items={content.playground} />
+    <Marquee tools={content.tools} />
+    <Journal articles={content.journal} />
+    <Collab content={content.collab} />
+    <Final content={content.contact} socials={content.personal.socials} />
+  </main>
+  
+  <Footer content={content.footer} />
 
-    <!-- Password Auth Lock Screen -->
-    <div class="auth-overlay" id="authOverlay">
-      <div class="auth-card">
-        <h1>Admin Workspace</h1>
-        <p>Enter your password to manage and publish portfolio content.</p>
-        <form id="authForm">
-          <div class="form-group">
-            <label for="adminPass">Password</label>
-            <input type="password" id="adminPass" placeholder="Enter admin password" autocomplete="current-password" required />
-          </div>
-          <button type="submit" class="btn-admin-primary" style="width: 100%; justify-content: center">
-            Unlock Editor ↗
-          </button>
-          <div class="auth-error" id="authError"></div>
-        </form>
-      </div>
+  <!-- Floating CMS Command Bar -->
+  <aside class="cms-command-bar" aria-label="Visual CMS Controls">
+    <div class="cms-status-badge">
+      <span class="cms-status-dot" id="cmsStatusDot"></span>
+      <span id="cmsStatusText">All Changes Published</span>
     </div>
 
-    <!-- Main CMS Interface -->
-    <header class="admin-header">
-      <div class="admin-header-left">
-        <a href="/" class="admin-logo" target="_blank">
-          PORTFOLIO CMS
-          <span class="admin-badge">Cloudflare Sync</span>
-        </a>
+    <div class="cms-divider"></div>
+
+    <button type="button" class="cms-cmd-btn" id="cmsBtnPreview" title="Toggle between Editing and Clean Preview">
+      👁️ Preview Mode
+    </button>
+
+    <button type="button" class="cms-cmd-btn" id="cmsBtnR2Sync" title="Cloudflare R2 sync & 10-day retention">
+      ☁️ Cloudflare R2
+    </button>
+
+    <div class="cms-divider"></div>
+
+    <div class="cms-session-timer" id="cmsSessionTimer">
+      ⏱️ 15m left
+    </div>
+
+    <button type="button" class="cms-cmd-btn" id="cmsBtnLock" title="Lock editor" style="color: #ef4444">
+      🔒 Lock
+    </button>
+
+    <button type="button" class="cms-cmd-btn primary" id="cmsBtnPublish">
+      🚀 Publish Changes
+    </button>
+  </aside>
+
+  <!-- 1. Password Auth Modal -->
+  <div class="cms-modal-overlay" id="cmsAuthModal">
+    <div class="cms-modal-card" style="max-width: 380px; text-align: center">
+      <div style="font-size: 32px; margin-bottom: 8px">🔐</div>
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px">Visual Portfolio Editor</h2>
+      <p style="font-size: 13px; color: rgba(255, 255, 255, 0.65); margin-bottom: 20px">
+        Enter your admin password to edit text, swap images, and manage sections live on the page.
+      </p>
+      <form id="cmsAuthForm">
+        <input
+          type="password"
+          id="cmsAuthPass"
+          class="cms-input-text"
+          placeholder="Admin password"
+          autocomplete="current-password"
+          required
+          style="text-align: center; margin-bottom: 14px"
+        />
+        <button type="submit" class="cms-cmd-btn primary" style="width: 100%; justify-content: center; padding: 10px 16px">
+          Unlock Editor ↗
+        </button>
+        <div id="cmsAuthError" style="color: #ef4444; font-size: 12px; margin-top: 10px"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Media Upload & Replace Modal -->
+  <div class="cms-modal-overlay" id="cmsMediaModal">
+    <div class="cms-modal-card">
+      <div class="cms-modal-header">
+        <h3>Replace Image</h3>
+        <button type="button" class="cms-modal-close" id="cmsCloseMediaModal">✕</button>
       </div>
-      <div class="admin-header-actions">
-        <a href="/" target="_blank" class="btn-admin-secondary">
-          <span>View Live Site</span> ↗
-        </a>
-        <button type="button" class="btn-admin-secondary" id="btnExportJson">
-          Export JSON
+      <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-bottom: 16px">
+        Upload a replacement file or paste a new image URL. The previous image will automatically be archived for <strong>10 days</strong> before permanent deletion.
+      </div>
+      
+      <div class="cms-dropzone" id="cmsDropzone">
+        <input type="file" id="cmsImageFileInput" accept="image/*" style="display: none" />
+        <div style="font-size: 28px; margin-bottom: 8px">📷</div>
+        <div style="font-weight: 600; font-size: 14px">Drop new image here, or click to browse</div>
+        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin-top: 4px">PNG, JPG, WEBP, SVG supported</div>
+      </div>
+
+      <div style="margin: 18px 0; text-align: center; font-size: 11px; color: rgba(255, 255, 255, 0.4); letter-spacing: 0.1em">
+        — OR ENTER IMAGE URL —
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: rgba(255, 255, 255, 0.7)">Image CDN / URL</label>
+        <input type="text" id="cmsImageUrlInput" class="cms-input-text" placeholder="https://..." />
+      </div>
+
+      <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px">
+        <button type="button" class="cms-cmd-btn" id="cmsBtnCancelMedia" onclick="document.getElementById('cmsMediaModal').classList.remove('open')">
+          Cancel
         </button>
-        <label class="btn-admin-secondary btn-upload-file">
-          Import JSON
-          <input type="file" id="importJsonInput" accept=".json" />
-        </label>
-        <button type="button" class="btn-admin-secondary" id="btnLogout" style="color: var(--accent-red)">
-          Lock
+        <button type="button" class="cms-cmd-btn primary" id="cmsBtnApplyImageUrl">
+          Apply Image URL
         </button>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <main class="admin-container">
-      <!-- Sidebar Navigation -->
-      <aside class="admin-nav">
-        <button class="nav-tab-btn active" data-tab="tab-sections">
-          <span class="tab-icon">🎛️</span> Section Visibility
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-personal">
-          <span class="tab-icon">👤</span> Personal & Socials
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-hero">
-          <span class="tab-icon">✨</span> Hero Section
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-intro">
-          <span class="tab-icon">📖</span> Intro Statement
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-projects">
-          <span class="tab-icon">💼</span> Selected Work
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-services">
-          <span class="tab-icon">⚡</span> Services & Offerings
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-about">
-          <span class="tab-icon">🎯</span> About & Career
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-playground">
-          <span class="tab-icon">🧪</span> Playground & Tools
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-journal">
-          <span class="tab-icon">✍️</span> Journal & Notes
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-contact">
-          <span class="tab-icon">✉️</span> Contact & Footer
-        </button>
-        <button class="nav-tab-btn" data-tab="tab-cloudflare">
-          <span class="tab-icon">☁️</span> Cloudflare Sync
-        </button>
-      </aside>
+  <!-- 3. Cloudflare R2 & 10-Day Retention Modal -->
+  <div class="cms-modal-overlay" id="cmsR2Modal">
+    <div class="cms-modal-card">
+      <div class="cms-modal-header">
+        <h3>Cloudflare R2 & 10-Day Retention</h3>
+        <button type="button" class="cms-modal-close" id="cmsCloseR2Modal">✕</button>
+      </div>
 
-      <!-- Content Panels -->
-      <section class="admin-panels">
-        <!-- 0. Section Toggles Tab -->
-        <div class="tab-pane active" id="tab-sections">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Section Visibility Toggles</h2>
-                <p>Turn entire sections on or off as your portfolio evolves over time.</p>
-              </div>
-            </div>
-            <div id="sectionSwitchesContainer"></div>
-          </div>
+      <div style="display: flex; flex-direction: column; gap: 16px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.75)">
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px">
+          <div style="font-weight: 600; color: #fff; margin-bottom: 4px">☁️ One-Click Asset Sync to R2</div>
+          <p style="margin: 0 0 10px 0; font-size: 12px">
+            Uploads all local portfolio images to your Cloudflare R2 bucket and switches URLs to your Cloudflare CDN.
+          </p>
+          <button type="button" class="cms-cmd-btn primary" id="cmsBtnStartR2Sync" style="font-size: 12px">
+            ☁️ Sync All Assets to Cloudflare R2
+          </button>
+          <div id="cmsSyncProgress" style="margin-top: 8px; font-size: 11px; color: #c9a96e; display: none"></div>
         </div>
 
-        <!-- 1. Personal & Socials Tab -->
-        <div class="tab-pane" id="tab-personal">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Personal & Brand Identity</h2>
-                <p>Configure names, status badges, emails, and social links.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" data-bind="personal.name" />
-              </div>
-              <div class="form-group">
-                <label>Brand Name / Logo Text</label>
-                <input type="text" data-bind="personal.brandName" />
-              </div>
-              <div class="form-group full">
-                <label>Professional Role / Subtitle</label>
-                <input type="text" data-bind="personal.role" />
-              </div>
-              <div class="form-group">
-                <label>Primary Email</label>
-                <input type="email" data-bind="personal.email" />
-              </div>
-              <div class="form-group">
-                <label>Location Text</label>
-                <input type="text" data-bind="personal.location" />
-              </div>
-              <div class="form-group">
-                <label>Status Badge 1 (Availability)</label>
-                <input type="text" data-bind="personal.statusText" />
-              </div>
-              <div class="form-group">
-                <label>Status Badge 2 (Main Text)</label>
-                <input type="text" data-bind="personal.statusBadge2" />
-              </div>
-              <div class="form-group">
-                <label>Status Badge 2 (Subtitle)</label>
-                <input type="text" data-bind="personal.statusBadge2Sub" />
-              </div>
-            </div>
-
-            <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-subtle)">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px">
-                <div>
-                  <h3 style="font-size: 15px; font-weight: 600">Extensible Social Links</h3>
-                  <p style="font-size: 12px; color: var(--text-muted)">Add any platform (LinkedIn, X, GitHub, Dribbble, Medium, Substack, etc.)</p>
-                </div>
-                <button type="button" class="btn-admin-primary" id="btnAddSocial">+ Add Link</button>
-              </div>
-              <div class="items-list" id="socialsListContainer"></div>
-            </div>
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px">
+          <div style="font-weight: 600; color: #fff; margin-bottom: 4px">🗑️ 10-Day Retention Cleanup</div>
+          <p style="margin: 0 0 10px 0; font-size: 12px">
+            When an image is replaced, it stays safely in the archive for 10 days. Clean any expired archived images immediately:
+          </p>
+          <div id="cmsArchiveCountText" style="font-size: 12px; color: #c9a96e; margin-bottom: 10px">
+            0 images currently in 10-day retention
           </div>
+          <button type="button" class="cms-cmd-btn" id="cmsBtnCleanExpired" style="border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 12px">
+            🗑️ Clean Expired Images Now
+          </button>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- 2. Hero Section Tab -->
-        <div class="tab-pane" id="tab-hero">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Hero Section</h2>
-                <p>Edit main headline, descriptions, CTAs, and hero imagery.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group full">
-                <label>Hero Eyebrow</label>
-                <input type="text" data-bind="hero.eyebrow" />
-              </div>
-              <div class="form-group">
-                <label>Headline Line 1 (supports HTML &lt;i&gt;)</label>
-                <input type="text" data-bind="hero.h1Line1" />
-              </div>
-              <div class="form-group">
-                <label>Headline Line 2 (supports HTML &lt;i&gt;)</label>
-                <input type="text" data-bind="hero.h1Line2" />
-              </div>
-              <div class="form-group full">
-                <label>Headline Line 3</label>
-                <input type="text" data-bind="hero.h1Line3" />
-              </div>
-              <div class="form-group full">
-                <label>Hero Description</label>
-                <textarea data-bind="hero.description"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Primary CTA Text</label>
-                <input type="text" data-bind="hero.ctaText" />
-              </div>
-              <div class="form-group">
-                <label>Primary CTA Link</label>
-                <input type="text" data-bind="hero.ctaLink" />
-              </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle)">
-              <h3 style="font-size: 14px; margin-bottom: 14px">Hero Media & Cards</h3>
-              <div class="form-grid">
-                <!-- Workspace Image -->
-                <div class="form-group full">
-                  <label>Workspace Showcase Image</label>
-                  <div class="media-field-box">
-                    <img class="media-preview-thumb" id="prev_hero_ws" src="../assets/images/hero-workspace.jpg" alt="" />
-                    <div class="media-field-content">
-                      <input type="text" data-bind="hero.workspaceImage" data-preview="#prev_hero_ws" />
-                      <div class="media-actions">
-                        <label class="btn-admin-secondary btn-upload-file">
-                          Upload Image
-                          <input type="file" data-upload-target="hero.workspaceImage" data-preview="#prev_hero_ws" accept="image/*" />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label>Workspace Pill Caption</label>
-                  <input type="text" data-bind="hero.workspaceTitle" />
-                </div>
-
-                <!-- Portrait Image -->
-                <div class="form-group full">
-                  <label>Hero Portrait Photo</label>
-                  <div class="media-field-box">
-                    <img class="media-preview-thumb" id="prev_hero_port" src="../assets/images/hero-portrait.jpg" alt="" />
-                    <div class="media-field-content">
-                      <input type="text" data-bind="hero.portraitImage" data-preview="#prev_hero_port" />
-                      <div class="media-actions">
-                        <label class="btn-admin-secondary btn-upload-file">
-                          Upload Image
-                          <input type="file" data-upload-target="hero.portraitImage" data-preview="#prev_hero_port" accept="image/*" />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Avatar Image -->
-                <div class="form-group full">
-                  <label>Status Badge Avatar</label>
-                  <div class="media-field-box">
-                    <img class="media-preview-thumb" id="prev_hero_av" src="../assets/images/avatar-1.jpg" alt="" />
-                    <div class="media-field-content">
-                      <input type="text" data-bind="hero.avatarImage" data-preview="#prev_hero_av" />
-                      <div class="media-actions">
-                        <label class="btn-admin-secondary btn-upload-file">
-                          Upload Image
-                          <input type="file" data-upload-target="hero.avatarImage" data-preview="#prev_hero_av" accept="image/*" />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label>Design System Badge Title</label>
-                  <input type="text" data-bind="hero.systemBadgeTitle" />
-                </div>
-                <div class="form-group">
-                  <label>Design System Badge Value</label>
-                  <input type="text" data-bind="hero.systemBadgeValue" />
-                </div>
-                <div class="form-group full">
-                  <label>Design System Subtitle</label>
-                  <input type="text" data-bind="hero.systemBadgeSub" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Intro Section Tab -->
-        <div class="tab-pane" id="tab-intro">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Introduction Section</h2>
-                <p>The short introductory statement below the hero.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group full">
-                <label>Section Label</label>
-                <input type="text" data-bind="intro.label" />
-              </div>
-              <div class="form-group full">
-                <label>Heading</label>
-                <textarea data-bind="intro.heading"></textarea>
-              </div>
-              <div class="form-group full">
-                <label>Description</label>
-                <textarea data-bind="intro.description"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Button Text</label>
-                <input type="text" data-bind="intro.buttonText" />
-              </div>
-              <div class="form-group">
-                <label>Button Link</label>
-                <input type="text" data-bind="intro.buttonLink" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Projects Tab -->
-        <div class="tab-pane" id="tab-projects">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Selected Work Projects</h2>
-                <p>Reorder (▲/▼), toggle visibility (👁️), duplicate, or edit case studies.</p>
-              </div>
-              <button type="button" class="btn-admin-primary" id="btnAddProject">
-                + Add Project
-              </button>
-            </div>
-            <div class="items-list" id="projectsListContainer"></div>
-          </div>
-        </div>
-
-        <!-- 5. Services Tab -->
-        <div class="tab-pane" id="tab-services">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Services & Offerings</h2>
-                <p>Capabilities with hover preview imagery.</p>
-              </div>
-              <button type="button" class="btn-admin-primary" id="btnAddService">
-                + Add Service
-              </button>
-            </div>
-            <div class="items-list" id="servicesListContainer"></div>
-          </div>
-        </div>
-
-        <!-- 6. About & Career Tab -->
-        <div class="tab-pane" id="tab-about">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>About & Narrative</h2>
-                <p>Biography, narrative, metrics, and about imagery.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group full">
-                <label>Section Label</label>
-                <input type="text" data-bind="about.label" />
-              </div>
-              <div class="form-group full">
-                <label>Heading</label>
-                <textarea data-bind="about.heading"></textarea>
-              </div>
-              <div class="form-group full">
-                <label>Detailed Biography</label>
-                <textarea style="min-height: 120px" data-bind="about.bio"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Based In</label>
-                <input type="text" data-bind="about.basedIn" />
-              </div>
-              <div class="form-group">
-                <label>Availability Note</label>
-                <input type="text" data-bind="about.availability" />
-              </div>
-              <div class="form-group">
-                <label>Experience Tag</label>
-                <input type="text" data-bind="about.experienceYears" />
-              </div>
-
-              <!-- Main Portrait -->
-              <div class="form-group full">
-                <label>About Main Portrait</label>
-                <div class="media-field-box">
-                  <img class="media-preview-thumb" id="prev_about_main" src="../assets/images/avatars/monson.jpg" alt="" />
-                  <div class="media-field-content">
-                    <input type="text" data-bind="about.imageMain" data-preview="#prev_about_main" />
-                    <div class="media-actions">
-                      <label class="btn-admin-secondary btn-upload-file">
-                        Upload Image
-                        <input type="file" data-upload-target="about.imageMain" data-preview="#prev_about_main" accept="image/*" />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Small Avatar -->
-              <div class="form-group full">
-                <label>Small Badge Avatar</label>
-                <div class="media-field-box">
-                  <img class="media-preview-thumb" id="prev_about_sm" src="../assets/images/avatars/monson-sm.jpg" alt="" />
-                  <div class="media-field-content">
-                    <input type="text" data-bind="about.imageSmall" data-preview="#prev_about_sm" />
-                    <div class="media-actions">
-                      <label class="btn-admin-secondary btn-upload-file">
-                        Upload Image
-                        <input type="file" data-upload-target="about.imageSmall" data-preview="#prev_about_sm" accept="image/*" />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle)">
-              <h3 style="font-size: 14px; margin-bottom: 14px">Numerical Stats</h3>
-              <div class="form-grid" id="aboutStatsContainer"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. Playground & Tools Tab -->
-        <div class="tab-pane" id="tab-playground">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Playground Experiments</h2>
-                <p>Experimental studies, 3D concepts, and interaction explorations.</p>
-              </div>
-              <button type="button" class="btn-admin-primary" id="btnAddPlayground">
-                + Add Item
-              </button>
-            </div>
-            <div class="items-list" id="playgroundListContainer"></div>
-          </div>
-
-          <!-- Dynamic Tools Marquee -->
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Tools & Skills Marquee</h2>
-                <p>Add or remove software and skills displayed in the animated marquee.</p>
-              </div>
-            </div>
-            <div class="chips-container" id="toolsChipsContainer"></div>
-            <div style="display: flex; gap: 8px; margin-top: 12px">
-              <input type="text" id="newToolInput" placeholder="Add tool (e.g. FRAMER, THREE.JS, SPLINE)" style="max-width: 320px" />
-              <button type="button" class="btn-admin-secondary" id="btnAddTool">+ Add Tool</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 8. Journal Tab -->
-        <div class="tab-pane" id="tab-journal">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Journal & Articles</h2>
-                <p>Written thoughts, publication dates, and cover images.</p>
-              </div>
-              <button type="button" class="btn-admin-primary" id="btnAddJournal">
-                + Add Article
-              </button>
-            </div>
-            <div class="items-list" id="journalListContainer"></div>
-          </div>
-        </div>
-
-        <!-- 9. Contact & Footer Tab -->
-        <div class="tab-pane" id="tab-contact">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Collaboration & Contact</h2>
-                <p>Call-to-action sections and footer metadata.</p>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group full">
-                <label>Collab Heading</label>
-                <input type="text" data-bind="collab.heading" />
-              </div>
-              <div class="form-group full">
-                <label>Collab Description</label>
-                <textarea data-bind="collab.description"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Collab CTA Text</label>
-                <input type="text" data-bind="collab.ctaText" />
-              </div>
-              <div class="form-group">
-                <label>Collab CTA Link</label>
-                <input type="text" data-bind="collab.ctaLink" />
-              </div>
-
-              <div class="form-group full" style="margin-top: 16px">
-                <label>Final Contact Heading</label>
-                <input type="text" data-bind="contact.heading" />
-              </div>
-              <div class="form-group full">
-                <label>Contact Subtext</label>
-                <input type="text" data-bind="contact.subtext" />
-              </div>
-              <div class="form-group">
-                <label>Response Time Text</label>
-                <input type="text" data-bind="contact.responseTime" />
-              </div>
-              <div class="form-group">
-                <label>Location & Hours Note</label>
-                <textarea data-bind="contact.locationNote"></textarea>
-              </div>
-              <div class="form-group full">
-                <label>Footer Brand</label>
-                <input type="text" data-bind="footer.brand" />
-              </div>
-              <div class="form-group full">
-                <label>Footer Summary</label>
-                <textarea data-bind="footer.summary"></textarea>
-              </div>
-              <div class="form-group">
-                <label>Footer Copyright</label>
-                <input type="text" data-bind="footer.copyright" />
-              </div>
-              <div class="form-group">
-                <label>Footer Tagline</label>
-                <input type="text" data-bind="footer.tagline" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 10. Cloudflare Settings Tab -->
-        <div class="tab-pane" id="tab-cloudflare">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Cloudflare R2 Asset Sync</h2>
-                <p>Fetch and host all local images directly from your Cloudflare R2 bucket.</p>
-              </div>
-              <button type="button" class="btn-admin-primary" id="btnSyncAllR2">
-                ☁️ Sync All Assets to Cloudflare R2
-              </button>
-            </div>
-            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted)">
-              <p>
-                Clicking this will check all images used in your portfolio. If any local images are found, it will automatically upload them to your Cloudflare R2 bucket and update their URLs to high-speed Cloudflare CDN links.
-              </p>
-              <div id="syncProgressText" style="margin-top: 10px; font-weight: 500; color: var(--accent-gold); display: none"></div>
-            </div>
-          </div>
-
-          <!-- 10-Day Image Retention & Cleanup Manager -->
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>10-Day Image Retention & Lifecycle</h2>
-                <p>When you replace any image, the old version is preserved for 10 days before automatic deletion.</p>
-              </div>
-              <button type="button" class="btn-admin-secondary" id="btnCleanExpiredR2" style="color: var(--accent-red)">
-                🗑️ Clean Expired Now
-              </button>
-            </div>
-            <div id="imageArchiveContainer" style="font-size: 13px; color: var(--text-muted)">
-              <div id="archiveCountText">0 archived images in 10-day retention</div>
-              <div id="archiveList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px"></div>
-            </div>
-          </div>
-
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h2>Cloudflare Storage & Bindings</h2>
-                <p>Verify Cloudflare KV and R2 connections or configure custom endpoints.</p>
-              </div>
-            </div>
-            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted); display: flex; flex-direction: column; gap: 14px">
-              <p>
-                This portfolio is configured to sync directly with <strong>Cloudflare KV</strong> (for live structured content) and <strong>Cloudflare R2</strong> (for image uploads) via Cloudflare Pages Functions (<code style="color: #fff">/api/content</code> & <code style="color: #fff">/api/upload</code>).
-              </p>
-              <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px">
-                <div style="font-weight: 600; color: #fff; margin-bottom: 6px">☁️ Cloudflare Pages KV Binding:</div>
-                <div>KV Namespace Binding: <code style="color: var(--accent-gold)">PORTFOLIO_KV</code></div>
-                <div style="margin-top: 6px">Environment Variable (Password): <code style="color: var(--accent-gold)">ADMIN_PASSWORD</code></div>
-              </div>
-              <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px">
-                <div style="font-weight: 600; color: #fff; margin-bottom: 6px">🪣 Cloudflare R2 Bucket Binding:</div>
-                <div>Bucket Binding: <code style="color: var(--accent-cyan)">PORTFOLIO_R2</code></div>
-                <div>Public Domain / CDN: <code style="color: var(--accent-cyan)">R2_PUBLIC_URL</code> (Optional, fallback returns direct API URL)</div>
-              </div>
-              <p>
-                <strong>Offline / Local Mode:</strong> When running locally, all changes and media automatically save into your local browser storage and display live on your site instantly.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- Floating Action Bar -->
-    <div class="floating-bar">
-      <span class="save-status" id="saveStatus">Draft loaded</span>
-      <button type="button" class="btn-admin-primary" id="btnPublish">
-        Publish Changes 🚀
+  <!-- 4. Session Inactivity Countdown Modal -->
+  <div class="cms-modal-overlay" id="cmsSessionWarnModal">
+    <div class="cms-modal-card" style="max-width: 380px; text-align: center">
+      <div style="font-size: 32px; margin-bottom: 8px">⏳</div>
+      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 6px">Session Expiring Soon</h2>
+      <p style="font-size: 13px; color: rgba(255, 255, 255, 0.65); margin-bottom: 20px">
+        You have been inactive. For your security, the visual editor will automatically lock in <strong id="cmsSessionCountdown" style="color: #c9a96e">60</strong> seconds.
+      </p>
+      <button type="button" class="cms-cmd-btn primary" id="cmsBtnExtendSession" style="width: 100%; justify-content: center; padding: 10px 16px">
+        Stay Logged In
       </button>
     </div>
+  </div>
 
-    <!-- Session Inactivity Warning Modal -->
-    <div class="auth-overlay hidden" id="sessionWarnModal" style="z-index: 1100">
-      <div class="auth-card" style="max-width: 380px">
-        <div style="font-size: 32px; margin-bottom: 12px">⏳</div>
-        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px">Session Expiring Soon</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px">
-          You have been inactive. For your security, the CMS will automatically lock in <strong id="sessionCountdown" style="color: var(--accent-gold)">60</strong> seconds.
-        </p>
-        <button type="button" class="btn-admin-primary" id="btnExtendSession" style="width: 100%; justify-content: center">
-          Stay Logged In
-        </button>
-      </div>
-    </div>
+  <!-- Toast Notification -->
+  <div id="cmsToast" style="
+    display: none;
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 100000;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-family: var(--sans, sans-serif);
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: opacity 0.3s ease;
+  "></div>
 
-    <!-- Toast Notification -->
-    <div class="admin-toast" id="adminToast"></div>
-
-    <script src="../../scripts/admin.js"></script>
-  </body>
-</html>
+  <!-- Client-side Visual CMS Engine -->
+  <script src="../../scripts/visual-cms.js"></script>
+</Layout>

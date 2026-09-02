@@ -8,7 +8,7 @@ interface Props {
 const { content } = Astro.props;
 ---
 
-<section class="about" id="about" aria-labelledby="about-heading">
+<section class="about" id="about" aria-labelledby="about-heading" data-cms-section="about">
   <div class="about-media parallax" data-speed="0.04">
     <img
       loading="lazy"
@@ -17,6 +17,7 @@ const { content } = Astro.props;
       height="1350"
       src={content.imageMain}
       alt="Monson Sunny portrait — designer by profession, problem solver by nature"
+      data-cms-image="about.imageMain"
     />
     <div class="about-badge">
       <span class="av">
@@ -27,11 +28,12 @@ const { content } = Astro.props;
           height="300"
           src={content.imageSmall}
           alt="Monson Sunny — avatar"
+          data-cms-image="about.imageSmall"
         />
       </span>
       <div>
         <div style="font-size: 13px; font-weight: 700; color: var(--dark)">Monson Sunny</div>
-        <div style="font-size: 11px; color: var(--muted2)">{content.role}</div>
+        <div style="font-size: 11px; color: var(--muted2)" data-cms-bind="about.role">{content.role}</div>
       </div>
       <span
         style="
@@ -52,34 +54,34 @@ const { content } = Astro.props;
   </div>
   <div class="about-content">
     <div class="label">The Person Behind The Pixels</div>
-    <h2 id="about-heading" class="reveal" style="margin-top: 10px">
+    <h2 id="about-heading" class="reveal" style="margin-top: 10px" data-cms-bind="about.heading">
       {content.heading}
     </h2>
-    <p class="reveal">
+    <p class="reveal" data-cms-bind="about.subtext">
       {content.subtext}
     </p>
     <div class="about-meta reveal">
       <div>
         <strong>Based in</strong>
-        {content.location}
+        <span data-cms-bind="about.location">{content.location}</span>
       </div>
       <div>
         <strong>Role</strong>
-        {content.role}
+        <span data-cms-bind="about.role">{content.role}</span>
       </div>
     </div>
     <div class="about-stats reveal">
       <div>
-        <b>{content.stats.stat1Number}</b>
-        <span>{content.stats.stat1Label}</span>
+        <b data-cms-bind="about.stats.stat1Number">{content.stats.stat1Number}</b>
+        <span data-cms-bind="about.stats.stat1Label">{content.stats.stat1Label}</span>
       </div>
       <div>
-        <b>{content.stats.stat2Number}</b>
-        <span>{content.stats.stat2Label}</span>
+        <b data-cms-bind="about.stats.stat2Number">{content.stats.stat2Number}</b>
+        <span data-cms-bind="about.stats.stat2Label">{content.stats.stat2Label}</span>
       </div>
       <div>
-        <b>{content.stats.stat3Number}</b>
-        <span>{content.stats.stat3Label}</span>
+        <b data-cms-bind="about.stats.stat3Number">{content.stats.stat3Number}</b>
+        <span data-cms-bind="about.stats.stat3Label">{content.stats.stat3Label}</span>
       </div>
     </div>
   </div>

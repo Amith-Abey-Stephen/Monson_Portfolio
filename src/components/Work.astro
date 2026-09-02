@@ -10,7 +10,7 @@ const { projects } = Astro.props;
 const visibleProjects = projects.filter((p) => p.visible !== false);
 ---
 
-<section class="work" id="work" aria-labelledby="work-heading">
+<section class="work" id="work" aria-labelledby="work-heading" data-cms-section="work">
   <div class="work-head">
     <div>
       <div class="label">Selected Work · 2024—2026</div>
@@ -26,9 +26,9 @@ const visibleProjects = projects.filter((p) => p.visible !== false);
     </div>
   </div>
 
-  <div class="work-grid">
+  <div class="work-grid" data-cms-grid="projects">
     {visibleProjects.map((project, idx) => (
-      <ProjectCard project={project} isReverse={idx % 2 === 1} />
+      <ProjectCard project={project} isReverse={idx % 2 === 1} index={idx} />
     ))}
   </div>
 </section>

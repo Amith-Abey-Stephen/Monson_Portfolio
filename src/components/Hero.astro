@@ -8,36 +8,34 @@ interface Props {
 const { content } = Astro.props;
 ---
 
-<section class="hero" id="top" aria-labelledby="hero-heading">
+<section class="hero" id="top" aria-labelledby="hero-heading" data-cms-section="hero">
   <div class="hero-bg-num" aria-hidden="true">01</div>
   <div>
-    <div class="eyebrow">{content.eyebrow}</div>
+    <div class="eyebrow" data-cms-bind="hero.eyebrow">{content.eyebrow}</div>
     <h1 id="hero-heading">
       <span class="line">
-        <span>
-          {content.headingLine1.split(' ').slice(0, -1).join(' ')}
-          <i>{content.headingLine1.split(' ').slice(-1)}</i>
+        <span data-cms-bind="hero.headingLine1">
+          {content.headingLine1}
         </span>
       </span>
       <span class="line">
-        <span>
-          {content.headingLine2.split(' ').slice(0, -1).join(' ')}
-          <i>{content.headingLine2.split(' ').slice(-1)}</i>
+        <span data-cms-bind="hero.headingLine2">
+          {content.headingLine2}
         </span>
       </span>
-      <span class="line"><span>{content.headingLine3}</span></span>
+      <span class="line"><span data-cms-bind="hero.headingLine3">{content.headingLine3}</span></span>
     </h1>
-    <p class="hero-desc">
+    <p class="hero-desc" data-cms-bind="hero.description">
       {content.description}
     </p>
     <div class="hero-ctas">
-      <a class="btn-primary magnetic" href={content.primaryCtaLink} data-cursor="LET'S TALK ↗">
+      <a class="btn-primary magnetic" href={content.primaryCtaLink} data-cursor="LET'S TALK ↗" data-cms-bind="hero.primaryCtaText">
         {content.primaryCtaText}
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
           <path d="M1 13L13 1M13 1H3.5M13 1V10.5" stroke="currentColor" stroke-width="1.4" />
         </svg>
       </a>
-      <a class="scroll-hint" href="#intro" aria-label="Scroll to introduction">
+      <a class="scroll-hint" href="#intro" aria-label="Scroll to introduction" data-cms-bind="hero.scrollHintText">
         <span class="line-v" aria-hidden="true"></span>
         {content.scrollHintText}
       </a>
@@ -70,6 +68,7 @@ const { content } = Astro.props;
               height="599"
               src={content.workspaceImage}
               alt="Workspace UI — DeskNet community preview"
+              data-cms-image="hero.workspaceImage"
             />
             <div
               style="
@@ -137,6 +136,7 @@ const { content } = Astro.props;
               height="900"
               src={content.portraitImage}
               alt="Monson Sunny portrait"
+              data-cms-image="hero.portraitImage"
             />
             <div
               style="
@@ -185,6 +185,7 @@ const { content } = Astro.props;
           height="67"
           src={content.avatarImage}
           alt="Available for work — team avatar"
+          data-cms-image="hero.avatarImage"
         />
       </span>
       <span>Available for work</span>

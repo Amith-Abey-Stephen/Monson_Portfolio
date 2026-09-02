@@ -9,18 +9,14 @@ interface Props {
 const { content, socials } = Astro.props;
 ---
 
-<section class="final" id="contact" aria-labelledby="contact-heading">
+<section class="final" id="contact" aria-labelledby="contact-heading" data-cms-section="contact">
   <div class="final-grid">
     <div>
-      <h2 id="contact-heading">
-        Let's make
-        <br />
-        <i>something</i>
-        <br />
-        great.
+      <h2 id="contact-heading" data-cms-bind="contact.heading">
+        {content.heading}
       </h2>
-      <p class="final-sub">{content.subtext}</p>
-      <a class="email-cta magnetic" href={`mailto:${content.email}`}>
+      <p class="final-sub" data-cms-bind="contact.subtext">{content.subtext}</p>
+      <a class="email-cta magnetic" href={`mailto:${content.email}`} data-cms-bind="contact.email">
         {content.email}
         <span aria-hidden="true">↗</span>
       </a>
@@ -51,15 +47,18 @@ const { content, socials } = Astro.props;
             text-transform: uppercase;
             font-size: 11px;
           "
+          data-cms-bind="contact.responseTime"
         >
           {content.responseTime}
         </div>
-        {content.locationNote.split('\n').map((line, idx) => (
-          <>
-            {line}
-            {idx === 0 && <br />}
-          </>
-        ))}
+        <div data-cms-bind="contact.locationNote">
+          {content.locationNote.split('\n').map((line, idx) => (
+            <>
+              {line}
+              {idx === 0 && <br />}
+            </>
+          ))}
+        </div>
       </div>
     </div>
   </div>

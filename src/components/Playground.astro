@@ -9,7 +9,7 @@ const { items } = Astro.props;
 const visibleItems = items.filter((item) => item.visible !== false);
 ---
 
-<section class="playground" id="playground" aria-labelledby="playground-heading">
+<section class="playground" id="playground" aria-labelledby="playground-heading" data-cms-section="playground">
   <div class="playground-head">
     <div>
       <div class="label">Playground</div>
@@ -23,9 +23,9 @@ const visibleItems = items.filter((item) => item.visible !== false);
       UI explorations, motion studies, typography and 3D experiments — where I play and learn.
     </div>
   </div>
-  <div class="pg-track" id="pgTrack">
-    {visibleItems.map((item) => (
-      <div class="pg-card" data-cursor="EXPLORE ↗" tabindex="0" role="button" aria-label={`Open ${item.title}`}>
+  <div class="pg-track" id="pgTrack" data-cms-grid="playground">
+    {visibleItems.map((item, idx) => (
+      <div class="pg-card" data-cursor="EXPLORE ↗" tabindex="0" role="button" aria-label={`Open ${item.title}`} data-cms-item="playground" data-id={item.id}>
         <img
           loading="lazy"
           decoding="async"
@@ -33,12 +33,13 @@ const visibleItems = items.filter((item) => item.visible !== false);
           height="456"
           src={item.image}
           alt={`Playground — ${item.title}`}
+          data-cms-image={`playground.${idx}.image`}
         />
         <div class="pg-overlay">
           <div>
-            <b>{item.title}</b>
+            <b data-cms-bind={`playground.${idx}.title`}>{item.title}</b>
             <br />
-            <span>{item.category}</span>
+            <span data-cms-bind={`playground.${idx}.category`}>{item.category}</span>
           </div>
           <span class="pg-pill" aria-hidden="true">↗</span>
         </div>

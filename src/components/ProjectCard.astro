@@ -4,12 +4,13 @@ import type { ProjectItem } from '../lib/content-model';
 interface Props {
   project: ProjectItem;
   isReverse?: boolean;
+  index?: number;
 }
 
-const { project, isReverse = false } = Astro.props;
+const { project, isReverse = false, index = 0 } = Astro.props;
 ---
 
-<article class={`project ${isReverse ? 'reverse' : ''}`} data-id={project.id}>
+<article class={`project ${isReverse ? 'reverse' : ''}`} data-id={project.id} data-cms-item="projects">
   <div
     class="p-media"
     data-cursor="VIEW CASE STUDY ↗"
@@ -24,15 +25,16 @@ const { project, isReverse = false } = Astro.props;
       height="960"
       src={project.image}
       alt={`${project.title} — ${project.category}`}
+      data-cms-image={`projects.${index}.image`}
     />
-    <span class="p-tag">{project.title} — {project.tag}</span>
-    <span class="p-year">{project.year}</span>
+    <span class="p-tag" data-cms-bind={`projects.${index}.tag`}>{project.title} — {project.tag}</span>
+    <span class="p-year" data-cms-bind={`projects.${index}.year`}>{project.year}</span>
   </div>
   <div class="p-meta">
-    <div class="p-cat">{project.category}</div>
-    <h3>{project.title}</h3>
-    <p>{project.description}</p>
-    <a class="p-link" href={project.link} aria-label={`View ${project.title} case study`}>
+    <div class="p-cat" data-cms-bind={`projects.${index}.category`}>{project.category}</div>
+    <h3 data-cms-bind={`projects.${index}.title`}>{project.title}</h3>
+    <p data-cms-bind={`projects.${index}.description`}>{project.description}</p>
+    <a class="p-link" href={project.link} aria-label={`View ${project.title} case study`} data-cms-bind={`projects.${index}.linkText`}>
       {project.linkText || 'View Case Study'}
       <span class="arr" aria-hidden="true">↗</span>
     </a>
