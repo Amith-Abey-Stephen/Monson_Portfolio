@@ -33,8 +33,8 @@ export default defineConfig({
         chunkFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: ({ name }) => {
           if (/\.(css)$/.test(name ?? '')) return 'assets/css/[name]-[hash][extname]'
-          if (/\.(png|jpe?g|svg|webp|avif|gif|ico)$/.test(name ?? '')) return 'assets/images/[name]-[hash][extname]'
-          return 'assets/[name]-[hash][extname]'
+          if (/\.(png|jpe?g|svg|webp|avif|gif|ico)$/.test(name ?? '')) return 'assets/images/[name][extname]'
+          return 'assets/[name][extname]'
         },
       },
     },
