@@ -2,6 +2,10 @@ name = "monson-portfolio"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
 
+# Static assets configuration for Wrangler
+[assets]
+directory = "./dist"
+
 # Cloudflare KV Binding for dynamic content storage
 [[kv_namespaces]]
 binding = "PORTFOLIO_KV"
@@ -14,4 +18,3 @@ bucket_name = "portfolio-media"
 
 # NOTE: Set ADMIN_PASSWORD securely as a Secret in Cloudflare Pages Dashboard
 # or in a local git-ignored `.dev.vars` file for local testing (see .dev.vars.example).
-
