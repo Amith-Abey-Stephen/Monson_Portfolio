@@ -1717,6 +1717,42 @@ img {
   }
 }
 
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 76px;
+  }
+  .hero h1 {
+    font-size: clamp(30px, 9vw, 40px);
+  }
+  .hero-ctas {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  .hero-ctas .btn-primary,
+  .hero-ctas .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .work-head h2 {
+    font-size: clamp(32px, 8vw, 42px);
+  }
+  .collab h2 {
+    font-size: clamp(30px, 8vw, 38px);
+  }
+  .final h2 {
+    font-size: clamp(36px, 10vw, 48px);
+  }
+  .about-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .about-media {
+    height: 320px;
+  }
+}
+
 /* DUMMY IMAGE FALLBACK & OVERALL POLISH */
 img {
   font-size: 10px;
