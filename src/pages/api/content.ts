@@ -2,10 +2,18 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
+function getEnv(key: string): string {
+  return (
+    (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env as any)[key]) ||
+    (typeof process !== 'undefined' && process.env && process.env[key]) ||
+    ''
+  );
+}
+
 export const GET: APIRoute = async () => {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const kvId = process.env.CLOUDFLARE_KV_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
+  const kvId = getEnv('CLOUDFLARE_KV_ID');
+  const apiToken = getEnv('CLOUDFLARE_API_TOKEN');
 
   if (!accountId || !kvId || !apiToken) {
     return new Response(JSON.stringify({}), {
@@ -58,7 +66,7 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({ request }) => {
   const authHeader = request.headers.get('authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  const expectedPass = process.env.ADMIN_PASSWORD;
+  const expectedPass = getEnv('ADMIN_PASSWORD');
 
   if (expectedPass && token !== expectedPass) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -81,9 +89,9 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const kvId = process.env.CLOUDFLARE_KV_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
+  const kvId = getEnv('CLOUDFLARE_KV_ID');
+  const apiToken = getEnv('CLOUDFLARE_API_TOKEN');
 
   if (!accountId || !kvId || !apiToken) {
     return new Response(

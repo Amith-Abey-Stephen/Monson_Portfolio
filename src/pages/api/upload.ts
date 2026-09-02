@@ -2,10 +2,18 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
+function getEnv(key: string): string {
+  return (
+    (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env as any)[key]) ||
+    (typeof process !== 'undefined' && process.env && process.env[key]) ||
+    ''
+  );
+}
+
 export const POST: APIRoute = async ({ request }) => {
   const authHeader = request.headers.get('authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  const expectedPass = process.env.ADMIN_PASSWORD;
+  const expectedPass = getEnv('ADMIN_PASSWORD');
 
   if (expectedPass && token !== expectedPass) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -14,10 +22,10 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const r2Bucket = process.env.CLOUDFLARE_R2_BUCKET;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-  const r2PublicUrl = process.env.R2_PUBLIC_URL;
+  const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
+  const r2Bucket = getEnv('CLOUDFLARE_R2_BUCKET');
+  const apiToken = getEnv('CLOUDFLARE_API_TOKEN');
+  const r2PublicUrl = getEnv('R2_PUBLIC_URL');
 
   if (!accountId || !r2Bucket || !apiToken) {
     return new Response(
@@ -83,7 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
 export const DELETE: APIRoute = async ({ request }) => {
   const authHeader = request.headers.get('authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  const expectedPass = process.env.ADMIN_PASSWORD;
+  const expectedPass = getEnv('ADMIN_PASSWORD');
 
   if (expectedPass && token !== expectedPass) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -102,9 +110,9 @@ export const DELETE: APIRoute = async ({ request }) => {
   const { fileName, url } = body;
   const targetFile = fileName || (url ? url.split('/').slice(-2).join('/') : '');
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const r2Bucket = process.env.CLOUDFLARE_R2_BUCKET;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
+  const r2Bucket = getEnv('CLOUDFLARE_R2_BUCKET');
+  const apiToken = getEnv('CLOUDFLARE_API_TOKEN');
 
   if (!accountId || !r2Bucket || !apiToken || !targetFile) {
     return new Response(JSON.stringify({ success: true, message: 'Local/no-op delete' }), {

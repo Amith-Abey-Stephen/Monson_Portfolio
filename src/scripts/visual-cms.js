@@ -79,6 +79,55 @@ import {
     if (text) text.textContent = 'All Changes Published'
   }
 
+  /* Hydrate DOM from loaded content model */
+  function hydrateDomFromContent(content) {
+    if (!content) return
+
+    // 1. Text elements
+    document.querySelectorAll('[data-cms-bind]').forEach((el) => {
+      const path = el.getAttribute('data-cms-bind')
+      if (path) {
+        const val = getByPath(content, path)
+        if (val !== undefined && val !== null && typeof val !== 'object') {
+          el.textContent = String(val)
+        }
+      }
+    })
+
+    // 2. Images
+    document.querySelectorAll('[data-cms-image]').forEach((img) => {
+      const path = img.getAttribute('data-cms-image')
+      if (path) {
+        const val = getByPath(content, path)
+        if (val && typeof val === 'string') {
+          img.setAttribute('src', val)
+        }
+      }
+    })
+
+    // 3. Sections
+    if (content.sections) {
+      document.querySelectorAll('section[data-cms-section]').forEach((sec) => {
+        const secName = sec.getAttribute('data-cms-section')
+        if (secName && content.sections[secName] === false) {
+          sec.style.display = 'none'
+        } else {
+          sec.style.display = ''
+        }
+      })
+    }
+  }
+
+  /* Sync all active DOM elements into memory content model */
+  function syncAllBindingsToMemory() {
+    document.querySelectorAll('[data-cms-bind]').forEach((el) => {
+      const path = el.getAttribute('data-cms-bind')
+      if (path) {
+        setByPath(currentContent, path, el.innerText.trim())
+      }
+    })
+  }
+
   /* Initialize visual editing bindings */
   function initTextBindings() {
     const textElements = document.querySelectorAll('[data-cms-bind]')
@@ -372,6 +421,8 @@ import {
     const btnPublish = document.getElementById('cmsBtnPublish')
     if (btnPublish) {
       btnPublish.addEventListener('click', async () => {
+        syncAllBindingsToMemory()
+
         btnPublish.disabled = true
         btnPublish.innerHTML = '⏳ Publishing...'
 
@@ -675,6 +726,7 @@ import {
     const loaded = await loadPortfolioContent()
     if (loaded) {
       currentContent = loaded
+      hydrateDomFromContent(currentContent)
     }
 
     initTextBindings()
