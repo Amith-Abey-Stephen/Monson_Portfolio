@@ -336,7 +336,7 @@ export async function loadPortfolioContent() {
     })
     if (res.ok) {
       const data = await res.json()
-      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+      if (isValidContent(data)) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
         return mergeDeep(DEFAULT_PORTFOLIO_CONTENT, data)
       }
@@ -350,8 +350,10 @@ export async function loadPortfolioContent() {
     const cached = localStorage.getItem(STORAGE_KEY)
     if (cached) {
       const parsed = JSON.parse(cached)
-      if (parsed && typeof parsed === 'object') {
+      if (isValidContent(parsed)) {
         return mergeDeep(DEFAULT_PORTFOLIO_CONTENT, parsed)
+      } else {
+        localStorage.removeItem(STORAGE_KEY)
       }
     }
   } catch (_e) {
@@ -359,6 +361,16 @@ export async function loadPortfolioContent() {
   }
 
   return JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO_CONTENT))
+}
+
+function isValidContent(obj) {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    !Array.isArray(obj) &&
+    !obj.error &&
+    (obj.personal || obj.hero || obj.projects || obj.sections)
+  )
 }
 
 /**

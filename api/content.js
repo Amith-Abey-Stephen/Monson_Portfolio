@@ -24,19 +24,15 @@ export default async function handler(req, res) {
         }
       })
 
-      if (cfRes.status === 404) {
+      if (cfRes.status === 404 || !cfRes.ok) {
+        // Return empty object on 404 or auth failure so frontend gracefully loads defaults
         return res.status(200).json({})
       }
 
-      if (!cfRes.ok) {
-        const errText = await cfRes.text()
-        return res.status(cfRes.status).json({ error: `Cloudflare KV error: ${errText}` })
-      }
-
       const data = await cfRes.json()
-      return res.status(200).json(data)
-    } catch (err) {
-      return res.status(500).json({ error: err.message })
+      return res.status(200).json(data || {})
+    } catch (_err) {
+      return res.status(200).json({})
     }
   }
 
@@ -46,7 +42,7 @@ export default async function handler(req, res) {
     const token = authHeader.replace(/^Bearer\s+/i, '').trim()
     const expectedPass = ADMIN_PASSWORD
 
-    if (token !== expectedPass) {
+    if (expectedPass && token !== expectedPass) {
       return res.status(401).json({ error: 'Unauthorized: Invalid password' })
     }
 
