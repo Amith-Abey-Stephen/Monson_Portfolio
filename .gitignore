@@ -36,8 +36,10 @@ ehthumbs.db
 .env.local
 .env.*.local
 .env.production
+!.env.example
 .dev.vars
-.dev.vars.*
+.dev.vars.local
+!.dev.vars.example
 .wrangler/
 .cloudflare/
 

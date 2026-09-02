@@ -15,12 +15,16 @@
   "keywords": [
     "portfolio",
     "ui-ux",
-    "design",
+    "designer-portfolio",
+    "cms",
+    "cloudflare-kv",
+    "cloudflare-r2",
     "vite",
-    "static-site"
+    "static-site",
+    "template"
   ],
-  "author": "Monson Sunny",
-  "license": "UNLICENSED",
+  "author": "Amith Abey Stephen <amithabeystephen@gmail.com>",
+  "license": "MIT",
   "devDependencies": {
     "sharp": "^0.33.4",
     "svgo": "^4.1.0",
