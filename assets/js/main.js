@@ -801,10 +801,12 @@ import { loadPortfolioContent } from './content-model.js'
       // eslint-disable-next-line no-console
       console.table(checks)
     }
-    // CLS guard: if images failed, log warning once
-    if (imgOk < imgs.length) {
-      console.warn(`[perf] ${imgs.length - imgOk} image(s) failed to load`)
-    }
+    // Listen for actual runtime image loading errors
+    imgs.forEach((img) => {
+      img.addEventListener('error', () => {
+        img.classList.add('img-load-error')
+      })
+    })
   })
 
   /* --- No-JS fallback cleanup --- */
