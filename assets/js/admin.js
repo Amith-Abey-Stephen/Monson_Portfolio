@@ -19,7 +19,11 @@ import {
 ;(() => {
   'use strict'
 
-  const AUTH_KEY = 'portfolio_admin_auth'
+  const AUTH_KEY = import.meta.env?.VITE_AUTH_KEY || 'portfolio_admin_auth'
+  const AUTH_EXPIRY_KEY = import.meta.env?.VITE_AUTH_EXPIRY_KEY || 'portfolio_admin_expiry'
+  const SESSION_TIMEOUT_MINUTES = parseInt(import.meta.env?.VITE_SESSION_TIMEOUT_MINUTES || '15', 10)
+  const INACTIVITY_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000
+  const WARNING_BEFORE_TIMEOUT_MS = parseInt(import.meta.env?.VITE_WARNING_BEFORE_TIMEOUT_MS || '60000', 10)
 
   let currentContent = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO_CONTENT))
   let currentPassword = localStorage.getItem(AUTH_KEY) || ''
@@ -51,16 +55,98 @@ import {
     setTimeout(() => toast.classList.remove('show'), duration)
   }
 
-  // Auth Management
+  // Auth & Session Management (Environment-configurable idle timeout)
+  let lastActivityTime = Date.now()
+  let sessionTimerInterval = null
+
   function initAuth() {
     const authOverlay = $('#authOverlay')
     const authForm = $('#authForm')
     const authPass = $('#adminPass')
     const authError = $('#authError')
     const btnLogout = $('#btnLogout')
+    const sessionWarnModal = $('#sessionWarnModal')
+    const sessionCountdown = $('#sessionCountdown')
+    const btnExtendSession = $('#btnExtendSession')
 
-    if (currentPassword) {
+    // Check if existing session has expired
+    const savedExpiry = parseInt(localStorage.getItem(AUTH_EXPIRY_KEY) || '0', 10)
+    if (currentPassword && savedExpiry && Date.now() > savedExpiry) {
+      logout('Session expired due to inactivity. Please log in again.')
+    } else if (currentPassword) {
       authOverlay.classList.add('hidden')
+      startSessionTimer()
+    }
+
+    function recordActivity() {
+      if (!currentPassword) return
+      lastActivityTime = Date.now()
+      localStorage.setItem(AUTH_EXPIRY_KEY, String(Date.now() + INACTIVITY_TIMEOUT_MS))
+      if (sessionWarnModal && !sessionWarnModal.classList.contains('hidden')) {
+        sessionWarnModal.classList.add('hidden')
+      }
+    }
+
+    function startSessionTimer() {
+      recordActivity()
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval)
+
+      sessionTimerInterval = setInterval(() => {
+        if (!currentPassword) {
+          clearInterval(sessionTimerInterval)
+          return
+        }
+
+        const now = Date.now()
+        const remainingMs = lastActivityTime + INACTIVITY_TIMEOUT_MS - now
+
+        if (remainingMs <= 0) {
+          logout(`Session timed out after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity.`)
+        } else if (remainingMs <= WARNING_BEFORE_TIMEOUT_MS) {
+          if (sessionWarnModal) {
+            sessionWarnModal.classList.remove('hidden')
+            if (sessionCountdown) {
+              sessionCountdown.textContent = Math.ceil(remainingMs / 1000)
+            }
+          }
+        } else {
+          if (sessionWarnModal && !sessionWarnModal.classList.contains('hidden')) {
+            sessionWarnModal.classList.add('hidden')
+          }
+        }
+      }, 1000)
+    }
+
+    function logout(reason = '') {
+      localStorage.removeItem(AUTH_KEY)
+      localStorage.removeItem(AUTH_EXPIRY_KEY)
+      currentPassword = ''
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval)
+      if (sessionWarnModal) sessionWarnModal.classList.add('hidden')
+      authOverlay.classList.remove('hidden')
+      if (authError && reason) authError.textContent = reason
+      showToast('🔒 Workspace locked')
+    }
+
+    // User activity listeners (throttled)
+    let lastThrottled = 0
+    const onUserActivity = () => {
+      const now = Date.now()
+      if (now - lastThrottled > 5000) {
+        lastThrottled = now
+        recordActivity()
+      }
+    }
+
+    ;['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'].forEach((evt) => {
+      window.addEventListener(evt, onUserActivity, { passive: true })
+    })
+
+    if (btnExtendSession) {
+      btnExtendSession.addEventListener('click', () => {
+        recordActivity()
+        showToast('✓ Session extended')
+      })
     }
 
     authForm.addEventListener('submit', async (e) => {
@@ -72,20 +158,19 @@ import {
       if (isValid) {
         currentPassword = pass
         localStorage.setItem(AUTH_KEY, pass)
+        startSessionTimer()
         authOverlay.classList.add('hidden')
         authError.textContent = ''
-        showToast('🔓 Workspace unlocked')
+        authPass.value = ''
+        showToast(`🔓 Workspace unlocked (${SESSION_TIMEOUT_MINUTES}-min idle timeout active)`)
       } else {
-        authError.textContent = 'Invalid password. Check wrangler.toml ADMIN_PASSWORD.'
+        authError.textContent = 'Invalid password. Please try again.'
       }
     })
 
     if (btnLogout) {
       btnLogout.addEventListener('click', () => {
-        localStorage.removeItem(AUTH_KEY)
-        currentPassword = ''
-        authOverlay.classList.remove('hidden')
-        showToast('🔒 Workspace locked')
+        logout('You have locked the workspace.')
       })
     }
   }

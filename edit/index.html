@@ -612,6 +612,20 @@
       </button>
     </div>
 
+    <!-- Session Inactivity Warning Modal -->
+    <div class="auth-overlay hidden" id="sessionWarnModal" style="z-index: 1100">
+      <div class="auth-card" style="max-width: 380px">
+        <div style="font-size: 32px; margin-bottom: 12px">⏳</div>
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px">Session Expiring Soon</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px">
+          You have been inactive. For your security, the CMS will automatically lock in <strong id="sessionCountdown" style="color: var(--accent-gold)">60</strong> seconds.
+        </p>
+        <button type="button" class="btn-admin-primary" id="btnExtendSession" style="width: 100%; justify-content: center">
+          Stay Logged In
+        </button>
+      </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="admin-toast" id="adminToast"></div>
 

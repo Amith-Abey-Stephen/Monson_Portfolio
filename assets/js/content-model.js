@@ -325,9 +325,10 @@ export const DEFAULT_PORTFOLIO_CONTENT = {
   imageArchive: []
 }
 
-const STORAGE_KEY = 'portfolio_content_live'
-const AUTH_KEY = 'portfolio_admin_auth'
-const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000
+const STORAGE_KEY = import.meta.env?.VITE_STORAGE_KEY || 'portfolio_content_live'
+const AUTH_KEY = import.meta.env?.VITE_AUTH_KEY || 'portfolio_admin_auth'
+const RETENTION_DAYS = parseInt(import.meta.env?.VITE_IMAGE_RETENTION_DAYS || '10', 10)
+const TEN_DAYS_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000
 
 /**
  * Tracks a replaced image in the 10-day retention archive
