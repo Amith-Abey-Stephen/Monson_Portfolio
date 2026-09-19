@@ -1,0 +1,264 @@
+import type { SiteContent } from "@/lib/schema";
+
+/**
+ * Fallback content (Monson Sunny — UI/UX Designer).
+ * The database is the source of truth at runtime; this file only seeds
+ * the DB and renders a safe fallback when the DB is unreachable.
+ * Unknown facts (email, phone, metrics, URLs) are left EMPTY on purpose —
+ * the Studio lets the owner fill them in. Nothing here is fabricated.
+ */
+
+export const site = {
+  name: "Monson Sunny",
+  role: "UI/UX Designer",
+  tagline: "UI/UX Designer | Figma | Mobile App",
+  email: "",
+  phoneDisplay: "",
+  phoneHref: "",
+  calendly: "",
+  resumeHref: "",
+  contraHref: "",
+  behanceUrl: "",
+  linkedinUrl: "",
+  heroImage: "",
+  aboutImage: "",
+  ogImage: "",
+};
+
+export const navLinks = [
+  { label: "Home", href: "#hero", id: "hero" },
+  { label: "Work", href: "#projects", id: "projects" },
+  { label: "Skills", href: "#skills", id: "skills" },
+  { label: "Experience", href: "#experience", id: "experience" },
+  { label: "Contact", href: "#contact", id: "contact" },
+];
+
+export const hero = {
+  firstName: "Monson",
+  lastName: "Sunny",
+  title: "UI/UX Designer",
+  subtitle:
+    "UI/UX Designer crafting intuitive mobile apps and web experiences, currently associated with Caxita Tech Solutions.",
+  quote: "I turn ideas into intuitive experiences",
+};
+
+export const clientLogos = ["Caxita Tech Solutions"];
+
+export const logoImages: string[] = [];
+
+export const aboutIntro = {
+  heading: "Design that feels effortless and inspires action",
+  body: "I'm Monson Sunny, a UI/UX Designer associated with Caxita Tech Solutions. With a background in front-end development, I design mobile apps and web experiences that are clear, usable, and pleasant — from early flows to polished, developer-ready interfaces.",
+};
+
+export const journey = {
+  eyebrow: "Learning through every path",
+  heading: "Design journey",
+};
+
+export const stats: SiteContent["stats"] = [];
+
+export const services: SiteContent["services"] = [
+  {
+    index: "01",
+    title: "Mobile App Design",
+    description:
+      "End-to-end app interfaces — user flows, wireframes, and polished UI in Figma, designed for clarity and ease of use.",
+    tags: ["User flows", "Wireframes", "High-fidelity UI"],
+    preview: "",
+  },
+  {
+    index: "02",
+    title: "Web & Dashboard Design",
+    description:
+      "Landing pages and dashboards with clean hierarchy, readable layouts, and consistent components.",
+    tags: ["Landing pages", "Dashboards", "Web apps"],
+    preview: "",
+  },
+  {
+    index: "03",
+    title: "Design Systems & Prototyping",
+    description:
+      "Reusable components, styles, and interactive prototypes that keep designs consistent and handoff smooth.",
+    tags: ["Components", "Prototypes", "Handoff"],
+    preview: "",
+  },
+];
+
+export type Project = {
+  name: string;
+  tag: string;
+  description: string;
+  mockTitle: string;
+  mockSubtitle: string;
+  image: string;
+  accent: string;
+  href: string;
+  behanceUrl: string;
+};
+
+export const projects: Project[] = [
+  {
+    name: "Product Drop Experience",
+    tag: "App Design",
+    description: "Product discovery experience",
+    mockTitle: "Product Drop Experience",
+    mockSubtitle: "Mobile · Product",
+    image: "",
+    accent: "#7CFFB2",
+    href: "#projects",
+    behanceUrl: "",
+  },
+  {
+    name: "Finance Dashboard",
+    tag: "Dashboard",
+    description: "Personal finance overview",
+    mockTitle: "Finance Dashboard",
+    mockSubtitle: "Web · Fintech",
+    image: "",
+    accent: "#FFD84D",
+    href: "#projects",
+    behanceUrl: "",
+  },
+  {
+    name: "Travel Booking Platform",
+    tag: "Web Design",
+    description: "Trips, stays and flights",
+    mockTitle: "Travel Booking Platform",
+    mockSubtitle: "Web · Travel",
+    image: "",
+    accent: "#FFFFFF",
+    href: "#projects",
+    behanceUrl: "",
+  },
+  {
+    name: "AI Chatbot",
+    tag: "App Design",
+    description: "Conversational assistant",
+    mockTitle: "AI Chatbot",
+    mockSubtitle: "Mobile · AI",
+    image: "",
+    accent: "#FFB86B",
+    href: "#projects",
+    behanceUrl: "",
+  },
+  {
+    name: "Car Rental Booking App",
+    tag: "App Design",
+    description: "Rentals in a few taps",
+    mockTitle: "Car Rental Booking App",
+    mockSubtitle: "Mobile · Booking",
+    image: "",
+    accent: "#8EC5FF",
+    href: "#projects",
+    behanceUrl: "",
+  },
+  {
+    name: "Digital Marketing Landing Page",
+    tag: "Web Design",
+    description: "Marketing site design",
+    mockTitle: "Digital Marketing Landing Page",
+    mockSubtitle: "Web · Marketing",
+    image: "",
+    accent: "#D0A8FF",
+    href: "#projects",
+    behanceUrl: "",
+  },
+];
+
+export const galleryItems: { title: string; image: string }[] = [];
+
+export const quote = {
+  text: "Good design is invisible — it simply feels right.",
+  signature: "Monson Sunny",
+};
+
+export const about = {
+  title:
+    "UI/UX Designer with a background in front-end development, focused on mobile apps and web experiences.",
+  body: "I'm Monson Sunny, a UI/UX Designer associated with Caxita Tech Solutions. My work spans product discovery flows, dashboards, booking experiences, and marketing pages — always aiming for interfaces that are intuitive, consistent, and easy to build. Add project case studies, experience, and contact details anytime through the Studio.",
+  tags: ["UI Design", "UX Design", "Mobile Apps", "Figma", "Prototyping"],
+  role: "UI/UX Designer",
+  type: "Caxita Tech Solutions",
+  period: "Present",
+};
+
+export const testimonials: { quote: string; name: string; role: string }[] = [];
+
+export const faqs = [
+  {
+    index: "01",
+    q: "What does a project with you look like?",
+    a: "We start with goals and user flows, move to wireframes, then polished UI in Figma with prototypes. You get organized files that are ready for development handoff.",
+  },
+  {
+    index: "02",
+    q: "Which tools do you use?",
+    a: "Figma for interface design, wireframes, prototypes, and design systems — plus standard handoff practices for developers.",
+  },
+  {
+    index: "03",
+    q: "What do you need from me to start?",
+    a: "A short intro about your product, any existing content or references, and the screens or flows you have in mind. Everything else can be shaped together.",
+  },
+  {
+    index: "04",
+    q: "How can I see more of your work?",
+    a: "Browse the selected projects on this site, and ask for the Behance profile link — it can be added here through the Studio.",
+  },
+];
+
+export const socials = [
+  { label: "Behance", href: "" },
+  { label: "LinkedIn", href: "" },
+  { label: "Email", href: "" },
+  { label: "Resume", href: "" },
+];
+
+export const sections: SiteContent["sections"] = {
+  order: [
+    "hero",
+    "intro",
+    "projects",
+    "skills",
+    "gallery",
+    "quote",
+    "about",
+    "testimonials",
+    "faq",
+    "contact",
+  ],
+  visible: {
+    hero: true,
+    intro: true,
+    projects: true,
+    skills: true,
+    gallery: true,
+    quote: true,
+    about: true,
+    testimonials: true,
+    faq: true,
+    contact: true,
+  },
+};
+
+/** Whole-document fallback used when the DB is unreachable. */
+export const defaultContent: SiteContent = {
+  site,
+  navLinks,
+  hero,
+  clientLogos,
+  logoImages,
+  aboutIntro,
+  journey,
+  stats,
+  services,
+  projects,
+  galleryItems,
+  quote,
+  about,
+  testimonials,
+  faqs,
+  socials,
+  sections,
+};

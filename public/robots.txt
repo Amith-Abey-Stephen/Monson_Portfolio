@@ -1,6 +1,3 @@
-# robots.txt — Monson Sunny
 User-agent: *
 Allow: /
-Disallow: /404.html
-
-Sitemap: https://monsonsunny.com/sitemap.xml
+Sitemap: https://portfolioone.framer.ai/sitemap.xml

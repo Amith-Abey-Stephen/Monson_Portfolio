@@ -1,0 +1,298 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #09090b;
+  --color-bg-alt: #131313;
+  --color-bg-deep: #000000;
+  --color-card: #161616;
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-text-mute: rgba(255, 255, 255, 0.62);
+  --color-text-sub: rgba(255, 255, 255, 0.82);
+  --color-accent: #ff4a1a;
+  --color-cream: #f5f1ea;
+
+  --font-display: var(--font-display-next), "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-body: var(--font-sans-next), "Inter", system-ui, sans-serif;
+  --font-heading: var(--font-display-next), "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-script: var(--font-script-next), "Great Vibes", cursive;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: auto;
+}
+
+body {
+  background: var(--color-bg);
+  color: #fff;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #ff4a1a;
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+}
+
+/* ---------- utilities ---------- */
+.font-script {
+  font-family: var(--font-script);
+}
+
+.text-stroke-ghost {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.14);
+  color: transparent;
+}
+
+.ghost-huge {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.13);
+  user-select: none;
+  pointer-events: none;
+}
+
+.vertical-lines {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(100% / 6 - 1px),
+    rgba(255, 255, 255, 0.07) calc(100% / 6 - 1px),
+    rgba(255, 255, 255, 0.07) calc(100% / 6)
+  );
+}
+
+/* shimmer button (Book Meeting) */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shimmer-btn .shimmer-label {
+  position: relative;
+  z-index: 2;
+}
+.shimmer-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    -75deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.85) 50%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+}
+.shimmer-btn:hover::after {
+  opacity: 1;
+  animation: shimmer-border 1.4s linear infinite;
+}
+@keyframes shimmer-border {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Giant name slow vertical sheen — matches the hero:
+   grey gradient top <-> full white, ~4s loop with holds at each end */
+.name-sheen {
+  background-image: linear-gradient(
+    to bottom,
+    #737373 0%,
+    #c6c6c6 13%,
+    #ffffff 24%,
+    #ffffff 100%
+  );
+  background-size: 100% 200%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: name-sheen 4s ease-in-out infinite;
+}
+@keyframes name-sheen {
+  0%,
+  32% {
+    background-position: 50% 0%;
+  }
+  50%,
+  82% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
+  }
+}
+
+/* "Book Meeting" label wipe — dark band sweeps left -> right across
+   the text every ~2s (~0.6s sweep + pause full-bright) */
+.book-shine {
+  display: inline-block;
+  background-image: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    #ffffff 45%,
+    rgba(255, 255, 255, 0.05) 50%,
+    #ffffff 55%,
+    #ffffff 100%
+  );
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: book-shine 2s linear infinite;
+}
+@keyframes book-shine {
+  0% {
+    background-position: 115% 0;
+  }
+  32% {
+    background-position: -15% 0;
+  }
+  100% {
+    background-position: -15% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name-sheen,
+  .book-shine {
+    animation: none;
+  }
+  .animate-marquee,
+  .animate-marquee-fast,
+  .animate-marquee-rev,
+  .animate-marquee-slow {
+    animation: none;
+  }
+}
+
+/* marquees */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-rev {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+.animate-marquee-fast {
+  animation: marquee 20s linear infinite;
+}
+.animate-marquee-rev {
+  animation: marquee-rev 32s linear infinite;
+}
+.animate-marquee-slow {
+  animation: marquee 48s linear infinite;
+}
+.marquee-paused:hover .animate-marquee,
+.marquee-paused:hover .animate-marquee-fast,
+.marquee-paused:hover .animate-marquee-rev,
+.marquee-paused:hover .animate-marquee-slow,
+.marquee-paused:focus-within .animate-marquee,
+.marquee-paused:focus-within .animate-marquee-fast,
+.marquee-paused:focus-within .animate-marquee-rev,
+.marquee-paused:focus-within .animate-marquee-slow {
+  animation-play-state: paused;
+}
+
+/* consistent, visible keyboard focus everywhere */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* grain */
+.noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+/* hide cursor trail on touch */
+@media (hover: none) {
+  #cursor-trail-canvas {
+    display: none !important;
+  }
+}
+
+@keyframes journey-img-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(24px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes preloader-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

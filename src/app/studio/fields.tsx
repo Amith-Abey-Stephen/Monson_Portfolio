@@ -1,0 +1,249 @@
+"use client";
+
+import { useRef, useState } from "react";
+
+export const inputCls =
+  "mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2.5 text-[14px] text-white placeholder:text-white/30 focus:border-white/35 focus:outline-none";
+
+export function Field({
+  label,
+  value,
+  max,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  value?: string | unknown[];
+  max?: number;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  const len = typeof value === "string" ? value.length : Array.isArray(value) ? value.length : undefined;
+  const over = max !== undefined && len !== undefined && len > max;
+  return (
+    <label className="block">
+      <span className="flex items-baseline justify-between gap-2 text-[13px] font-medium text-white/80">
+        <span>
+          {label}
+          {required && <span className="ml-1 text-red-300">*</span>}
+        </span>
+        {max !== undefined && len !== undefined && (
+          <span className={`shrink-0 tabular-nums text-[12px] ${over ? "text-red-300" : "text-white/40"}`}>
+            {len}/{max}
+          </span>
+        )}
+      </span>
+      {children}
+      {hint && <span className="mt-1 block text-[12px] leading-relaxed text-white/40">{hint}</span>}
+    </label>
+  );
+}
+
+export function Text({
+  value,
+  onChange,
+  max,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  max?: number;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      value={value}
+      maxLength={max}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      className={inputCls}
+    />
+  );
+}
+
+export function Area({
+  value,
+  onChange,
+  max,
+  rows = 3,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  max?: number;
+  rows?: number;
+  placeholder?: string;
+}) {
+  return (
+    <textarea
+      value={value}
+      maxLength={max}
+      rows={rows}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${inputCls} resize-y leading-relaxed`}
+    />
+  );
+}
+
+/**
+ * Image field (S10): URL editing + upload with server-side cover-crop to
+ * the component's aspect ratio, live preview, replace/remove.
+ */
+export function ImageField({
+  value,
+  onChange,
+  aspect,
+  hint,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  aspect?: string;
+  hint?: string;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const upload = async (f: File) => {
+    setUploading(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("file", f);
+      if (aspect) form.append("aspect", aspect);
+      const res = await fetch("/api/uploads", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Upload failed.");
+      onChange(json.url as string);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      {value ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={value}
+          alt="preview"
+          className="mb-2 max-h-40 w-full rounded-lg border border-white/10 bg-black/40 object-contain"
+        />
+      ) : (
+        <p className="mb-2 rounded-lg border border-dashed border-white/15 px-3 py-4 text-center text-[13px] text-white/40">
+          Nothing here yet — upload or paste an image URL.
+        </p>
+      )}
+      <div className="flex gap-2">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://… or /uploads/…"
+          className={`${inputCls} mt-0 flex-1`}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="shrink-0 rounded-lg border border-white/15 bg-white/[0.07] px-3 text-[13px] font-medium text-white hover:bg-white/[0.12] disabled:opacity-50"
+        >
+          {uploading ? "…" : "Upload"}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="shrink-0 rounded-lg border border-white/15 px-3 text-[13px] text-white/60 hover:bg-white/[0.07]"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (f) void upload(f);
+        }}
+      />
+      {aspect && (
+        <p className="mt-1 text-[12px] text-white/40">
+          Saved images are cropped to {aspect} to match the site design.
+        </p>
+      )}
+      {hint && <p className="mt-1 text-[12px] text-white/40">{hint}</p>}
+      {error && (
+        <p role="alert" className="mt-1 text-[12px] text-red-300">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function RowButtons({
+  index,
+  total,
+  onMove,
+  onDelete,
+  onDuplicate,
+}: {
+  index: number;
+  total: number;
+  onMove: (dir: -1 | 1) => void;
+  onDelete?: () => void;
+  onDuplicate?: () => void;
+}) {
+  const btn =
+    "rounded-md border border-white/10 px-2 py-1 text-[12px] text-white/70 hover:bg-white/10 disabled:opacity-30";
+  return (
+    <div className="flex shrink-0 gap-1.5">
+      <button type="button" aria-label="Move up" disabled={index === 0} onClick={() => onMove(-1)} className={btn}>
+        ↑
+      </button>
+      <button
+        type="button"
+        aria-label="Move down"
+        disabled={index === total - 1}
+        onClick={() => onMove(1)}
+        className={btn}
+      >
+        ↓
+      </button>
+      {onDuplicate && (
+        <button type="button" aria-label="Duplicate" onClick={onDuplicate} className={btn}>
+          ⧉
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          aria-label="Delete"
+          onClick={() => {
+            if (window.confirm("Delete this item?")) onDelete();
+          }}
+          className={`${btn} hover:!bg-red-500/20 hover:text-red-200`}
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function move<T>(list: T[], from: number, dir: -1 | 1): T[] {
+  const to = from + dir;
+  if (to < 0 || to >= list.length) return list;
+  const next = [...list];
+  [next[from], next[to]] = [next[to], next[from]];
+  return next;
+}
