@@ -8,7 +8,7 @@
   --color-border: rgba(255, 255, 255, 0.09);
   --color-text-mute: rgba(255, 255, 255, 0.62);
   --color-text-sub: rgba(255, 255, 255, 0.82);
-  --color-accent: #ff4a1a;
+  --color-accent: #a855f7;
   --color-cream: #f5f1ea;
 
   --font-display: var(--font-display-next), "Inter Tight", "Inter", system-ui, sans-serif;
@@ -48,7 +48,7 @@ body {
 }
 
 ::selection {
-  background: #ff4a1a;
+  background: #7c3aed;
   color: #fff;
 }
 

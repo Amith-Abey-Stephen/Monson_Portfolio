@@ -42,7 +42,7 @@ function Card({
         {t.quote}
       </blockquote>
       <figcaption className="relative mt-6 md:mt-8">
-        <div className="size-[52px] overflow-hidden rounded-full bg-gradient-to-br from-orange-300 via-rose-300 to-purple-400">
+        <div className="size-[52px] overflow-hidden rounded-full bg-gradient-to-br from-violet-300 via-rose-300 to-purple-400">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${a.seed}&backgroundColor=${a.bg}`}
@@ -74,7 +74,7 @@ export function Testimonials({
   // FAQ section keeps its designed continuity.
   if (testimonials.length === 0) {
     return (
-      <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0204_40%,#2a070b_52%,#5c1016_65%,#8e1622_78%,#b81f2e_90%,#c81e30_100%)] py-16 sm:py-20 md:py-28">
+      <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_65%,#6d28d9_78%,#7c3aed_90%,#8b5cf6_100%)] py-16 sm:py-20 md:py-28">
         <GridLines />
         <ScrollReveal className="text-center">
           <p aria-hidden className="ghost-huge px-4 text-[22vw] leading-none sm:text-[26vw] md:text-[13vw]">FAQs</p>
@@ -83,7 +83,7 @@ export function Testimonials({
     );
   }
   return (
-    <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0204_40%,#2a070b_52%,#5c1016_65%,#8e1622_78%,#b81f2e_90%,#c81e30_100%)] py-16 sm:py-20 md:py-28">
+    <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_65%,#6d28d9_78%,#7c3aed_90%,#8b5cf6_100%)] py-16 sm:py-20 md:py-28">
       <GridLines />
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-6 md:px-12">
         <TextReveal

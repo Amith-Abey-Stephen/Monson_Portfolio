@@ -7,7 +7,7 @@ import type { SiteContent } from "@/lib/schema";
 import { GridLines, ScrollReveal, MagneticButton } from "./ui";
 
 const TILE_STYLES = [
-  "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400",
+  "bg-gradient-to-br from-purple-600 via-pink-500 to-violet-400",
   "bg-black",
   "bg-[#ea4c89]",
   "bg-[#1a1a1a]",
@@ -97,7 +97,7 @@ export function Contact({
                 target="_blank"
                 className="mt-7 inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-xl bg-[#1c1c1e] px-6 py-4 font-heading text-[15px] font-medium transition-colors hover:bg-[#2a2a2e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:text-[16px] md:mt-8"
               >
-                <Sparkles size={17} className="shrink-0 text-orange-300" aria-hidden /> Hire Me on Contra
+                <Sparkles size={17} className="shrink-0 text-purple-300" aria-hidden /> Hire Me on Contra
               </MagneticButton>
             </ScrollReveal>
           )}

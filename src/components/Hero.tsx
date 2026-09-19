@@ -33,8 +33,8 @@ export function Hero({ data }: { data?: HeroData } = {}) {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/15 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#ff3d0a]/55 via-transparent to-black/45" />
-        <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_70%_20%,rgba(255,60,10,0.35),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#7c3aed]/55 via-transparent to-black/45" />
+        <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_70%_20%,rgba(124,58,237,0.35),transparent_60%)]" />
       </div>
 
       <GridLines />
@@ -101,7 +101,7 @@ export function Hero({ data }: { data?: HeroData } = {}) {
                   target="_blank"
                   className="inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-[10px] border border-white/10 bg-[#111] px-7 py-4 text-[15px] font-medium transition-colors duration-300 hover:border-white/20 hover:bg-[#1b1b1b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:text-[16px]"
                 >
-                  <Sparkles size={17} className="shrink-0 text-orange-300" aria-hidden />
+                  <Sparkles size={17} className="shrink-0 text-purple-300" aria-hidden />
                   Hire Me on Contra
                 </MagneticButton>
               )}

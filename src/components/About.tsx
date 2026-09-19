@@ -281,7 +281,7 @@ export function About({
                 className="aspect-[4/5] w-full object-cover object-[50%_12%] will-change-transform [mask-image:linear-gradient(to_bottom,black_80%,transparent_99%)]"
                 loading="lazy"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-[#ff3d0a]/10" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-[#7c3aed]/10" />
             </motion.div>
           </div>
         )}

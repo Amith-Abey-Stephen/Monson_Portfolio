@@ -14,12 +14,12 @@ export function AboutIntro({
   return (
     <section className="relative overflow-hidden bg-transparent px-5 pb-24 pt-14 sm:px-6 md:px-12 md:pb-44 md:pt-24">
       <GridLines />
-      {/* bottom melt — red canvas mixes into the Projects black.
+      {/* bottom melt — violet canvas mixes into the Projects black.
           Ends in the exact Projects base (#0a0a0c) so the seam
           disappears into a smooth color blend, never a hard cut. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#3a0f06]/55 to-[#0a0a0c] md:h-72"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#2a1650]/55 to-[#0a0a0c] md:h-72"
       />
       <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 items-start gap-6 md:gap-10 lg:grid-cols-2 lg:gap-16">
         <TextReveal

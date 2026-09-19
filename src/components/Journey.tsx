@@ -69,7 +69,7 @@ function JourneyLine({ target }: { target: React.RefObject<HTMLElement | null> }
         <linearGradient id="journey-aurora" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#34ffb5" />
           <stop offset="50%" stopColor="#a855f7" />
-          <stop offset="100%" stopColor="#ffb03a" />
+          <stop offset="100%" stopColor="#e879f9" />
         </linearGradient>
         <filter id="journey-glow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="6" result="blur" />
@@ -222,7 +222,7 @@ export function Journey({
             transition={{ type: "spring", stiffness: 320, damping: 24 }}
             className="-translate-x-[68%] -translate-y-[82%] will-change-transform"
           >
-            <div className="relative aspect-[16/10] w-[440px] overflow-hidden rounded-2xl border border-white/20 shadow-[0_40px_120px_-20px_rgba(255,110,60,0.35)]">
+            <div className="relative aspect-[16/10] w-[440px] overflow-hidden rounded-2xl border border-white/20 shadow-[0_40px_120px_-20px_rgba(168,85,247,0.35)]">
               {services.map((s, i) =>
                 s.preview ? (
                   <motion.img
