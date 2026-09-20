@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 export const inputCls =
   "mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none";
@@ -246,4 +247,61 @@ export function move<T>(list: T[], from: number, dir: -1 | 1): T[] {
   const next = [...list];
   [next[from], next[to]] = [next[to], next[from]];
   return next;
+}
+
+/**
+ * Collapsible list item: thumbnail + title header, full editor inside.
+ * Keeps long lists (projects, services, …) scannable.
+ */
+export function ItemCard({
+  title,
+  badge,
+  thumb,
+  fallback,
+  open,
+  onToggle,
+  actions,
+  children,
+}: {
+  title: string;
+  badge?: string;
+  thumb?: string;
+  fallback?: string;
+  open: boolean;
+  onToggle: () => void;
+  actions: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-stone-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+      <div className="flex items-center gap-1 pr-2">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left hover:bg-stone-50"
+        >
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="size-9 shrink-0 rounded-lg border border-stone-200 object-cover" />
+          ) : (
+            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-stone-900/[0.06] font-heading text-[14px] font-bold text-stone-500">
+              {(fallback ?? title).charAt(0).toUpperCase() || "•"}
+            </span>
+          )}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-semibold text-stone-800">{title}</span>
+            {badge && <span className="block truncate text-[11px] text-stone-400">{badge}</span>}
+          </span>
+          <ChevronDown
+            size={15}
+            aria-hidden
+            className={`shrink-0 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+        {actions}
+      </div>
+      {open && <div className="space-y-3 border-t border-stone-100 px-3 py-3">{children}</div>}
+    </div>
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   AlignLeft,
   Briefcase,
@@ -15,8 +15,11 @@ import {
   Map,
   MessagesSquare,
   Monitor,
+  PanelRight,
+  PanelRightClose,
   Quote,
   Redo2,
+  Search,
   Send,
   Settings,
   Smartphone,
@@ -31,7 +34,7 @@ import {
 import type { SectionKey, SiteContent } from "@/lib/schema";
 import { LIMITS, MAX_COUNT, SECTION_KEYS, SECTION_LABELS } from "@/lib/schema";
 import { autoDerivedKeywords } from "@/lib/seo";
-import { Area, Field, ImageField, RowButtons, Text, move } from "./fields";
+import { Area, Field, ImageField, ItemCard, RowButtons, Text, move } from "./fields";
 import { Hero } from "@/components/Hero";
 import { AboutIntro } from "@/components/AboutIntro";
 import { Projects } from "@/components/Projects";
@@ -105,7 +108,7 @@ const PRESETS: PreviewPreset[] = [
  * then the whole thing is scaled to fit the panel — like the reference
  * studio's zoomed preview. The inner page scrolls natively.
  */
-function ScaledPreview({ designWidth, children }: { designWidth: number; children: React.ReactNode }) {
+function ScaledPreview({ designWidth, children, onScale }: { designWidth: number; children: React.ReactNode; onScale?: (pct: number) => void }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 800, h: 600 });
 
@@ -117,12 +120,14 @@ function ScaledPreview({ designWidth, children }: { designWidth: number; childre
       const w = Math.max(1, Math.round(r.width));
       const h = Math.max(1, Math.round(r.height));
       setBox((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+      onScale?.(Math.max(1, Math.round((w / designWidth) * 100)));
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [designWidth]);
 
   const scale = box.w / designWidth;
   return (
@@ -231,6 +236,46 @@ const addBtnCls =
 const iconBtnCls =
   "grid size-9 place-items-center rounded-xl border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 disabled:opacity-30";
 
+const TOP_KEYS = [
+  "site",
+  "navLinks",
+  "hero",
+  "clientLogos",
+  "logoImages",
+  "aboutIntro",
+  "journey",
+  "stats",
+  "services",
+  "projects",
+  "galleryItems",
+  "quote",
+  "about",
+  "testimonials",
+  "faqs",
+  "socials",
+  "seo",
+  "sections",
+] as const;
+
+const TAB_KEYS: Record<TabId, readonly string[]> = {
+  overview: [],
+  sections: ["sections"],
+  hero: ["hero"],
+  intro: ["aboutIntro"],
+  journey: ["journey", "stats", "services"],
+  work: ["projects"],
+  gallery: ["galleryItems"],
+  quote: ["quote"],
+  about: ["about"],
+  testimonials: ["testimonials"],
+  faq: ["faqs"],
+  contact: ["site", "socials", "navLinks"],
+  "site-settings": ["site", "clientLogos", "logoImages"],
+  seo: ["seo"],
+  publish: [],
+  history: [],
+};
+
 export function StudioApp({
   initial,
   publishedInitial,
@@ -261,8 +306,20 @@ export function StudioApp({
   const [version, setVersion] = useState(meta.version);
   const [publishedAt, setPublishedAt] = useState<string | null>(meta.publishedAt);
   const [newKeyword, setNewKeyword] = useState("");
+  const [filter, setFilter] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
   const firstRender = useRef(true);
+  const filterRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const isOpen = (list: string, i: number) => openMap[`${list}:${i}`] ?? i === 0;
+  const toggleOpen = (list: string, i: number) =>
+    setOpenMap((m) => {
+      const key = `${list}:${i}`;
+      return { ...m, [key]: !(m[key] ?? i === 0) };
+    });
 
   const patch = (fn: (d: SiteContent) => void) => dispatch({ type: "patch", fn });
   const undo = () => dispatch({ type: "undo" });
@@ -271,6 +328,21 @@ export function StudioApp({
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(publishedSnap),
     [draft, publishedSnap]
+  );
+
+  const changedKeys = useMemo(
+    () =>
+      TOP_KEYS.filter(
+        (k) =>
+          JSON.stringify((draft as Record<string, unknown>)[k]) !==
+          JSON.stringify((publishedSnap as Record<string, unknown>)[k])
+      ),
+    [draft, publishedSnap]
+  );
+
+  const tabDirty = (id: TabId) => TAB_KEYS[id].some((k) => (changedKeys as readonly string[]).includes(k));
+  const dirtyTabs = TABS.filter(
+    (t) => !["overview", "publish", "history"].includes(t.id) && tabDirty(t.id)
   );
 
   // Autosave: debounce, show Saving/Saved/Error, never touch published.
@@ -296,7 +368,7 @@ export function StudioApp({
     return () => clearTimeout(t);
   }, [draft]);
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       const res = await fetch("/api/content?scope=history");
       if (res.ok) {
@@ -304,9 +376,9 @@ export function StudioApp({
         setHistory(json.history as HistoryEntry[]);
       }
     } catch {}
-  };
+  }, []);
 
-  const publish = async () => {
+  const publish = useCallback(async () => {
     setPublishing(true);
     setPublishMsg("");
     try {
@@ -323,7 +395,29 @@ export function StudioApp({
     } finally {
       setPublishing(false);
     }
-  };
+  }, [draft, loadHistory]);
+
+  // Shortcuts: ⌘/Ctrl+Enter publish · ⌘/Ctrl+Z undo · ⇧⌘Z redo · / search.
+  // Typing inside fields keeps native behavior.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      const typing = Boolean(t.closest("input, textarea, select") || t.isContentEditable);
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "enter") {
+        e.preventDefault();
+        void publish();
+      } else if (mod && e.key.toLowerCase() === "z" && !typing) {
+        e.preventDefault();
+        dispatch({ type: e.shiftKey ? "redo" : "undo" });
+      } else if (e.key === "/" && !typing && !mod) {
+        e.preventDefault();
+        filterRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [publish]);
 
   const restore = async (id: number) => {
     if (!window.confirm("Restore this version? Current published content will be archived first.")) return;
@@ -384,7 +478,18 @@ export function StudioApp({
         </span>
         <span className="text-[14px] font-bold text-stone-900">Content studio</span>
       </div>
-      {TABS.map((t) => (
+      <div className="relative mb-1 hidden shrink-0 lg:block">
+        <Search size={14} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+        <input
+          ref={filterRef}
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Search sections…  ( / )"
+          aria-label="Search sections"
+          className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-8 pr-3 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+        />
+      </div>
+      {TABS.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
         <button
           key={t.id}
           onClick={() => setTab(t.id)}
@@ -395,6 +500,9 @@ export function StudioApp({
         >
           <t.Icon size={16} className="shrink-0" aria-hidden />
           {t.label}
+          {tabDirty(t.id) && (
+            <span aria-label="Has unpublished changes" title="Has unpublished changes" className={`ml-auto size-1.5 shrink-0 rounded-full ${tab === t.id ? "bg-amber-300" : "bg-amber-500"}`} />
+          )}
         </button>
       ))}
       <div className="mt-1 hidden border-t border-stone-200 pt-3 lg:block">
@@ -405,6 +513,7 @@ export function StudioApp({
         >
           Sign out
         </button>
+        <p className="mt-2 px-3 text-[11px] leading-relaxed text-stone-400">⌘↵ publish · ⌘Z undo · / search</p>
       </div>
     </>
   );
@@ -426,15 +535,16 @@ export function StudioApp({
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium ${
                 dirty ? "bg-red-500/10 text-red-600" : "bg-green-600/10 text-green-700"
               }`}
+              title={dirty ? `Changed: ${changedKeys.join(", ")}` : "Draft matches published"}
             >
               {dirty && <span aria-hidden className="size-1.5 rounded-full bg-red-500" />}
-              {dirty ? "Unpublished changes" : "Everything is published"}
+              {dirty ? `Unpublished changes${changedKeys.length > 0 ? ` (${changedKeys.length})` : ""}` : "Everything is published"}
             </span>
             <button
               onClick={undo}
               disabled={editor.past.length === 0}
-              aria-label="Undo"
-              title="Undo"
+              aria-label="Undo (⌘Z)"
+              title="Undo (⌘Z)"
               className={iconBtnCls}
             >
               <Undo2 size={16} />
@@ -442,11 +552,19 @@ export function StudioApp({
             <button
               onClick={redo}
               disabled={editor.future.length === 0}
-              aria-label="Redo"
-              title="Redo"
+              aria-label="Redo (⇧⌘Z)"
+              title="Redo (⇧⌘Z)"
               className={iconBtnCls}
             >
               <Redo2 size={16} />
+            </button>
+            <button
+              onClick={() => setPreviewOpen((v) => !v)}
+              aria-label={previewOpen ? "Hide preview" : "Show preview"}
+              title={previewOpen ? "Hide preview" : "Show preview"}
+              className={`${iconBtnCls} hidden lg:grid`}
+            >
+              {previewOpen ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
             </button>
             <a
               href="/"
@@ -487,7 +605,7 @@ export function StudioApp({
         )}
       </header>
 
-      <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-0 lg:grid-cols-[200px_minmax(0,400px)_minmax(0,1fr)]">
+      <div className={`mx-auto grid max-w-[1600px] grid-cols-1 gap-0 ${previewOpen ? "lg:grid-cols-[200px_minmax(0,400px)_minmax(0,1fr)]" : "lg:grid-cols-[200px_minmax(0,1fr)]"}`}>
         {/* sidebar */}
         <aside className={`${view === "preview" ? "hidden" : ""} lg:block`}>
           <nav aria-label="Studio sections" className="flex gap-1 overflow-x-auto border-b border-stone-200/80 px-3 py-2 lg:sticky lg:top-[57px] lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:p-3">
@@ -496,7 +614,7 @@ export function StudioApp({
         </aside>
 
         {/* editor */}
-        <main className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80`}>
+        <main className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[780px] lg:border-r-0"}`}>
           {tab === "overview" && (
             <section className="space-y-4">
               <div>
@@ -531,6 +649,25 @@ export function StudioApp({
                 Pick a section from the menu to edit it. Everything you type saves to your draft automatically — the
                 live site only changes when you press <strong className="text-stone-900">Publish</strong>.
               </p>
+              {dirtyTabs.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                    Changed sections ({dirtyTabs.length})
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {dirtyTabs.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setTab(t.id)}
+                        className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-[12px] font-medium text-amber-800 hover:bg-amber-100"
+                      >
+                        <t.Icon size={13} aria-hidden />
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setTab("sections")}
@@ -707,9 +844,15 @@ export function StudioApp({
               </div>
               {draft.services.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
               {draft.services.map((s, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[13px] font-semibold text-stone-600">Service {s.index}</span>
+                <ItemCard
+                  key={i}
+                  title={s.title || `Service ${s.index}`}
+                  badge={`Service ${s.index}${s.tags.length > 0 ? ` · ${s.tags.slice(0, 3).join(", ")}` : ""}`}
+                  thumb={s.preview}
+                  fallback={s.title}
+                  open={isOpen("services", i)}
+                  onToggle={() => toggleOpen("services", i)}
+                  actions={
                     <RowButtons
                       index={i}
                       total={draft.services.length}
@@ -722,7 +865,8 @@ export function StudioApp({
                         })
                       }
                     />
-                  </div>
+                  }
+                >
                   <div className="space-y-3">
                     <Field label="Title" value={s.title} max={LIMITS.service.title} required>
                       <Text value={s.title} max={LIMITS.service.title} onChange={(v) => patch((d) => { d.services[i].title = v; })} />
@@ -735,7 +879,7 @@ export function StudioApp({
                       <ImageField value={s.preview} aspect="16/10" onChange={(v) => patch((d) => { d.services[i].preview = v; })} />
                     </Field>
                   </div>
-                </div>
+                </ItemCard>
               ))}
             </section>
           )}
@@ -768,9 +912,15 @@ export function StudioApp({
               </div>
               {draft.projects.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — the Work section stays hidden until you add one.</p>}
               {draft.projects.map((p, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="truncate text-[13px] font-semibold text-stone-600">{p.name || `Project ${i + 1}`}</span>
+                <ItemCard
+                  key={i}
+                  title={p.name || `Project ${i + 1}`}
+                  badge={p.tag || p.description}
+                  thumb={p.image}
+                  fallback={p.name}
+                  open={isOpen("projects", i)}
+                  onToggle={() => toggleOpen("projects", i)}
+                  actions={
                     <RowButtons
                       index={i}
                       total={draft.projects.length}
@@ -783,7 +933,8 @@ export function StudioApp({
                         })
                       }
                     />
-                  </div>
+                  }
+                >
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <Field label="Name" value={p.name} max={LIMITS.project.name} required>
@@ -832,7 +983,7 @@ export function StudioApp({
                       </div>
                     </Field>
                   </div>
-                </div>
+                </ItemCard>
               ))}
             </section>
           )}
@@ -852,16 +1003,23 @@ export function StudioApp({
               <p className="text-[12px] text-stone-400">Needs 3+ images with URLs — fewer hides the section publicly.</p>
               {draft.galleryItems.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
               {draft.galleryItems.map((g, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="truncate text-[13px] font-semibold text-stone-600">{g.title || `Image ${i + 1}`}</span>
+                <ItemCard
+                  key={i}
+                  title={g.title || `Image ${i + 1}`}
+                  badge={`Image ${i + 1} of ${draft.galleryItems.length}`}
+                  thumb={g.image}
+                  fallback={g.title}
+                  open={isOpen("gallery", i)}
+                  onToggle={() => toggleOpen("gallery", i)}
+                  actions={
                     <RowButtons
                       index={i}
                       total={draft.galleryItems.length}
                       onMove={(dir) => patch((d) => { d.galleryItems = move(d.galleryItems, i, dir); })}
                       onDelete={() => patch((d) => { d.galleryItems.splice(i, 1); })}
                     />
-                  </div>
+                  }
+                >
                   <div className="space-y-3">
                     <Field label="Title" value={g.title} max={LIMITS.gallery.title}>
                       <Text value={g.title} max={LIMITS.gallery.title} onChange={(v) => patch((d) => { d.galleryItems[i].title = v; })} />
@@ -870,7 +1028,7 @@ export function StudioApp({
                       <ImageField value={g.image} aspect="16/10" onChange={(v) => patch((d) => { d.galleryItems[i].image = v; })} />
                     </Field>
                   </div>
-                </div>
+                </ItemCard>
               ))}
             </section>
           )}
@@ -923,16 +1081,22 @@ export function StudioApp({
               </div>
               {draft.testimonials.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — the marquee stays hidden until you add one.</p>}
               {draft.testimonials.map((t, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="truncate text-[13px] font-semibold text-stone-600">{t.name || `Testimonial ${i + 1}`}</span>
+                <ItemCard
+                  key={i}
+                  title={t.name || `Testimonial ${i + 1}`}
+                  badge={t.role}
+                  fallback={t.name}
+                  open={isOpen("testimonials", i)}
+                  onToggle={() => toggleOpen("testimonials", i)}
+                  actions={
                     <RowButtons
                       index={i}
                       total={draft.testimonials.length}
                       onMove={(dir) => patch((d) => { d.testimonials = move(d.testimonials, i, dir); })}
                       onDelete={() => patch((d) => { d.testimonials.splice(i, 1); })}
                     />
-                  </div>
+                  }
+                >
                   <div className="space-y-3">
                     <Field label="Quote" value={t.quote} max={LIMITS.testimonial.quote} required>
                       <Area value={t.quote} max={LIMITS.testimonial.quote} rows={3} onChange={(v) => patch((d) => { d.testimonials[i].quote = v; })} />
@@ -946,7 +1110,7 @@ export function StudioApp({
                       </Field>
                     </div>
                   </div>
-                </div>
+                </ItemCard>
               ))}
             </section>
           )}
@@ -973,16 +1137,22 @@ export function StudioApp({
               </div>
               {draft.faqs.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
               {draft.faqs.map((f, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="truncate text-[13px] font-semibold text-stone-600">{f.q || `Question ${i + 1}`}</span>
+                <ItemCard
+                  key={i}
+                  title={f.q || `Question ${i + 1}`}
+                  badge={`Q${i + 1}`}
+                  fallback={f.q}
+                  open={isOpen("faqs", i)}
+                  onToggle={() => toggleOpen("faqs", i)}
+                  actions={
                     <RowButtons
                       index={i}
                       total={draft.faqs.length}
                       onMove={(dir) => patch((d) => { d.faqs = move(d.faqs, i, dir); })}
                       onDelete={() => patch((d) => { d.faqs.splice(i, 1); })}
                     />
-                  </div>
+                  }
+                >
                   <div className="space-y-3">
                     <Field label="Question" value={f.q} max={LIMITS.faq.q} required>
                       <Text value={f.q} max={LIMITS.faq.q} onChange={(v) => patch((d) => { d.faqs[i].q = v; })} />
@@ -991,7 +1161,7 @@ export function StudioApp({
                       <Area value={f.a} max={LIMITS.faq.a} rows={3} onChange={(v) => patch((d) => { d.faqs[i].a = v; })} />
                     </Field>
                   </div>
-                </div>
+                </ItemCard>
               ))}
             </section>
           )}
@@ -1315,6 +1485,25 @@ export function StudioApp({
               >
                 {publishing ? "Publishing…" : `Publish draft as v${version + 1}`}
               </button>
+              {dirtyTabs.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                    Going live in v{version + 1} ({dirtyTabs.length} section{dirtyTabs.length === 1 ? "" : "s"})
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {dirtyTabs.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setTab(t.id)}
+                        className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 hover:bg-stone-100"
+                      >
+                        <t.Icon size={13} aria-hidden />
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {publishMsg && (
                 <p aria-live="polite" className="text-[13px] font-medium text-green-700">
                   {publishMsg}
@@ -1352,11 +1541,11 @@ export function StudioApp({
 
         {/* live preview — fixed corner window; the draft site scrolls
             inside the frame only, never with the page */}
-        <div className={`${view === "edit" ? "hidden" : ""} min-w-0 border-t border-stone-200/80 lg:sticky lg:top-[57px] lg:block lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
+        <div className={`${view === "edit" ? "hidden" : ""} ${previewOpen ? "lg:block" : "lg:hidden"} min-w-0 border-t border-stone-200/80 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
           <div className="flex h-full flex-col">
           <div className="border-b border-stone-200/80 bg-[#f4f2ec] px-3 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-              Live preview · {preset.dims}
+              Live preview · {preset.dims}{zoom ? ` · ${zoom}%` : ""}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <select
@@ -1390,7 +1579,7 @@ export function StudioApp({
             </div>
           </div>
           <div className="studio-preview-dots min-h-0 h-[70vh] flex-1 p-2 sm:p-5 lg:h-auto">
-            <ScaledPreview designWidth={preset.designWidth}>
+            <ScaledPreview designWidth={preset.designWidth} onScale={setZoom}>
               {preset.id === "laptop" && (
                 <div className="flex items-center gap-1.5 border-b border-stone-200 bg-stone-100 px-3.5 py-2.5" aria-hidden>
                   <span className="size-2.5 rounded-full bg-[#ff5f57]" />
