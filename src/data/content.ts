@@ -15,9 +15,9 @@ export const site = {
   email: "monsonsunny2000@gmail.com",
   phoneDisplay: "+91 7907654850",
   phoneHref: "tel:+917907654850",
-  calendly: "",
-  resumeHref: "",
-  contraHref: "",
+  calendly: "#",
+  resumeHref: "#",
+  contraHref: "#",
   behanceUrl: "",
   linkedinUrl: "",
   heroImage: "",
@@ -69,7 +69,8 @@ export const services: SiteContent["services"] = [
     description:
       "End-to-end app interfaces — user flows, wireframes, and polished UI in Figma, designed for clarity and ease of use.",
     tags: ["User flows", "Wireframes", "High-fidelity UI"],
-    preview: "",
+    preview:
+      "https://framerusercontent.com/images/D5to85TmmFI4rAuvfbNqLXriSc.png?width=1448&height=1086",
   },
   {
     index: "02",
@@ -77,7 +78,8 @@ export const services: SiteContent["services"] = [
     description:
       "Landing pages and dashboards with clean hierarchy, readable layouts, and consistent components.",
     tags: ["Landing pages", "Dashboards", "Web apps"],
-    preview: "",
+    preview:
+      "https://framerusercontent.com/images/nqWPDqP2Irs65djTJlJLtKJ5SI.webp?width=1448&height=1086",
   },
   {
     index: "03",
@@ -85,7 +87,8 @@ export const services: SiteContent["services"] = [
     description:
       "Reusable components, styles, and interactive prototypes that keep designs consistent and handoff smooth.",
     tags: ["Components", "Prototypes", "Handoff"],
-    preview: "",
+    preview:
+      "https://framerusercontent.com/images/szufef32UqXtohOmXWbnPWk1RDc.webp?width=1339&height=1080",
   },
   {
     index: "04",
@@ -93,7 +96,8 @@ export const services: SiteContent["services"] = [
     description:
       "Faster, sharper workflows using Figma AI, Claude, and generative design tools — from assisted research to optimized user flows.",
     tags: ["Figma AI", "Claude", "UX optimization"],
-    preview: "",
+    preview:
+      "https://framerusercontent.com/images/CAnTuyC7rYGbO1sbhC8LNj6E.jpg?width=1080&height=1080",
   },
 ];
 
@@ -178,7 +182,58 @@ export const projects: Project[] = [
   },
 ];
 
-export const galleryItems: { title: string; image: string }[] = [];
+export const galleryItems: { title: string; image: string }[] = [
+  {
+    title: "Build B2B growth that ends in purchase orders",
+    image:
+      "https://framerusercontent.com/images/Ft5E6vbXEzPW0iVTukukbkCuMM.png?width=1172&height=852",
+  },
+  {
+    title: "The Beyond Ordinary",
+    image:
+      "https://framerusercontent.com/images/4TOaudXsxkFFwu3h7hRGuBr474g.png?width=1448&height=1086",
+  },
+  {
+    title: "Build the Next Era of Web3 Innovation",
+    image:
+      "https://framerusercontent.com/images/szufef32UqXtohOmXWbnPWk1RDc.webp?width=1339&height=1080",
+  },
+  {
+    title: "Smarter Finance. Stronger Future.",
+    image:
+      "https://framerusercontent.com/images/CAnTuyC7rYGbO1sbhC8LNj6E.jpg?width=1080&height=1080",
+  },
+  {
+    title: "Panasonic — Light the future",
+    image:
+      "https://framerusercontent.com/images/am0JIL2cCzcIYLmZLvS6WH9le3w.jpg?width=2048&height=1529",
+  },
+  {
+    title: "Power Decisions. Drive Real Outcomes.",
+    image:
+      "https://framerusercontent.com/images/D5to85TmmFI4rAuvfbNqLXriSc.png?width=1448&height=1086",
+  },
+  {
+    title: "Solar Power",
+    image:
+      "https://framerusercontent.com/images/nqWPDqP2Irs65djTJlJLtKJ5SI.webp?width=1448&height=1086",
+  },
+  {
+    title: "Advanced Web3 Solutions Built for the Future",
+    image:
+      "https://framerusercontent.com/images/b4CY8gkPahGjizIhAciARATwzlk.png?width=1448&height=1086",
+  },
+  {
+    title: "Work smarter, not harder. All in one workspace.",
+    image:
+      "https://framerusercontent.com/images/oRhHTzpqddTThlSWiKtFphEd21E.png?width=1448&height=1086",
+  },
+  {
+    title: "Ethereal Mind",
+    image:
+      "https://framerusercontent.com/images/8fO9XaNyKpuVdGGfeDDRzGUgInY.png?width=1536&height=1024",
+  },
+];
 
 export const quote = {
   text: "Good design is invisible — it simply feels right.",
@@ -195,7 +250,44 @@ export const about = {
   period: "2023–2026",
 };
 
-export const testimonials: { quote: string; name: string; role: string }[] = [];
+export const testimonials: { quote: string; name: string; role: string }[] = [
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "LAYNE MORGAN",
+    role: "COMMERCIAL DIRECTOR, SNAPPLE",
+  },
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "ANNA KORHONEN",
+    role: "DESIGN DIRECTOR, GIGGLE",
+  },
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "TIMOTHY RODGERS",
+    role: "HEAD OF PROJECTS, MICROSHAFT",
+  },
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "RICK BELLANTE",
+    role: "PRODUCT MANAGER, NEXUSGATE",
+  },
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "JOSH STEVENS",
+    role: "CREATIVE DIRECTOR, NETFLUX",
+  },
+  {
+    quote:
+      "Mark transformed Microshaft's brand with his visionary design. His creativity and attention to detail brought our ideas to life, exceeding all expectations.",
+    name: "ANITA HOFFMANN",
+    role: "LEAD UX DESIGNER, BETA",
+  },
+];
 
 export const faqs = [
   {
@@ -221,10 +313,10 @@ export const faqs = [
 ];
 
 export const socials = [
-  { label: "Behance", href: "" },
-  { label: "LinkedIn", href: "" },
+  { label: "Behance", href: "#" },
+  { label: "LinkedIn", href: "#" },
   { label: "Email", href: "mailto:monsonsunny2000@gmail.com" },
-  { label: "Resume", href: "" },
+  { label: "Resume", href: "#" },
 ];
 
 export const sections: SiteContent["sections"] = {
