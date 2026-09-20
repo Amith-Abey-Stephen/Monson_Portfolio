@@ -23,6 +23,8 @@ export const site = {
   heroImage: "",
   aboutImage: "",
   ogImage: "",
+  favicon: "",
+  copyrightNotice: "",
 };
 
 export const navLinks = [
@@ -319,6 +321,17 @@ export const socials = [
   { label: "Resume", href: "#" },
 ];
 
+export const seo: SiteContent["seo"] = {
+  title: "",
+  description: "",
+  customKeywords: [],
+  twitterHandle: "",
+  canonicalUrl: "",
+  googleSiteVerification: "",
+  analyticsId: "",
+  noIndex: false,
+};
+
 export const sections: SiteContent["sections"] = {
   order: [
     "hero",
@@ -364,5 +377,6 @@ export const defaultContent: SiteContent = {
   testimonials,
   faqs,
   socials,
+  seo,
   sections,
 };

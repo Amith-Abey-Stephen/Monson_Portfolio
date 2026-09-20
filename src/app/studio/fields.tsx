@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 export const inputCls =
-  "mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2.5 text-[14px] text-white placeholder:text-white/30 focus:border-white/35 focus:outline-none";
+  "mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none";
 
 export function Field({
   label,
@@ -24,19 +24,19 @@ export function Field({
   const over = max !== undefined && len !== undefined && len > max;
   return (
     <label className="block">
-      <span className="flex items-baseline justify-between gap-2 text-[13px] font-medium text-white/80">
+      <span className="flex items-baseline justify-between gap-2 text-[13px] font-semibold text-stone-800">
         <span>
           {label}
-          {required && <span className="ml-1 text-red-300">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </span>
         {max !== undefined && len !== undefined && (
-          <span className={`shrink-0 tabular-nums text-[12px] ${over ? "text-red-300" : "text-white/40"}`}>
+          <span className={`shrink-0 font-normal tabular-nums text-[12px] ${over ? "text-red-500" : "text-stone-400"}`}>
             {len}/{max}
           </span>
         )}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-[12px] leading-relaxed text-white/40">{hint}</span>}
+      {hint && <span className="mt-1 block text-[12px] leading-relaxed text-stone-400">{hint}</span>}
     </label>
   );
 }
@@ -89,7 +89,7 @@ export function Area({
 }
 
 /**
- * Image field (S10): URL editing + upload with server-side cover-crop to
+ * Image field: URL editing + upload with server-side cover-crop to
  * the component's aspect ratio, live preview, replace/remove.
  */
 export function ImageField({
@@ -132,10 +132,10 @@ export function ImageField({
         <img
           src={value}
           alt="preview"
-          className="mb-2 max-h-40 w-full rounded-lg border border-white/10 bg-black/40 object-contain"
+          className="mb-2 max-h-40 w-full rounded-xl border border-stone-200 bg-stone-100 object-contain"
         />
       ) : (
-        <p className="mb-2 rounded-lg border border-dashed border-white/15 px-3 py-4 text-center text-[13px] text-white/40">
+        <p className="mb-2 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-[13px] text-stone-400">
           Nothing here yet — upload or paste an image URL.
         </p>
       )}
@@ -150,7 +150,7 @@ export function ImageField({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="shrink-0 rounded-lg border border-white/15 bg-white/[0.07] px-3 text-[13px] font-medium text-white hover:bg-white/[0.12] disabled:opacity-50"
+          className="shrink-0 rounded-full border border-stone-200 bg-white px-4 text-[13px] font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
         >
           {uploading ? "…" : "Upload"}
         </button>
@@ -158,7 +158,7 @@ export function ImageField({
           <button
             type="button"
             onClick={() => onChange("")}
-            className="shrink-0 rounded-lg border border-white/15 px-3 text-[13px] text-white/60 hover:bg-white/[0.07]"
+            className="shrink-0 rounded-full border border-stone-200 bg-white px-4 text-[13px] text-stone-500 hover:bg-stone-100"
           >
             Remove
           </button>
@@ -176,13 +176,13 @@ export function ImageField({
         }}
       />
       {aspect && (
-        <p className="mt-1 text-[12px] text-white/40">
+        <p className="mt-1 text-[12px] text-stone-400">
           Saved images are cropped to {aspect} to match the site design.
         </p>
       )}
-      {hint && <p className="mt-1 text-[12px] text-white/40">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-stone-400">{hint}</p>}
       {error && (
-        <p role="alert" className="mt-1 text-[12px] text-red-300">
+        <p role="alert" className="mt-1 text-[12px] text-red-600">
           {error}
         </p>
       )}
@@ -204,7 +204,7 @@ export function RowButtons({
   onDuplicate?: () => void;
 }) {
   const btn =
-    "rounded-md border border-white/10 px-2 py-1 text-[12px] text-white/70 hover:bg-white/10 disabled:opacity-30";
+    "rounded-lg border border-stone-200 bg-white px-2 py-1 text-[12px] text-stone-500 hover:bg-stone-100 disabled:opacity-30";
   return (
     <div className="flex shrink-0 gap-1.5">
       <button type="button" aria-label="Move up" disabled={index === 0} onClick={() => onMove(-1)} className={btn}>
@@ -231,7 +231,7 @@ export function RowButtons({
           onClick={() => {
             if (window.confirm("Delete this item?")) onDelete();
           }}
-          className={`${btn} hover:!bg-red-500/20 hover:text-red-200`}
+          className={`${btn} hover:!bg-red-50 hover:text-red-600`}
         >
           ✕
         </button>

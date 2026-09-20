@@ -19,6 +19,9 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
 
     // anchor scrolling via lenis
     const onClick = (e: MouseEvent) => {
+      // Studio preview frame handles its own anchors natively —
+      // never hijack clicks inside it to scroll the outer page.
+      if ((e.target as HTMLElement).closest("[data-studio-preview]")) return;
       const a = (e.target as HTMLElement).closest('a[href^="#"]');
       if (!a) return;
       const id = a.getAttribute("href");

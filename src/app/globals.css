@@ -63,6 +63,13 @@ body {
   border-radius: 99px;
 }
 
+/* ---------- studio-only ---------- */
+.studio-preview-dots {
+  background-color: #e8e6df;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
 /* ---------- utilities ---------- */
 .font-script {
   font-family: var(--font-script);

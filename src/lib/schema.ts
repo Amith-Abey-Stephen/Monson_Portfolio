@@ -18,6 +18,8 @@ export const LIMITS = {
   nav: { label: 30, href: 60 },
   service: { title: 80, description: 500, preview: 1000 },
   stat: { label: 80, value: 16, suffix: 8 },
+  seo: { title: 70, description: 200, keyword: 60, handle: 40, url: 500, verification: 200, analytics: 40 },
+  copyright: 120,
 } as const;
 
 export const MAX_COUNT = {
@@ -33,6 +35,7 @@ export const MAX_COUNT = {
   testimonials: 12,
   faqs: 12,
   socials: 8,
+  customKeywords: 20,
 } as const;
 
 const urlOrEmpty = (max: number) =>
@@ -145,6 +148,8 @@ export const siteContentSchema = z.object({
     heroImage: imageOrEmpty(LIMITS.site.image),
     aboutImage: imageOrEmpty(LIMITS.site.image),
     ogImage: imageOrEmpty(LIMITS.site.image),
+    favicon: imageOrEmpty(LIMITS.site.image).optional().default(""),
+    copyrightNotice: z.string().max(LIMITS.copyright).optional().default(""),
   }),
   navLinks: z.array(navLinkSchema).max(MAX_COUNT.navLinks),
   hero: z.object({
@@ -183,6 +188,31 @@ export const siteContentSchema = z.object({
   testimonials: z.array(testimonialSchema).max(MAX_COUNT.testimonials),
   faqs: z.array(faqSchema).max(MAX_COUNT.faqs),
   socials: z.array(socialSchema).max(MAX_COUNT.socials),
+  seo: z
+    .object({
+      title: z.string().max(LIMITS.seo.title).optional().default(""),
+      description: z.string().max(LIMITS.seo.description).optional().default(""),
+      customKeywords: z
+        .array(z.string().min(1).max(LIMITS.seo.keyword))
+        .max(MAX_COUNT.customKeywords)
+        .optional()
+        .default([]),
+      twitterHandle: z.string().max(LIMITS.seo.handle).optional().default(""),
+      canonicalUrl: urlOrEmpty(LIMITS.seo.url).optional().default(""),
+      googleSiteVerification: z.string().max(LIMITS.seo.verification).optional().default(""),
+      analyticsId: z.string().max(LIMITS.seo.analytics).optional().default(""),
+      noIndex: z.boolean().optional().default(false),
+    })
+    .default({
+      title: "",
+      description: "",
+      customKeywords: [],
+      twitterHandle: "",
+      canonicalUrl: "",
+      googleSiteVerification: "",
+      analyticsId: "",
+      noIndex: false,
+    }),
   sections: z.object({
     order: z.array(z.enum(SECTION_KEYS)).max(SECTION_KEYS.length),
     visible: z.record(z.enum(SECTION_KEYS), z.boolean()),

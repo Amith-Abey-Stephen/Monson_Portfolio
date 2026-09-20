@@ -13,7 +13,9 @@
     "linkedinUrl": "",
     "heroImage": "",
     "aboutImage": "",
-    "ogImage": ""
+    "ogImage": "",
+    "favicon": "",
+    "copyrightNotice": ""
   },
   "navLinks": [
     {
@@ -329,6 +331,16 @@
       "href": "#"
     }
   ],
+  "seo": {
+    "title": "",
+    "description": "",
+    "customKeywords": [],
+    "twitterHandle": "",
+    "canonicalUrl": "",
+    "googleSiteVerification": "",
+    "analyticsId": "",
+    "noIndex": false
+  },
   "sections": {
     "order": [
       "hero",

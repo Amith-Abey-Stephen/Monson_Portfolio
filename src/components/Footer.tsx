@@ -7,6 +7,9 @@ export function Footer({
   data?: Pick<SiteContent, "site" | "about">;
 } = {}) {
   const site = data?.site ?? fallbackSite;
+  const notice =
+    site.copyrightNotice.trim() ||
+    `© ${new Date().getFullYear()} ${site.name} — Built with Next.js${site.email ? ` • ${site.email}` : ""}`;
   return (
     <footer className="relative overflow-hidden bg-transparent pb-6 pt-10 md:pb-8">
       <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-5 font-heading text-[13px] text-white/45 sm:px-6 sm:text-[14px] md:justify-between md:px-12">
@@ -21,8 +24,7 @@ export function Footer({
         {site.name}
       </h2>
       <p className="mt-4 break-words px-5 text-center font-heading text-[12px] leading-relaxed text-white/30">
-        © {new Date().getFullYear()} {site.name} — Built with Next.js
-        {site.email ? ` • ${site.email}` : ""}
+        {notice}
       </p>
     </footer>
   );
