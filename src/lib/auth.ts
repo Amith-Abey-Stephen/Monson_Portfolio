@@ -61,10 +61,22 @@ export function verifyPassword(password: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+/**
+ * Owner allowlist. `OWNER_EMAILS` holds a comma-separated list sharing the
+ * single Studio password; legacy `OWNER_EMAIL` still works and merges in.
+ */
+export function allowedEmails(): string[] {
+  const list = (process.env.OWNER_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const single = (process.env.OWNER_EMAIL ?? "").trim().toLowerCase();
+  if (single && !list.includes(single)) list.push(single);
+  return list;
+}
+
 export function isEmailAllowed(email: string): boolean {
-  const owner = (process.env.OWNER_EMAIL ?? "").trim().toLowerCase();
-  if (!owner) return false;
-  return email.trim().toLowerCase() === owner;
+  return allowedEmails().includes(email.trim().toLowerCase());
 }
 
 export function createSession(email: string): { token: string; expiresAt: number } {
@@ -92,5 +104,9 @@ export async function requireSession(): Promise<{ email: string }> {
 }
 
 export function authConfigured(): boolean {
-  return Boolean(process.env.AUTH_SECRET && process.env.OWNER_EMAIL && (process.env.STUDIO_PASSWORD_HASH || process.env.STUDIO_PASSWORD));
+  return Boolean(
+    allowedEmails().length > 0 &&
+      process.env.AUTH_SECRET &&
+      (process.env.STUDIO_PASSWORD_HASH || process.env.STUDIO_PASSWORD)
+  );
 }

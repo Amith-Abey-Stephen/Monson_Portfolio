@@ -11,10 +11,10 @@ import type { SiteContent } from "@/lib/schema";
 export const site = {
   name: "Monson Sunny",
   role: "UI/UX Designer",
-  tagline: "UI/UX Designer | Figma | Mobile App",
-  email: "",
-  phoneDisplay: "",
-  phoneHref: "",
+  tagline: "UI/UX Designer | Figma | AI-Assisted Design",
+  email: "monsonsunny2000@gmail.com",
+  phoneDisplay: "+91 7907654850",
+  phoneHref: "tel:+917907654850",
   calendly: "",
   resumeHref: "",
   contraHref: "",
@@ -38,25 +38,29 @@ export const hero = {
   lastName: "Sunny",
   title: "UI/UX Designer",
   subtitle:
-    "UI/UX Designer crafting intuitive mobile apps and web experiences, currently associated with Caxita Tech Solutions.",
+    "Creative and detail-oriented UI/UX designer with 4 years of experience, crafting intuitive interfaces with Figma and AI-powered design tools — from wireframes and prototypes to complete design systems.",
   quote: "I turn ideas into intuitive experiences",
 };
 
-export const clientLogos = ["Caxita Tech Solutions"];
+export const clientLogos = ["Caxita Tech Solutions", "Jay4Web"];
 
 export const logoImages: string[] = [];
 
 export const aboutIntro = {
   heading: "Design that feels effortless and inspires action",
-  body: "I'm Monson Sunny, a UI/UX Designer associated with Caxita Tech Solutions. With a background in front-end development, I design mobile apps and web experiences that are clear, usable, and pleasant — from early flows to polished, developer-ready interfaces.",
+  body: "I'm Monson Sunny, a UI/UX designer with 4 years of experience, currently at Caxita Tech Solutions in Kochi. I design responsive websites and mobile apps with Figma and AI-powered tools. Previously a frontend developer at Jay4Web, I bring hands-on HTML, CSS, and JavaScript knowledge to every developer handoff.",
 };
 
 export const journey = {
   eyebrow: "Learning through every path",
-  heading: "Design journey",
+  heading: "4 years of designing experiences",
 };
 
-export const stats: SiteContent["stats"] = [];
+export const stats: SiteContent["stats"] = [
+  { value: "4", target: 4, suffix: "+", label: "Years Experience" },
+  { value: "8", target: 8, suffix: "", label: "Design Tools" },
+  { value: "2", target: 2, suffix: "", label: "Companies" },
+];
 
 export const services: SiteContent["services"] = [
   {
@@ -81,6 +85,14 @@ export const services: SiteContent["services"] = [
     description:
       "Reusable components, styles, and interactive prototypes that keep designs consistent and handoff smooth.",
     tags: ["Components", "Prototypes", "Handoff"],
+    preview: "",
+  },
+  {
+    index: "04",
+    title: "AI-Assisted UX",
+    description:
+      "Faster, sharper workflows using Figma AI, Claude, and generative design tools — from assisted research to optimized user flows.",
+    tags: ["Figma AI", "Claude", "UX optimization"],
     preview: "",
   },
 ];
@@ -175,12 +187,12 @@ export const quote = {
 
 export const about = {
   title:
-    "UI/UX Designer with a background in front-end development, focused on mobile apps and web experiences.",
-  body: "I'm Monson Sunny, a UI/UX Designer associated with Caxita Tech Solutions. My work spans product discovery flows, dashboards, booking experiences, and marketing pages — always aiming for interfaces that are intuitive, consistent, and easy to build. Add project case studies, experience, and contact details anytime through the Studio.",
-  tags: ["UI Design", "UX Design", "Mobile Apps", "Figma", "Prototyping"],
+    "UI/UX designer with 4 years of experience, crafting intuitive interfaces with Figma and AI-powered design tools.",
+  body: "I'm Monson Sunny, a UI/UX Designer at Caxita Tech Solutions, Kochi (2023–2026), where I design responsive websites and mobile applications — developing wireframes, prototypes, user flows, and design systems while following accessibility and usability best practices. Previously a Frontend Developer at Jay4Web (2021–2022), converting UI/UX mockups into responsive interfaces with HTML, CSS, and JavaScript. Trained in Web Designing and Development at Arena Animation, with a B.Com from MG University.",
+  tags: ["Figma", "UI Design", "UX Design", "Prototyping", "Design Systems", "HTML & CSS"],
   role: "UI/UX Designer",
   type: "Caxita Tech Solutions",
-  period: "Present",
+  period: "2023–2026",
 };
 
 export const testimonials: { quote: string; name: string; role: string }[] = [];
@@ -188,30 +200,30 @@ export const testimonials: { quote: string; name: string; role: string }[] = [];
 export const faqs = [
   {
     index: "01",
-    q: "What does a project with you look like?",
-    a: "We start with goals and user flows, move to wireframes, then polished UI in Figma with prototypes. You get organized files that are ready for development handoff.",
+    q: "How much experience do you have?",
+    a: "4 years — currently a UI/UX Designer at Caxita Tech Solutions (2023–2026), previously a Frontend Developer at Jay4Web (2021–2022), so the designs I deliver come developer-ready.",
   },
   {
     index: "02",
-    q: "Which tools do you use?",
-    a: "Figma for interface design, wireframes, prototypes, and design systems — plus standard handoff practices for developers.",
+    q: "Which tools do you work with?",
+    a: "Figma (including Figma AI) as the core tool, plus Claude and generative AI tools for research and workflow speed — with Adobe Photoshop, Illustrator, XD, Bootstrap, and HTML & CSS in the mix.",
   },
   {
     index: "03",
-    q: "What do you need from me to start?",
-    a: "A short intro about your product, any existing content or references, and the screens or flows you have in mind. Everything else can be shaped together.",
+    q: "What does your design process look like?",
+    a: "User flows and wireframes first, then interactive prototypes and scalable design systems — checked against UI/UX standards, accessibility, and usability best practices, in collaboration with developers and stakeholders.",
   },
   {
     index: "04",
-    q: "How can I see more of your work?",
-    a: "Browse the selected projects on this site, and ask for the Behance profile link — it can be added here through the Studio.",
+    q: "How can I reach you or see more of your work?",
+    a: "Use the email or phone details on this site, and ask for the Behance profile link — project links can be added here anytime through the Studio.",
   },
 ];
 
 export const socials = [
   { label: "Behance", href: "" },
   { label: "LinkedIn", href: "" },
-  { label: "Email", href: "" },
+  { label: "Email", href: "mailto:monsonsunny2000@gmail.com" },
   { label: "Resume", href: "" },
 ];
 
