@@ -74,7 +74,7 @@ export function Hero({ data }: { data?: HeroData } = {}) {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/15 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#7c3aed]/55 via-transparent to-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#7c3aed]/30 via-transparent to-black/45" />
         <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_70%_20%,rgba(124,58,237,0.35),transparent_60%)]" />
       </div>
 

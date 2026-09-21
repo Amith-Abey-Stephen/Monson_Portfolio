@@ -74,7 +74,7 @@ export function Testimonials({
   // FAQ section keeps its designed continuity.
   if (testimonials.length === 0) {
     return (
-      <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_65%,#6d28d9_78%,#7c3aed_90%,#8b5cf6_100%)] py-16 sm:py-20 md:py-28">
+      <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_64%,#6d28d9_76%,#5b21b6_87%,#2e1065_100%)] py-16 sm:py-20 md:py-28">
         <GridLines />
         <ScrollReveal className="text-center">
           <p aria-hidden className="ghost-huge px-4 text-[22vw] leading-none sm:text-[26vw] md:text-[13vw]">FAQs</p>
@@ -83,7 +83,7 @@ export function Testimonials({
     );
   }
   return (
-    <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_65%,#6d28d9_78%,#7c3aed_90%,#8b5cf6_100%)] py-16 sm:py-20 md:py-28">
+    <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_64%,#6d28d9_76%,#5b21b6_87%,#2e1065_100%)] py-16 sm:py-20 md:py-28">
       <GridLines />
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-6 md:px-12">
         <ScrollWipe

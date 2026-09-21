@@ -19,7 +19,7 @@ export function AboutIntro({
           disappears into a smooth color blend, never a hard cut. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#2a1650]/55 to-[#0a0a0c] md:h-72"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#2a1650]/30 to-[#0a0a0c] md:h-72"
       />
       <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 items-start gap-6 md:gap-10 lg:grid-cols-2 lg:gap-16">
         <ScrollWipe

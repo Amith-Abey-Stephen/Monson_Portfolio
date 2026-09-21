@@ -18,9 +18,15 @@ export function Faq({
   if (faqs.length === 0) return null;
 
   return (
-    <section aria-label="Frequently asked questions" className="relative overflow-hidden bg-[linear-gradient(to_bottom,#8b5cf6_0%,#5b21b6_25%,#2e1065_55%,transparent_100%)] px-4 pb-16 pt-4 sm:px-6 md:px-10 md:pb-20">
+    <section aria-label="Frequently asked questions" className="relative overflow-hidden bg-[linear-gradient(to_bottom,#2e1065_0%,#1a1030_15%,transparent_45%)] px-4 pb-16 pt-4 sm:px-6 md:px-10 md:pb-20">
       <GridLines />
-      <div className="relative mx-auto max-w-[1100px] overflow-hidden rounded-2xl border border-white/10 bg-black/25 backdrop-blur-xl">
+      {/* single soft wash behind the card — melts into Testimonials'
+          violet above and Contact's dark below, no painted gradient */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)]"
+      />
+      <div className="relative mx-auto max-w-[1100px] overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
         {faqs.map((f, i) => {
           const isOpen = open === i;
           return (

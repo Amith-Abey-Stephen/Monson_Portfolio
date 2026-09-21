@@ -15,11 +15,11 @@ export function SiteCanvas() {
             "linear-gradient(to bottom," +
             " #000000 0%," +
             " #0a0614 4%," +
-            " #a855f7 7.5%," +
-            " #7c3aed 9.5%," +
-            " #4c1d95 11.5%," +
-            " #1e1033 13%," +
-            " #120a24 15%," +
+            " #3b1d6e 7.5%," +
+            " #2a1650 9.5%," +
+            " #1a0f2e 11.5%," +
+            " #0e0918 13%," +
+            " #0a0a0c 15%," +
             " #0a0a0c 17%," +
             " #0a0a0c 52%," +
             " #2a1216 56%," +
@@ -30,8 +30,8 @@ export function SiteCanvas() {
             " #5b21b6 74%," +
             " #1a1030 77%," +
             " #141014 79%," +
-            " #5b21b6 82%," +
-            " #6d28d9 83.5%," +
+            " #2a1650 82%," +
+            " #3b1d6e 83.5%," +
             " #2e1065 86%," +
             " #0a0614 91%," +
             " #000000 95%," +
@@ -40,9 +40,9 @@ export function SiteCanvas() {
       />
       {/* soft washes — all feathered, never hard-edged.
           Smaller blur radii on mobile for GPU-friendliness. */}
-      <div className="absolute left-1/2 top-[7%] h-[30vh] w-[90vw] -translate-x-1/2 rounded-full bg-[#a855f7]/25 blur-[80px] md:blur-[130px]" />
+      <div className="absolute left-1/2 top-[7%] h-[30vh] w-[90vw] -translate-x-1/2 rounded-full bg-[#a855f7]/10 blur-[80px] md:blur-[130px]" />
       {/* violet bleed carrying hero → AboutIntro before projects cut to black */}
-      <div className="absolute left-1/2 top-[12.5%] h-[24vh] w-[90vw] -translate-x-1/2 rounded-full bg-[#7c3aed]/20 blur-[80px] md:blur-[120px]" />
+      <div className="absolute left-1/2 top-[12.5%] h-[24vh] w-[90vw] -translate-x-1/2 rounded-full bg-[#7c3aed]/10 blur-[80px] md:blur-[120px]" />
       <div className="absolute left-[62%] top-[72%] h-[34vh] w-[60vw] -translate-x-1/2 rounded-full bg-[#a855f7]/15 blur-[80px] md:blur-[130px]" />
       <div className="absolute left-1/2 top-[59%] h-[30vh] w-[85vw] -translate-x-1/2 rounded-full bg-[#c26a76]/25 blur-[80px] md:blur-[130px]" />
       <div className="absolute left-1/2 top-[83%] h-[26vh] w-[80vw] -translate-x-1/2 rounded-full bg-[#a8323e]/20 blur-[80px] md:blur-[130px]" />

@@ -151,13 +151,14 @@ export function Gallery({
 
   return (
     <section ref={ref} aria-label="Design gallery" className="relative overflow-hidden bg-transparent">
-      {/* pink stage — feathers from black above into rose, back to black below */}
+      {/* pink stage — long eased ramp from black above into rose
+          (no hard edge at the section start), back to black below */}
       <div
         aria-hidden
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, #0d0507 5%, #b84e5d 13%, #df8d97 36%, #df8d97 56%, #b84e5d 78%, #0d0507 92%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, #0d0507 4%, #3a161d 8%, #7c3540 12%, #b84e5d 17%, #d77f89 26%, #df8d97 36%, #df8d97 56%, #b84e5d 78%, #7c3540 84%, #3a161d 89%, #0d0507 94%, rgba(0,0,0,0) 100%)",
         }}
       />
 

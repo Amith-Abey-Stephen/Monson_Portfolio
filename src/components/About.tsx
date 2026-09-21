@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { useRef, type ReactNode } from "react";
+import { motion, useScroll, useTransform, type MotionValue, type MotionStyle } from "motion/react";
 import {
   about as fallbackAbout,
   galleryItems as fallbackGallery,
@@ -15,13 +15,15 @@ function QuoteLaptop({
   src,
   title,
   className = "",
+  style,
 }: {
   src: string;
   title: string;
   className?: string;
+  style?: MotionStyle;
 }) {
   return (
-    <div className={`relative ${className}`}>
+    <motion.div style={style} className={`relative ${className}`}>
       <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] shadow-[0_40px_90px_-20px_rgba(0,0,0,0.9)]">
         <div className="relative aspect-[16/10] overflow-hidden bg-[#101013]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -37,7 +39,7 @@ function QuoteLaptop({
       {/* laptop base */}
       <div className="relative mx-auto h-[9px] w-[96%] rounded-b-xl bg-gradient-to-b from-[#2b2b30] to-[#101012]" />
       <div className="mx-auto mt-1 h-5 w-[80%] rounded-full bg-black/70 blur-xl" />
-    </div>
+    </motion.div>
   );
 }
 
@@ -46,37 +48,90 @@ function QuotePair({
   leftTitle,
   right,
   rightTitle,
+  progress,
+  entryAt,
 }: {
   left: string;
   leftTitle: string;
   right: string;
   rightTitle: string;
+  progress: MotionValue<number>;
+  entryAt: number;
 }) {
+  // pair converges from the side edges toward center while growing —
+  // left card flies in from the left, right card from the right
+  const win: [number, number] = [entryAt - 0.02, entryAt + 0.14];
+  const lx = useTransform(progress, win, ["-55vw", "0vw"]);
+  const rx = useTransform(progress, win, ["55vw", "0vw"]);
+  const sc = useTransform(progress, win, [0.85, 1]);
   return (
     <div className="flex w-full max-w-[1400px] items-center justify-center gap-3 px-4 sm:gap-4 md:gap-8 md:px-10">
       <QuoteLaptop
         src={left}
         title={leftTitle}
+        style={{ x: lx, scale: sc }}
         className="w-[43vw] max-w-[520px] min-w-0 flex-1 shrink sm:flex-none md:w-[42vw]"
       />
       <QuoteLaptop
         src={right}
         title={rightTitle}
+        style={{ x: rx, scale: sc }}
         className="w-[43vw] max-w-[520px] min-w-0 flex-1 shrink sm:flex-none md:w-[42vw]"
       />
     </div>
   );
 }
 
-function QuoteSingle({ src, title }: { src: string; title: string }) {
+function QuoteSingle({
+  src,
+  title,
+  progress,
+  entryAt,
+}: {
+  src: string;
+  title: string;
+  progress: MotionValue<number>;
+  entryAt: number;
+}) {
+  // singles grow into place while rising
+  const sc = useTransform(progress, [entryAt - 0.02, entryAt + 0.14], [0.85, 1]);
   return (
     <div className="flex w-full justify-center px-4">
       <QuoteLaptop
         src={src}
         title={title}
+        style={{ scale: sc }}
         className="w-[78vw] max-w-[560px] sm:w-[64vw] md:w-[38vw]"
       />
     </div>
+  );
+}
+
+/**
+ * Squash-on-entry: each stream group sits crushed (squashed flat,
+ * slightly stretched wide) while below the viewport, then straightens
+ * out as it scrolls up past the bottom edge. Anchored at the bottom
+ * so it unsquashes upward like rising dough. Scroll-linked, per-group
+ * staggered by entry order.
+ */
+function Squash({
+  progress,
+  entryAt,
+  children,
+}: {
+  progress: MotionValue<number>;
+  entryAt: number;
+  children: ReactNode;
+}) {
+  const squashY = useTransform(progress, [entryAt - 0.02, entryAt + 0.1], [0.55, 1]);
+  const stretchX = useTransform(progress, [entryAt - 0.02, entryAt + 0.1], [1.08, 1]);
+  return (
+    <motion.div
+      style={{ scaleY: squashY, scaleX: stretchX, transformOrigin: "50% 100%" }}
+      className="w-full will-change-transform"
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -94,26 +149,30 @@ export function Quote({
     offset: ["start start", "end end"],
   });
 
-  // text block: rises in, pins, then lifts away at the very end
+  // staged scroll choreography: blank black on arrival, then the
+  // text block rises in and pins, then the laptop cards stream up
+  // in front of it as scrolling continues
   const textY = useTransform(
     scrollYProgress,
-    [0, 0.06, 0.93, 1],
-    [90, 0, 0, -90]
+    [0, 0.12, 0.22, 0.85, 1],
+    [90, 90, 0, 0, -90]
   );
   const textOpacity = useTransform(
     scrollYProgress,
-    [0, 0.05, 0.93, 1],
-    [0, 1, 1, 0]
+    [0, 0.12, 0.22, 0.85, 1],
+    [0, 0, 1, 1, 0]
   );
-  const signOpacity = useTransform(scrollYProgress, [0.03, 0.09], [0, 1]);
-  const signY = useTransform(scrollYProgress, [0.03, 0.09], [30, 0]);
+  const signOpacity = useTransform(scrollYProgress, [0.18, 0.28], [0, 1]);
+  const signY = useTransform(scrollYProgress, [0.18, 0.28], [30, 0]);
 
-  // laptop conveyor: streams from below the viewport to above it,
+  // laptop conveyor: holds fully below the viewport while the copy reads
+  // (first cards sit past 100vh, so the blank phase stays truly blank),
+  // then streams up past it once scrolling continues.
   // passing IN FRONT of the pinned text (laptops occlude the copy)
   const streamY = useTransform(
     scrollYProgress,
-    [0.08, 0.95],
-    ["72vh", "-305vh"]
+    [0.3, 0.95],
+    ["108vh", "-305vh"]
   );
 
   return (
@@ -152,26 +211,48 @@ export function Quote({
             >
               <div className="flex flex-col items-center gap-[42vh] pb-[50vh] pt-[10vh]">
                 {imgs.length >= 2 && (
-                  <QuotePair
-                    left={at(5).image}
-                    leftTitle={at(5).title}
-                    right={at(3).image}
-                    rightTitle={at(3).title}
-                  />
+                  <Squash progress={scrollYProgress} entryAt={0.32}>
+                    <QuotePair
+                      left={at(5).image}
+                      leftTitle={at(5).title}
+                      right={at(3).image}
+                      rightTitle={at(3).title}
+                      progress={scrollYProgress}
+                      entryAt={0.32}
+                    />
+                  </Squash>
                 )}
                 {imgs.length >= 3 && (
-                  <QuoteSingle src={at(6).image} title={at(6).title} />
+                  <Squash progress={scrollYProgress} entryAt={0.4}>
+                    <QuoteSingle
+                      src={at(6).image}
+                      title={at(6).title}
+                      progress={scrollYProgress}
+                      entryAt={0.4}
+                    />
+                  </Squash>
                 )}
                 {imgs.length >= 4 && (
-                  <QuotePair
-                    left={at(1).image}
-                    leftTitle={at(1).title}
-                    right={at(0).image}
-                    rightTitle={at(0).title}
-                  />
+                  <Squash progress={scrollYProgress} entryAt={0.47}>
+                    <QuotePair
+                      left={at(1).image}
+                      leftTitle={at(1).title}
+                      right={at(0).image}
+                      rightTitle={at(0).title}
+                      progress={scrollYProgress}
+                      entryAt={0.47}
+                    />
+                  </Squash>
                 )}
                 {imgs.length >= 5 && (
-                  <QuoteSingle src={at(2).image} title={at(2).title} />
+                  <Squash progress={scrollYProgress} entryAt={0.55}>
+                    <QuoteSingle
+                      src={at(2).image}
+                      title={at(2).title}
+                      progress={scrollYProgress}
+                      entryAt={0.55}
+                    />
+                  </Squash>
                 )}
               </div>
             </motion.div>
