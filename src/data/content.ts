@@ -48,6 +48,8 @@ export const clientLogos = ["Caxita Tech Solutions", "Jay4Web"];
 
 export const logoImages: string[] = [];
 
+export const logoMarqueeSpeed = 8;
+
 export const aboutIntro = {
   heading: "Design that feels effortless and inspires action",
   body: "I'm Monson Sunny, a UI/UX designer with 4 years of experience, currently at Caxita Tech Solutions in Kochi. I design responsive websites and mobile apps with Figma and AI-powered tools. Previously a frontend developer at Jay4Web, I bring hands-on HTML, CSS, and JavaScript knowledge to every developer handoff.",
@@ -366,6 +368,7 @@ export const defaultContent: SiteContent = {
   hero,
   clientLogos,
   logoImages,
+  logoMarqueeSpeed,
   aboutIntro,
   journey,
   stats,

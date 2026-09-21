@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { testimonials as fallbackTestimonials } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines, ScrollReveal, TextReveal } from "./ui";
+import { GridLines, ScrollReveal, ScrollBlocks, ScrollWipe } from "./ui";
 
 /** illustrated avatars (memoji-like) with a gradient fallback underneath */
 const avatarSeeds = [
@@ -86,12 +86,13 @@ export function Testimonials({
     <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_65%,#6d28d9_78%,#7c3aed_90%,#8b5cf6_100%)] py-16 sm:py-20 md:py-28">
       <GridLines />
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-6 md:px-12">
-        <TextReveal
+        <ScrollWipe
           as="h2"
+          direction="down"
           className="relative z-10 text-balance text-center font-heading text-[clamp(32px,10vw,56px)] font-bold leading-[0.95] tracking-tight text-[#e9e9e9] md:text-[7.4vw]"
         >
           What Clients Say
-        </TextReveal>
+        </ScrollWipe>
       </div>
 
       <motion.div
@@ -115,6 +116,9 @@ export function Testimonials({
           aria-hidden
           className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black/60 to-transparent sm:w-20"
         />
+        {/* tile cover — dark rectangles slide away staggered to unveil
+            the marquee once when the section is reached */}
+        <ScrollBlocks cols={8} rows={2} direction="left" className="absolute inset-0 z-20" />
       </motion.div>
 
       <ScrollReveal className="mt-12 text-center md:mt-14">

@@ -2,7 +2,7 @@
 
 import { aboutIntro as fallbackIntro } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines, ScrollReveal, TextReveal } from "./ui";
+import { GridLines, ScrollReveal, ScrollWipe } from "./ui";
 
 export function AboutIntro({
   data,
@@ -22,12 +22,13 @@ export function AboutIntro({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#2a1650]/55 to-[#0a0a0c] md:h-72"
       />
       <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 items-start gap-6 md:gap-10 lg:grid-cols-2 lg:gap-16">
-        <TextReveal
+        <ScrollWipe
           as="h2"
+          direction="right"
           className="text-balance font-heading text-[clamp(28px,7.5vw,36px)] font-semibold leading-[1.12] tracking-tight text-white sm:text-[36px] md:text-[60px]"
         >
           {aboutIntro.heading}
-        </TextReveal>
+        </ScrollWipe>
         <ScrollReveal delay={0.15}>
           <p className="max-w-[62ch] font-heading text-[15px] font-light leading-[1.7] text-white/85 sm:text-[16px] md:text-[19px]">
             {aboutIntro.body}

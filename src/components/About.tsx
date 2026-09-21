@@ -9,7 +9,7 @@ import {
 } from "@/data/content";
 import { quote as fallbackQuote } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines, ScrollReveal } from "./ui";
+import { GridLines, ScrollReveal, ScrollWipe } from "./ui";
 
 function QuoteLaptop({
   src,
@@ -228,11 +228,13 @@ export function About({
 
       <div className="relative z-[10] mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 pb-20 sm:px-6 md:gap-10 md:px-12 md:pb-24 lg:grid-cols-2 lg:gap-8">
         <div className="lg:py-[8vh]">
-          <ScrollReveal>
-            <h3 className="text-balance font-heading text-[20px] font-semibold leading-[1.4] text-white sm:text-[22px] md:text-[28px]">
-              {about.title}
-            </h3>
-          </ScrollReveal>
+          <ScrollWipe
+            as="h3"
+            direction="up"
+            className="text-balance font-heading text-[20px] font-semibold leading-[1.4] text-white sm:text-[22px] md:text-[28px]"
+          >
+            {about.title}
+          </ScrollWipe>
           <ScrollReveal delay={0.1}>
             <p className="mt-5 font-heading text-[15px] font-light leading-[1.75] text-white/70 sm:text-[16px] md:mt-6 md:text-[17px]">
               {about.body}

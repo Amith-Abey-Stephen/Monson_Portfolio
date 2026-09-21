@@ -100,6 +100,13 @@ body {
   );
 }
 
+/* HERO SYNC — one 6s master beat. Every hero loop is a clean
+   divisor of 6s so nothing drifts: sheen / float / glow = 6s (1x),
+   book-shine = 2s (3x), shimmer-border = 1.5s (4x). All "breathing"
+   easings share ease-in-out with peaks at 50%; all wipes stay linear.
+   Sunny floats antiphase (-3s = half master). Marquee duration is
+   snapped to a 6s multiple in LogoStrip.tsx. */
+
 /* shimmer button (Book Meeting) */
 .shimmer-btn {
   position: relative;
@@ -124,27 +131,33 @@ body {
     transparent 70%
   );
   background-size: 220% 100%;
+  background-repeat: no-repeat;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   opacity: 0;
+  transition: opacity 0.3s ease;
+  /* run continuously so hover just fades in mid-flight —
+     no restart / stuck jump when entering or leaving.
+     1.5s = 4x per 6s master, stays phase-locked. */
+  animation: shimmer-border 1.5s linear infinite;
 }
 .shimmer-btn:hover::after {
   opacity: 1;
-  animation: shimmer-border 1.4s linear infinite;
 }
 @keyframes shimmer-border {
+  /* 100% -> 0% keeps the shine fully off-screen at both ends,
+     so every loop starts/ends identical — no 2nd-loop jump */
   0% {
-    background-position: 200% 0;
+    background-position: 100% 0;
   }
   100% {
-    background-position: -200% 0;
+    background-position: 0% 0;
   }
 }
 
-/* Giant name slow vertical sheen — matches the hero:
-   grey gradient top <-> full white, ~4s loop with holds at each end */
+/* Giant name slow vertical sheen — 6s master loop with holds at each end */
 .name-sheen {
   background-image: linear-gradient(
     to bottom,
@@ -158,7 +171,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: name-sheen 4s ease-in-out infinite;
+  animation: name-sheen 6s ease-in-out infinite;
 }
 @keyframes name-sheen {
   0%,
@@ -174,8 +187,57 @@ body {
   }
 }
 
-/* "Book Meeting" label wipe — dark band sweeps left -> right across
-   the text every ~2s (~0.6s sweep + pause full-bright) */
+/* Giant name levitation — gentle up/down float so it feels like it's
+   hovering. Runs on the inner span so it never fights the outer
+   entrance motion (opacity/y). Second name gets a -3s offset. */
+.name-float {
+  will-change: transform;
+  animation: name-levitate 6s ease-in-out infinite;
+}
+.name-float-delay {
+  animation-delay: -3s;
+}
+@keyframes name-levitate {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Breathing radial purple glow from the bottom-left corner
+   under the UI/UX description — swells up then settles back down */
+.hero-breathe-glow {
+  background: radial-gradient(
+    100% 100% at 0% 100%,
+    rgba(139, 92, 246, 0.9) 0%,
+    rgba(124, 58, 237, 0.55) 38%,
+    rgba(76, 29, 149, 0.28) 58%,
+    transparent 72%
+  );
+  filter: blur(6px);
+  mix-blend-mode: screen;
+  transform-origin: 0% 100%;
+  will-change: transform, opacity;
+  animation: hero-glow-breathe 6s ease-in-out infinite;
+}
+@keyframes hero-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1) translateY(12px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12, 1.28) translateY(-30px);
+  }
+}
+
+/* "Book Meeting" label wipe — seamless loop: 100% -> 0% keeps the
+   band fully off-screen at both ends, so loop 2, 3, ... look exactly
+   like the 1st (no jump/glitch on restart). 2s = 3x per 6s master. */
 .book-shine {
   display: inline-block;
   background-image: linear-gradient(
@@ -195,18 +257,17 @@ body {
 }
 @keyframes book-shine {
   0% {
-    background-position: 115% 0;
-  }
-  32% {
-    background-position: -15% 0;
+    background-position: 100% 0;
   }
   100% {
-    background-position: -15% 0;
+    background-position: 0% 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .name-sheen,
+  .name-float,
+  .hero-breathe-glow,
   .book-shine {
     animation: none;
   }

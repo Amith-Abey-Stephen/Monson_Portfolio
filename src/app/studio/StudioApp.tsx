@@ -1303,6 +1303,29 @@ export function StudioApp({
                   }
                 />
               </Field>
+              <Field label="Marquee speed" value={String(draft.logoMarqueeSpeed ?? 8)} hint="1 = fastest, 10 = slowest (≈80s per loop). Decimals allowed, e.g. 3.5, 7.2.">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    value={draft.logoMarqueeSpeed ?? 8}
+                    onChange={(e) => patch((d) => { d.logoMarqueeSpeed = Math.min(10, Math.max(1, Number(e.target.value) || 1)); })}
+                    className="mt-1.5 flex-1 accent-stone-900"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    value={draft.logoMarqueeSpeed ?? 8}
+                    onChange={(e) => patch((d) => { d.logoMarqueeSpeed = Math.min(10, Math.max(1, Number(e.target.value) || 1)); })}
+                    className="mt-1.5 w-20 shrink-0 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-[14px] text-stone-900 focus:border-stone-400 focus:outline-none"
+                  />
+                  <span className="mt-1.5 shrink-0 text-[12px] text-stone-400">/ 10</span>
+                </div>
+              </Field>
               <div className="flex items-center justify-between">
                 <h3 className="text-[14px] font-semibold">Banner logos ({draft.logoImages.length}/{MAX_COUNT.logoImages})</h3>
                 <button

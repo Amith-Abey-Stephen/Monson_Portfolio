@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { projects as fallbackProjects, type Project } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines } from "./ui";
+import { GridLines, ScrollBlocks } from "./ui";
 
 function LaptopMock({
   p,
@@ -216,6 +216,9 @@ export function Projects({
         {projects.map((p, i) => (
           <ProjectCard key={p.name} p={p} index={i} />
         ))}
+        {/* tile cover — dark rectangles slide away staggered to unveil
+            the grid once when the section is reached */}
+        <ScrollBlocks cols={6} rows={4} direction="right" className="absolute inset-0 z-20" />
       </div>
     </section>
   );

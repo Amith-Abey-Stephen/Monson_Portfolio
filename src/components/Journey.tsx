@@ -12,7 +12,7 @@ import {
 import { services as fallbackServices, stats as fallbackStats } from "@/data/content";
 import { journey as fallbackJourney } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines, ScrollReveal, TextReveal } from "./ui";
+import { GridLines, ScrollReveal, ScrollWipe } from "./ui";
 
 /* ---------- count-up number, like the recording (3+ → 20+, etc.) ---------- */
 function CountUp({
@@ -160,12 +160,13 @@ export function Journey({
             {journey.eyebrow}
           </p>
         </ScrollReveal>
-        <TextReveal
+        <ScrollWipe
           as="h2"
+          direction="left"
           className="mt-3 text-balance font-heading text-[clamp(32px,9vw,40px)] font-bold leading-[1.05] tracking-tight text-white md:text-[68px]"
         >
           {journey.heading}
-        </TextReveal>
+        </ScrollWipe>
 
         {stats.length > 0 && (
           <div className="mt-10 grid grid-cols-2 md:mt-14 md:grid-cols-4">

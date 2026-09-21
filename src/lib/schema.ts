@@ -161,6 +161,7 @@ export const siteContentSchema = z.object({
   }),
   clientLogos: z.array(z.string().max(80)).max(MAX_COUNT.clientLogos),
   logoImages: z.array(imageOrEmpty(LIMITS.site.image)).max(MAX_COUNT.logoImages),
+  logoMarqueeSpeed: z.number().min(1).max(10).optional().default(8).catch(8),
   aboutIntro: z.object({
     heading: z.string().max(LIMITS.text.heading),
     body: z.string().max(LIMITS.text.body),
