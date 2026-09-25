@@ -7,6 +7,7 @@ import {
   useMotionValue,
   useScroll,
   useSpring,
+  useTransform,
   animate,
 } from "motion/react";
 import { services as fallbackServices, stats as fallbackStats } from "@/data/content";
@@ -48,15 +49,33 @@ function CountUp({
 
 /* ---------- scroll-drawn aurora line (gradient path draws on scroll) ---------- */
 function JourneyLine({ target }: { target: React.RefObject<HTMLElement | null> }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const { scrollYProgress } = useScroll({
     target: target as never,
-    offset: ["start center", "end center"],
+    // mobile starts drawing the moment the section peeks into view
+    // (desktop waits until it reaches center) — same line otherwise
+    offset: (isMobile ? ["start end", "end center"] : ["start center", "end center"]) as never,
   });
-  const progress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 24,
-    mass: 0.4,
-  });
+
+  // Mobile gets a tighter spring (same line, same timing — just minimal
+  // lag): the soft desktop spring trails visibly behind fast flick
+  // scrolling on touch, which reads as "out of sync".
+  // Mobile draws a touch faster to match its taller scroll area:
+  // full draw lands at 88% of the range instead of the very end.
+  const swifter = useTransform(scrollYProgress, [0, 0.88], [0, 1]);
+  const progress = useSpring(
+    isMobile ? swifter : scrollYProgress,
+    isMobile
+      ? { stiffness: 320, damping: 40, mass: 0.3 }
+      : { stiffness: 90, damping: 24, mass: 0.4 }
+  );
 
   return (
     <svg

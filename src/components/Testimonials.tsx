@@ -100,7 +100,7 @@ export function Testimonials({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="marquee-paused group relative mt-10 overflow-hidden md:mt-24"
+        className="marquee-paused group relative mt-10 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] md:mt-24"
       >
         {/* single seamless track: two identical halves, track translates -50% */}
         <div className="animate-marquee-slow flex w-max gap-5 pr-5 sm:gap-8 sm:pr-8 md:gap-10 md:pr-10">
