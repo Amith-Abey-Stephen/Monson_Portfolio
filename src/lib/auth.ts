@@ -85,7 +85,7 @@ export function createSession(email: string): { token: string; expiresAt: number
   return { token: sign({ email, exp: expiresAt }, secret), expiresAt };
 }
 
-export async function getSession(): Promise<{ email: string } | null> {
+export async function getSession(): Promise<{ email: string; expiresAt?: number } | null> {
   const secret = process.env.AUTH_SECRET ?? "";
   if (!secret) return null;
   const store = await cookies();
@@ -94,7 +94,7 @@ export async function getSession(): Promise<{ email: string } | null> {
   const payload = verifySessionToken(token, secret);
   if (!payload) return null;
   if (!isEmailAllowed(payload.email)) return null;
-  return { email: payload.email };
+  return { email: payload.email, expiresAt: payload.exp };
 }
 
 export async function requireSession(): Promise<{ email: string }> {

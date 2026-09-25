@@ -15,37 +15,32 @@ import {
   Map,
   MessagesSquare,
   Monitor,
+  Laptop,
+  Smartphone,
+  Tablet,
   PanelRight,
   PanelRightClose,
+  PanelLeft,
+  PanelLeftClose,
   Quote,
   Redo2,
   Search,
   Send,
   Settings,
-  Smartphone,
   Sparkles,
-  Tablet,
   Eye,
   EyeOff,
   ExternalLink,
   CircleHelp,
   Undo2,
+  Clock,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import type { SectionKey, SiteContent } from "@/lib/schema";
 import { LIMITS, MAX_COUNT, SECTION_KEYS, SECTION_LABELS } from "@/lib/schema";
 import { autoDerivedKeywords } from "@/lib/seo";
 import { Area, Field, ImageField, ItemCard, RowButtons, Text, move } from "./fields";
-import { Hero } from "@/components/Hero";
-import { AboutIntro } from "@/components/AboutIntro";
-import { Projects } from "@/components/Projects";
-import { Journey } from "@/components/Journey";
-import { Gallery } from "@/components/Gallery";
-import { Quote as QuoteSection, About } from "@/components/About";
-import { Testimonials } from "@/components/Testimonials";
-import { Faq } from "@/components/Faq";
-import { Contact } from "@/components/Contact";
-import { Footer } from "@/components/Footer";
-import { SiteCanvas } from "@/components/SiteCanvas";
 
 export type HistoryEntry = {
   id: number;
@@ -94,23 +89,61 @@ const TABS: { id: TabId; label: string; Icon: typeof Home }[] = [
   { id: "history", label: "Version history", Icon: History },
 ];
 
-type PreviewPreset = { id: string; label: string; dims: string; designWidth: number; Icon: typeof Monitor };
+export type DeviceCategory = "desktop" | "tablet" | "mobile";
 
-const PRESETS: PreviewPreset[] = [
-  { id: "laptop", label: "Laptop", dims: "1440 × 900", designWidth: 1440, Icon: Monitor },
-  { id: "tablet", label: "Tablet", dims: "820 × 1180", designWidth: 820, Icon: Tablet },
-  { id: "phone", label: "Phone", dims: "390 × 844", designWidth: 390, Icon: Smartphone },
+export type DeviceModel = {
+  id: string;
+  category: DeviceCategory;
+  name: string;
+  shortName: string;
+  dimsLabel: string;
+  width: number;
+  height: number;
+  frameStyle: "laptop" | "tablet" | "mobile";
+};
+
+export const DEVICE_MODELS: DeviceModel[] = [
+  // Desktop & Laptops
+  { id: "laptop-air", category: "desktop", name: "Laptop", shortName: "Laptop", dimsLabel: "1440 × 900", width: 1440, height: 900, frameStyle: "laptop" },
+  { id: "laptop-16", category: "desktop", name: "MacBook Pro 16″", shortName: "MacBook Pro 16″", dimsLabel: "1728 × 1117", width: 1728, height: 1117, frameStyle: "laptop" },
+  { id: "laptop-14", category: "desktop", name: "MacBook Pro 14″", shortName: "MacBook Pro 14″", dimsLabel: "1512 × 982", width: 1512, height: 982, frameStyle: "laptop" },
+  { id: "desktop-fhd", category: "desktop", name: "Desktop 1080p", shortName: "Desktop 1080p", dimsLabel: "1920 × 1080", width: 1920, height: 1080, frameStyle: "laptop" },
+  { id: "desktop-2k", category: "desktop", name: "2K QHD Display", shortName: "2K Monitor", dimsLabel: "2560 × 1440", width: 2560, height: 1440, frameStyle: "laptop" },
+  { id: "desktop-4k", category: "desktop", name: "4K Ultra HD", shortName: "4K Display", dimsLabel: "3840 × 2160", width: 3840, height: 2160, frameStyle: "laptop" },
+  { id: "laptop-small", category: "desktop", name: "Small Laptop", shortName: "Small Laptop", dimsLabel: "1280 × 800", width: 1280, height: 800, frameStyle: "laptop" },
+
+  // Tablets
+  { id: "tablet-ipad-air", category: "tablet", name: "iPad Air", shortName: "iPad Air", dimsLabel: "820 × 1180", width: 820, height: 1180, frameStyle: "tablet" },
+  { id: "tablet-ipad-pro", category: "tablet", name: "iPad Pro 12.9″", shortName: "iPad Pro 12.9″", dimsLabel: "1024 × 1366", width: 1024, height: 1366, frameStyle: "tablet" },
+  { id: "tablet-ipad-mini", category: "tablet", name: "iPad Mini", shortName: "iPad Mini", dimsLabel: "744 × 1133", width: 744, height: 1133, frameStyle: "tablet" },
+  { id: "tablet-galaxy", category: "tablet", name: "Galaxy Tab", shortName: "Galaxy Tab", dimsLabel: "800 × 1280", width: 800, height: 1280, frameStyle: "tablet" },
+  { id: "tablet-surface", category: "tablet", name: "Surface Pro", shortName: "Surface Pro", dimsLabel: "912 × 1368", width: 912, height: 1368, frameStyle: "tablet" },
+
+  // Mobile Phones
+  { id: "phone-15-pro", category: "mobile", name: "iPhone 15 Pro", shortName: "iPhone 15 Pro", dimsLabel: "393 × 852", width: 393, height: 852, frameStyle: "mobile" },
+  { id: "phone-16-pro-max", category: "mobile", name: "iPhone 16 Pro Max", shortName: "iPhone 16 Pro Max", dimsLabel: "430 × 932", width: 430, height: 932, frameStyle: "mobile" },
+  { id: "phone-14-13", category: "mobile", name: "iPhone 14", shortName: "iPhone 14", dimsLabel: "390 × 844", width: 390, height: 844, frameStyle: "mobile" },
+  { id: "phone-se", category: "mobile", name: "iPhone SE", shortName: "iPhone SE", dimsLabel: "375 × 667", width: 375, height: 667, frameStyle: "mobile" },
+  { id: "phone-s24", category: "mobile", name: "Galaxy S24", shortName: "Galaxy S24", dimsLabel: "412 × 915", width: 412, height: 915, frameStyle: "mobile" },
+  { id: "phone-pixel-8", category: "mobile", name: "Pixel 8", shortName: "Pixel 8", dimsLabel: "412 × 892", width: 412, height: 892, frameStyle: "mobile" },
 ];
 
 /**
- * True scaled miniature: the site lays out at the full design width
- * (so breakpoints and vw units behave exactly like the real device),
- * then the whole thing is scaled to fit the panel — like the reference
- * studio's zoomed preview. The inner page scrolls natively.
+ * True scaled miniature with realistic device bezel framing, natural aspect ratio,
+ * and true viewport CSS media query rendering via an isolated iframe.
  */
-function ScaledPreview({ designWidth, children, onScale }: { designWidth: number; children: React.ReactNode; onScale?: (pct: number) => void }) {
+function ScaledPreview({
+  device,
+  draft,
+  onScale,
+}: {
+  device: DeviceModel;
+  draft: SiteContent;
+  onScale?: (pct: number) => void;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState({ w: 800, h: 600 });
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [box, setBox] = useState({ w: 400, h: 500 });
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -120,33 +153,132 @@ function ScaledPreview({ designWidth, children, onScale }: { designWidth: number
       const w = Math.max(1, Math.round(r.width));
       const h = Math.max(1, Math.round(r.height));
       setBox((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
-      onScale?.(Math.max(1, Math.round((w / designWidth) * 100)));
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [designWidth]);
+  }, []);
 
-  const scale = box.w / designWidth;
+  // Post draft updates to the iframe whenever draft changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("studio_active_draft", JSON.stringify(draft));
+    } catch {}
+    const iframe = iframeRef.current;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ type: "STUDIO_DRAFT_UPDATE", draft }, "*");
+    }
+  }, [draft]);
+
+  // When iframe mounts and signals ready, push the current draft immediately
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type === "STUDIO_PREVIEW_READY") {
+        iframeRef.current?.contentWindow?.postMessage({ type: "STUDIO_DRAFT_UPDATE", draft }, "*");
+      }
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [draft]);
+
+  const isLaptop = device.frameStyle === "laptop";
+  const isMobile = device.frameStyle === "mobile";
+  const isTablet = device.frameStyle === "tablet";
+
+  const headerHeight = isLaptop ? 24 : isMobile ? 26 : 20;
+  const bottomBarHeight = isMobile ? 14 : 0;
+  const bezelX = isLaptop ? 12 : isMobile ? 12 : 12;
+  const bezelY = isLaptop ? 8 : isMobile ? 12 : 10;
+
+  // Leave margin inside the dotted canvas card so the pattern is visible around the floating device
+  const padX = 24;
+  const padY = 24;
+  const availW = Math.max(80, box.w - padX - bezelX);
+  const availH = Math.max(80, box.h - padY - bezelY - headerHeight - bottomBarHeight);
+
+  // Natural scaling: fits inside container horizontally and vertically
+  const scale = Math.min(availW / device.width, availH / device.height, 1);
+
+  useEffect(() => {
+    onScale?.(Math.max(1, Math.round(scale * 100)));
+  }, [scale, onScale]);
+
+  const scaledInnerW = Math.round(device.width * scale);
+  const scaledInnerH = Math.round(device.height * scale);
+
   return (
-    <div
-      ref={wrapRef}
-      className="h-full w-full overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_24px_70px_-24px_rgba(0,0,0,0.35)]"
-    >
+    <div ref={wrapRef} className="flex h-full w-full items-center justify-center overflow-hidden">
+      {/* Device Mockup Shell */}
       <div
-        data-lenis-prevent
-        data-studio-preview
-        className="overscroll-contain overflow-y-auto bg-white"
+        className={`relative flex flex-col overflow-hidden transition-all duration-300 shadow-[0_24px_50px_-10px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] ${
+          isMobile
+            ? "rounded-[34px] border-[5px] border-[#202024] bg-[#161618]"
+            : isTablet
+            ? "rounded-[24px] border-[5px] border-[#202024] bg-[#161618]"
+            : "rounded-xl border-[4px] border-[#18181b] bg-[#18181b]"
+        }`}
         style={{
-          width: designWidth,
-          height: box.h / scale,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
+          width: scaledInnerW + bezelX,
+          height: scaledInnerH + headerHeight + bottomBarHeight + bezelY,
         }}
       >
-        {children}
+        {/* Device Frame Header */}
+        {isLaptop && (
+          <div className="flex h-[24px] shrink-0 items-center bg-[#18181b] px-2.5 select-none" aria-hidden>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[#ff5f56]" />
+              <span className="size-2 rounded-full bg-[#ffbd2e]" />
+              <span className="size-2 rounded-full bg-[#27c93f]" />
+            </div>
+          </div>
+        )}
+
+        {isTablet && (
+          <div className="flex h-[20px] shrink-0 items-center justify-center bg-[#161618] select-none" aria-hidden>
+            <span className="size-2 rounded-full bg-stone-700/80 ring-1 ring-stone-600" />
+          </div>
+        )}
+
+        {isMobile && (
+          <div className="relative flex h-[26px] shrink-0 items-center justify-center bg-[#161618] select-none" aria-hidden>
+            {/* Dynamic Island */}
+            <div className="flex h-3 w-16 items-center justify-between rounded-full bg-black px-1.5 shadow-inner">
+              <span className="size-1 rounded-full bg-stone-800" />
+              <span className="size-1 rounded-full bg-blue-950/80" />
+            </div>
+          </div>
+        )}
+
+        {/* Viewport content with authentic isolated browser viewport */}
+        <div
+          className="relative overflow-hidden bg-black"
+          style={{
+            width: scaledInnerW,
+            height: scaledInnerH,
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            src="/studio/preview"
+            title="Portfolio preview"
+            tabIndex={-1}
+            className="border-0 bg-[#070708]"
+            style={{
+              width: device.width,
+              height: device.height,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
+          />
+        </div>
+
+        {/* Bottom Bar for Mobile */}
+        {isMobile && (
+          <div className="flex h-[14px] shrink-0 items-center justify-center bg-[#161618] select-none" aria-hidden>
+            <span className="h-1 w-16 rounded-full bg-stone-600/70" />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -276,6 +408,9 @@ const TAB_KEYS: Record<TabId, readonly string[]> = {
   history: [],
 };
 
+const IDLE_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
+const WARNING_DURATION_SEC = 120; // 2 minutes countdown
+
 export function StudioApp({
   initial,
   publishedInitial,
@@ -299,7 +434,18 @@ export function StudioApp({
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [tab, setTab] = useState<TabId>("overview");
   const [view, setView] = useState<View>("edit");
-  const [preset, setPreset] = useState<PreviewPreset>(PRESETS[0]);
+  const [selectedCategory, setSelectedCategory] = useState<DeviceCategory>("desktop");
+  const [selectedDevice, setSelectedDevice] = useState<DeviceModel>(
+    DEVICE_MODELS.find((m) => m.id === "laptop-air") ?? DEVICE_MODELS[0]
+  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("studio_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [history, setHistory] = useState<HistoryEntry[]>(historyInitial);
   const [publishMsg, setPublishMsg] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -313,6 +459,92 @@ export function StudioApp({
   const firstRender = useRef(true);
   const filterRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Inactivity & Session Timeout Configuration
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [timeoutSecondsLeft, setTimeoutSecondsLeft] = useState(WARNING_DURATION_SEC);
+  const lastActivityRef = useRef(0);
+
+  useEffect(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("studio_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const resetActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    if (showTimeoutModal) {
+      setShowTimeoutModal(false);
+      setTimeoutSecondsLeft(WARNING_DURATION_SEC);
+      void fetch("/api/studio/session");
+    }
+  }, [showTimeoutModal]);
+
+  // Listen for user interaction events to track idle time
+  useEffect(() => {
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+    let lastThrottled = 0;
+    const handler = () => {
+      const now = Date.now();
+      if (now - lastThrottled > 3000) {
+        lastThrottled = now;
+        lastActivityRef.current = now;
+        if (showTimeoutModal) {
+          setShowTimeoutModal(false);
+          setTimeoutSecondsLeft(WARNING_DURATION_SEC);
+        }
+      }
+    };
+    events.forEach((ev) => window.addEventListener(ev, handler, { passive: true }));
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, handler));
+    };
+  }, [showTimeoutModal]);
+
+  // Idle interval check & heartbeat
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      const idleMs = Date.now() - lastActivityRef.current;
+      if (idleMs >= IDLE_TIMEOUT_MS) {
+        try {
+          await fetch("/api/studio/logout", { method: "POST" });
+        } catch {}
+        router.push("/studio/login?reason=timeout");
+        return;
+      }
+
+      const warningThresholdMs = IDLE_TIMEOUT_MS - WARNING_DURATION_SEC * 1000;
+      if (idleMs >= warningThresholdMs) {
+        setShowTimeoutModal(true);
+        const remaining = Math.max(0, Math.ceil((IDLE_TIMEOUT_MS - idleMs) / 1000));
+        setTimeoutSecondsLeft(remaining);
+      } else {
+        setShowTimeoutModal(false);
+      }
+    }, 1000);
+
+    const heartbeat = setInterval(async () => {
+      try {
+        const res = await fetch("/api/studio/session");
+        if (!res.ok) {
+          router.push("/studio/login?reason=expired");
+        }
+      } catch {}
+    }, 60000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(heartbeat);
+    };
+  }, [router]);
 
   const isOpen = (list: string, i: number) => openMap[`${list}:${i}`] ?? i === 0;
   const toggleOpen = (list: string, i: number) =>
@@ -407,6 +639,9 @@ export function StudioApp({
       if (mod && e.key.toLowerCase() === "enter") {
         e.preventDefault();
         void publish();
+      } else if (mod && e.key.toLowerCase() === "b" && !typing) {
+        e.preventDefault();
+        toggleSidebar();
       } else if (mod && e.key.toLowerCase() === "z" && !typing) {
         e.preventDefault();
         dispatch({ type: e.shiftKey ? "redo" : "undo" });
@@ -417,7 +652,7 @@ export function StudioApp({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [publish]);
+  }, [publish, toggleSidebar]);
 
   const restore = async (id: number) => {
     if (!window.confirm("Restore this version? Current published content will be archived first.")) return;
@@ -454,31 +689,79 @@ export function StudioApp({
   const autoKeywords = useMemo(() => autoDerivedKeywords(draft), [draft]);
   const ownerFirst = (draft.site.name.split(" ")[0] || draft.site.name || "there");
 
-  const previewBlocks: Record<SectionKey, React.ReactNode> = {
-    hero: <Hero key="hero" data={draft} />,
-    intro: <AboutIntro key="intro" data={draft} />,
-    projects: <Projects key="projects" data={draft} />,
-    skills: <Journey key="skills" data={draft} />,
-    gallery: <Gallery key="gallery" data={draft} />,
-    quote: <QuoteSection key="quote" data={draft} />,
-    about: <About key="about" data={draft} />,
-    testimonials: <Testimonials key="testimonials" data={draft} />,
-    faq: <Faq key="faq" data={draft} />,
-    contact: <Contact key="contact" data={draft} />,
-  };
-
   const activeTab = TABS.find((t) => t.id === tab) ?? TABS[0];
   const saveLabel = saveState === "saved" ? "Saved" : saveState === "saving" ? "Saving…" : "Save failed";
 
-  const sideNav = (
+  const sideNav = sidebarCollapsed ? (
+    <div className="flex flex-col items-center gap-1.5 py-1">
+      {/* Expand button at top */}
+      <button
+        onClick={toggleSidebar}
+        title="Expand sidebar (⌘B)"
+        aria-label="Expand sidebar"
+        className="grid size-10 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white transition hover:bg-stone-800 shadow-sm"
+      >
+        {(draft.site.name.charAt(0) || "S").toUpperCase()}
+      </button>
+
+      <div className="my-1.5 h-px w-8 bg-stone-200/80" />
+
+      {TABS.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => setTab(t.id)}
+          aria-current={tab === t.id ? "true" : undefined}
+          title={t.label}
+          aria-label={t.label}
+          className={`relative grid size-10 place-items-center rounded-xl transition ${
+            tab === t.id ? "bg-black text-white shadow-sm" : "text-stone-500 hover:bg-black/5 hover:text-stone-900"
+          }`}
+        >
+          <t.Icon size={17} aria-hidden />
+          {tabDirty(t.id) && (
+            <span
+              aria-label="Has unpublished changes"
+              title="Has unpublished changes"
+              className="absolute right-1.5 top-1.5 size-2 rounded-full bg-amber-500 ring-2 ring-white"
+            />
+          )}
+        </button>
+      ))}
+
+      <div className="my-2 h-px w-8 bg-stone-200/80" />
+
+      <button
+        onClick={() => void logout()}
+        title={`Sign out (${email})`}
+        aria-label="Sign out"
+        className="grid size-10 place-items-center rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-600 transition"
+      >
+        <span className="text-[13px] font-bold">⎋</span>
+      </button>
+    </div>
+  ) : (
     <>
-      <div className="hidden items-center gap-2.5 px-3 pb-4 pt-1 lg:flex">
-        <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white">
-          {(draft.site.name.charAt(0) || "S").toUpperCase()}
-        </span>
-        <span className="text-[14px] font-bold text-stone-900">Content studio</span>
+      <div className="hidden items-center justify-between px-3 pb-3 pt-1 lg:flex">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white shadow-sm">
+            {(draft.site.name.charAt(0) || "S").toUpperCase()}
+          </span>
+          <div>
+            <span className="block text-[14px] font-bold text-stone-900 leading-tight">Content studio</span>
+            <span className="block text-[11px] text-stone-400 font-medium">Monson Sunny</span>
+          </div>
+        </div>
+        <button
+          onClick={toggleSidebar}
+          aria-label="Collapse sidebar (⌘B)"
+          title="Collapse sidebar (⌘B)"
+          className="grid size-7 place-items-center rounded-lg text-stone-400 transition hover:bg-stone-200/80 hover:text-stone-900"
+        >
+          <PanelLeftClose size={15} />
+        </button>
       </div>
-      <div className="relative mb-1 hidden shrink-0 lg:block">
+
+      <div className="relative mb-2 hidden shrink-0 lg:block">
         <Search size={14} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
         <input
           ref={filterRef}
@@ -486,34 +769,52 @@ export function StudioApp({
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Search sections…  ( / )"
           aria-label="Search sections"
-          className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-8 pr-3 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+          className="w-full rounded-xl border border-stone-200 bg-white py-1.5 pl-8 pr-3 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
         />
       </div>
-      {TABS.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
-        <button
-          key={t.id}
-          onClick={() => setTab(t.id)}
-          aria-current={tab === t.id ? "true" : undefined}
-          className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-medium ${
-            tab === t.id ? "bg-black text-white" : "text-stone-500 hover:bg-black/5 hover:text-stone-900"
-          }`}
-        >
-          <t.Icon size={16} className="shrink-0" aria-hidden />
-          {t.label}
-          {tabDirty(t.id) && (
-            <span aria-label="Has unpublished changes" title="Has unpublished changes" className={`ml-auto size-1.5 shrink-0 rounded-full ${tab === t.id ? "bg-amber-300" : "bg-amber-500"}`} />
-          )}
-        </button>
-      ))}
-      <div className="mt-1 hidden border-t border-stone-200 pt-3 lg:block">
-        <p className="truncate px-3 text-[12px] text-stone-400">{email}</p>
-        <button
-          onClick={() => void logout()}
-          className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] text-stone-500 hover:bg-black/5 hover:text-stone-900"
-        >
-          Sign out
-        </button>
-        <p className="mt-2 px-3 text-[11px] leading-relaxed text-stone-400">⌘↵ publish · ⌘Z undo · / search</p>
+
+      <div className="space-y-0.5">
+        {TABS.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? "true" : undefined}
+            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-medium transition ${
+              tab === t.id ? "bg-black text-white shadow-sm" : "text-stone-600 hover:bg-black/5 hover:text-stone-900"
+            }`}
+          >
+            <t.Icon size={16} className="shrink-0" aria-hidden />
+            <span className="truncate">{t.label}</span>
+            {tabDirty(t.id) && (
+              <span
+                aria-label="Has unpublished changes"
+                title="Has unpublished changes"
+                className={`ml-auto size-2 shrink-0 rounded-full ${tab === t.id ? "bg-amber-300" : "bg-amber-500"}`}
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-auto hidden border-t border-stone-200/90 pt-3 lg:block">
+        <div className="rounded-xl bg-stone-100/80 p-2.5">
+          <p className="truncate text-[11px] font-medium text-stone-500">{email}</p>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Active session
+            </span>
+            <button
+              onClick={() => void logout()}
+              className="text-[11px] font-semibold text-stone-600 transition hover:text-red-600"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+        <p className="mt-2 text-center text-[10px] text-stone-400">
+          ⌘↵ publish · ⌘B sidebar · ⌘Z undo
+        </p>
       </div>
     </>
   );
@@ -522,11 +823,19 @@ export function StudioApp({
     <div className="min-h-screen bg-[#f4f2ec] text-stone-900">
       {/* top bar */}
       <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f4f2ec]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-4 py-3">
+        <div className="mx-auto flex max-w-[1720px] flex-wrap items-center gap-2 px-4 py-2.5">
+          <button
+            onClick={toggleSidebar}
+            aria-label={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+            title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+            className={`${iconBtnCls} hidden lg:grid`}
+          >
+            {sidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+          </button>
           <span className="grid size-8 place-items-center rounded-lg bg-black font-heading text-[14px] font-bold text-white lg:hidden">
             {(draft.site.name.charAt(0) || "S").toUpperCase()}
           </span>
-          <h1 className="text-[17px] font-bold tracking-tight">
+          <h1 className="text-[16px] font-bold tracking-tight">
             {tab === "overview" ? "Overview" : activeTab.label}
             <span className="ml-2 align-middle text-[12px] font-normal text-stone-400">{saveLabel}</span>
           </h1>
@@ -605,83 +914,274 @@ export function StudioApp({
         )}
       </header>
 
-      <div className={`mx-auto grid max-w-[1600px] grid-cols-1 gap-0 ${previewOpen ? "lg:grid-cols-[200px_minmax(0,400px)_minmax(0,1fr)]" : "lg:grid-cols-[200px_minmax(0,1fr)]"}`}>
+      {/* Main Studio Grid: Sidebar, Main Editor, and 1/3rd Screen Live Preview */}
+      <div className={`mx-auto grid max-w-[1920px] grid-cols-1 gap-0 ${
+        previewOpen
+          ? sidebarCollapsed
+            ? "studio-grid-collapsed-preview"
+            : "studio-grid-expanded-preview"
+          : sidebarCollapsed
+            ? "studio-grid-collapsed-no-preview"
+            : "studio-grid-expanded-no-preview"
+      }`}>
         {/* sidebar */}
-        <aside className={`${view === "preview" ? "hidden" : ""} lg:block`}>
-          <nav aria-label="Studio sections" className="flex gap-1 overflow-x-auto border-b border-stone-200/80 px-3 py-2 lg:sticky lg:top-[57px] lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:p-3">
+        <aside className={`${view === "preview" ? "hidden" : ""} lg:block transition-all duration-200`}>
+          <nav
+            aria-label="Studio sections"
+            className={`flex gap-1 overflow-x-auto border-b border-stone-200/80 px-3 py-2 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r ${
+              sidebarCollapsed ? "lg:p-2" : "lg:p-3"
+            }`}
+          >
             {sideNav}
           </nav>
         </aside>
 
         {/* editor */}
-        <main className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[780px] lg:border-r-0"}`}>
+        <main className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[880px] lg:border-r-0"}`}>
           {tab === "overview" && (
-            <section className="space-y-4">
-              <div>
-                <h3 className="font-heading text-[26px] font-bold tracking-tight">
-                  {greeting()}, {ownerFirst} 👋
-                </h3>
-                <p className="mt-1 text-[13px] text-stone-500">Manage your portfolio content and publish updates.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className={cardCls}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Live version</p>
-                  <p className="mt-1 font-heading text-[26px] font-bold">v{version}</p>
+            <section className="space-y-5">
+              {/* Welcome Header */}
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div>
+                  <h2 className="font-heading text-[26px] font-bold tracking-tight text-stone-950">
+                    {greeting()}, {ownerFirst} 👋
+                  </h2>
+                  <p className="mt-0.5 text-[13px] text-stone-500">
+                    Manage portfolio content, inspect device previews, and publish live updates.
+                  </p>
                 </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setTab("sections")}
+                    className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-[12.5px] font-medium text-stone-700 shadow-sm transition hover:bg-stone-100"
+                  >
+                    <Layers size={14} className="text-stone-400" />
+                    Manage sections
+                  </button>
+                  <button
+                    onClick={() => void publish()}
+                    disabled={publishing}
+                    className="flex items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:opacity-50"
+                  >
+                    <Send size={13} />
+                    {publishing ? "Publishing…" : dirty ? "Publish changes" : "Publish now"}
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Key Metrics Cards */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Live version</p>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Live</span>
+                  </div>
+                  <p className="mt-1.5 font-heading text-[24px] font-bold text-stone-900">v{version}</p>
+                </div>
+
                 <div className={cardCls}>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Last published</p>
-                  <p className="mt-1 font-heading text-[15px] font-bold leading-snug">
-                    {publishedAt ? new Date(publishedAt).toLocaleString() : "Not yet"}
+                  <p className="mt-1.5 font-heading text-[13px] font-bold leading-snug text-stone-800">
+                    {publishedAt ? new Date(publishedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not yet"}
                   </p>
                 </div>
+
                 <div className={cardCls}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Draft status</p>
-                  <p className={`mt-1 text-[14px] font-semibold ${dirty ? "text-red-600" : "text-green-700"}`}>
-                    {dirty ? "Unpublished changes" : "Everything is published"}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Draft status</p>
+                    {dirty && <span className="size-2 rounded-full bg-amber-500 animate-pulse" />}
+                  </div>
+                  <p className={`mt-1.5 text-[13px] font-semibold ${dirty ? "text-amber-700" : "text-emerald-700"}`}>
+                    {dirty ? "Unpublished changes" : "All changes live"}
                   </p>
                 </div>
+
                 <div className={cardCls}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Earlier versions</p>
-                  <p className="mt-1 text-[14px] font-semibold">{history.length} in history</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Version history</p>
+                    <button onClick={() => setTab("history")} className="text-[10px] font-semibold text-stone-400 hover:text-stone-900">View →</button>
+                  </div>
+                  <p className="mt-1.5 font-heading text-[24px] font-bold text-stone-900">{history.length}</p>
                 </div>
               </div>
-              <p className="text-[13px] leading-relaxed text-stone-500">
-                Pick a section from the menu to edit it. Everything you type saves to your draft automatically — the
-                live site only changes when you press <strong className="text-stone-900">Publish</strong>.
-              </p>
+
+              {/* Changed sections alert banner if dirty */}
               {dirtyTabs.length > 0 && (
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-                    Changed sections ({dirtyTabs.length})
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-amber-500 animate-ping" />
+                      <p className="text-[13px] font-bold text-amber-950">
+                        Unpublished changes in {dirtyTabs.length} {dirtyTabs.length === 1 ? "section" : "sections"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => void publish()}
+                      disabled={publishing}
+                      className="rounded-full bg-amber-900 px-3.5 py-1 text-[12px] font-semibold text-white transition hover:bg-amber-950 disabled:opacity-50"
+                    >
+                      {publishing ? "Publishing…" : "Publish live"}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[12px] text-amber-800/90">
+                    Edits are saved to your private draft. Click any section below to review before publishing:
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {dirtyTabs.map((t) => (
                       <button
                         key={t.id}
                         onClick={() => setTab(t.id)}
-                        className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-[12px] font-medium text-amber-800 hover:bg-amber-100"
+                        className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-[12px] font-medium text-amber-900 shadow-sm transition hover:bg-amber-100"
                       >
-                        <t.Icon size={13} aria-hidden />
+                        <t.Icon size={12} aria-hidden />
                         {t.label}
+                        <ChevronRight size={12} className="text-amber-400" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setTab("sections")}
-                  className="rounded-full border border-stone-200 bg-white px-4 py-2.5 text-[13px] font-medium text-stone-700 hover:bg-stone-100"
-                >
-                  Manage sections
-                </button>
-                <button
-                  onClick={() => void publish()}
-                  disabled={publishing}
-                  className="rounded-full bg-black px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
-                >
-                  {publishing ? "Publishing…" : "Publish now"}
-                </button>
+
+              {/* Quick Preview Switcher Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-stone-200/90 bg-white p-3 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Monitor size={15} className="text-stone-400" />
+                  <span className="text-[12px] font-semibold text-stone-700">Quick device preview:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("desktop");
+                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "laptop-air")!);
+                      setPreviewOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
+                      selectedCategory === "desktop" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    <Laptop size={12} /> MacBook Air
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("desktop");
+                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "desktop-4k")!);
+                      setPreviewOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
+                      selectedDevice.id === "desktop-4k" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    <Monitor size={12} /> 4K Ultra HD
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("tablet");
+                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "tablet-ipad-air")!);
+                      setPreviewOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
+                      selectedCategory === "tablet" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    <Tablet size={12} /> iPad Air
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("mobile");
+                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "phone-15-pro")!);
+                      setPreviewOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
+                      selectedCategory === "mobile" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    <Smartphone size={12} /> iPhone 15 Pro
+                  </button>
+                </div>
+              </div>
+
+              {/* Sections Hub Grid */}
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-stone-500">
+                    Portfolio Sections Hub
+                  </h3>
+                  <span className="text-[11px] text-stone-400">Click any section to edit</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {SECTION_KEYS.map((k) => {
+                    const tabKey = (k === "skills" ? "journey" : k === "projects" ? "work" : k) as TabId;
+                    const tabMeta = TABS.find((t) => t.id === tabKey);
+                    const count = sectionCount(k, draft);
+                    const isVisible = draft.sections.visible[k] !== false;
+                    const isModified = tabDirty(tabKey);
+
+                    return (
+                      <div
+                        key={k}
+                        onClick={() => setTab(tabKey)}
+                        className={`group cursor-pointer rounded-2xl border bg-white p-3.5 transition-all hover:border-stone-400 hover:shadow-md ${
+                          isModified ? "border-amber-300 ring-1 ring-amber-200" : "border-stone-200/90"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`grid size-9 place-items-center rounded-xl transition ${
+                              isModified ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-700 group-hover:bg-black group-hover:text-white"
+                            }`}>
+                              {tabMeta ? <tabMeta.Icon size={16} /> : <Layers size={16} />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-[14px] font-bold text-stone-900 group-hover:text-black">
+                                  {SECTION_LABELS[k]}
+                                </h4>
+                                {isModified && (
+                                  <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[9.5px] font-semibold text-amber-800">
+                                    Modified
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11.5px] text-stone-400">
+                                {count ?? "Single block"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium ${
+                                isVisible ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"
+                              }`}
+                            >
+                              {isVisible ? <Eye size={10} /> : <EyeOff size={10} />}
+                              {isVisible ? "Visible" : "Hidden"}
+                            </span>
+                            <ChevronRight size={14} className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-stone-600" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Session Security & Auto-save Status Card */}
+              <div className="rounded-2xl border border-stone-200/90 bg-stone-100/60 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <div>
+                      <p className="text-[12px] font-semibold text-stone-800">Active session: {email}</p>
+                      <p className="text-[11px] text-stone-500">Auto-save protected · Idle timeout after 20 minutes of inactivity</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => void logout()}
+                    className="self-start text-[12px] font-medium text-stone-500 hover:text-red-600 transition"
+                  >
+                    Sign out of Studio
+                  </button>
+                </div>
               </div>
             </section>
           )}
@@ -1562,65 +2062,140 @@ export function StudioApp({
           )}
         </main>
 
-        {/* live preview — fixed corner window; the draft site scrolls
-            inside the frame only, never with the page */}
-        <div className={`${view === "edit" ? "hidden" : ""} ${previewOpen ? "lg:block" : "lg:hidden"} min-w-0 border-t border-stone-200/80 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
+        {/* live preview — 1/3rd of screen column at right side */}
+        <div className={`${view === "edit" ? "hidden" : ""} ${previewOpen ? "lg:flex" : "lg:hidden"} min-w-0 flex-col border-t border-stone-200/80 bg-[#f7f6f2] lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
           <div className="flex h-full flex-col">
-          <div className="border-b border-stone-200/80 bg-[#f4f2ec] px-3 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-              Live preview · {preset.dims}{zoom ? ` · ${zoom}%` : ""}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <select
-                value={preset.id}
-                onChange={(e) => setPreset(PRESETS.find((p) => p.id === e.target.value) ?? PRESETS[0])}
-                aria-label="Preview device"
-                className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-700 focus:border-stone-400 focus:outline-none [&>option]:bg-white"
-              >
-                {PRESETS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label} · {p.dims}
-                  </option>
-                ))}
-              </select>
-              <div className="flex rounded-full border border-stone-200 bg-white p-1">
-                {PRESETS.map((p) => (
+            {/* Top Bar: Title & Controls */}
+            <div className="shrink-0 px-4 pt-4 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                  LIVE PREVIEW
+                </span>
+                <span className="text-[12px] font-mono text-stone-400">
+                  {selectedDevice.width} × {selectedDevice.height}{zoom ? ` · ${zoom}%` : ""}
+                </span>
+              </div>
+
+              {/* Controls Row: Left Dropdown, Right Segmented Pill */}
+              <div className="mt-2.5 flex items-center justify-between gap-3">
+                {/* Left: Device model dropdown */}
+                <div className="relative min-w-0 flex-1 max-w-[240px]">
+                  <select
+                    value={selectedDevice.id}
+                    onChange={(e) => {
+                      const dev = DEVICE_MODELS.find((m) => m.id === e.target.value);
+                      if (dev) {
+                        setSelectedDevice(dev);
+                        setSelectedCategory(dev.category);
+                      }
+                    }}
+                    aria-label="Select device model"
+                    className="w-full appearance-none rounded-xl border border-stone-200 bg-white py-1.5 pl-3.5 pr-8 text-[12.5px] font-medium text-stone-800 shadow-sm transition hover:border-stone-300 focus:border-stone-400 focus:outline-none cursor-pointer"
+                  >
+                    <optgroup label="Desktop & Laptops">
+                      {DEVICE_MODELS.filter((m) => m.category === "desktop").map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} · {p.width}×{p.height}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Tablets">
+                      {DEVICE_MODELS.filter((m) => m.category === "tablet").map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} · {p.width}×{p.height}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Mobile Phones">
+                      {DEVICE_MODELS.filter((m) => m.category === "mobile").map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} · {p.width}×{p.height}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500"
+                    aria-hidden
+                  />
+                </div>
+
+                {/* Right: Segmented Category Switcher Icons [ Smartphone ] [ Tablet ] [ Monitor ] */}
+                <div className="flex shrink-0 items-center rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
                   <button
-                    key={p.id}
-                    onClick={() => setPreset(p)}
-                    aria-label={`${p.label} preview`}
-                    aria-pressed={preset.id === p.id}
-                    title={`${p.label} · ${p.dims}`}
-                    className={`grid size-8 place-items-center rounded-full ${
-                      preset.id === p.id ? "bg-black text-white" : "text-stone-400 hover:text-stone-900"
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory("mobile");
+                      if (selectedDevice.category !== "mobile") {
+                        setSelectedDevice(
+                          DEVICE_MODELS.find((m) => m.id === "phone-15-pro") ?? DEVICE_MODELS[12]
+                        );
+                      }
+                    }}
+                    aria-label="Mobile phone preview"
+                    aria-pressed={selectedCategory === "mobile"}
+                    title="Mobile preview"
+                    className={`grid size-8 place-items-center rounded-lg transition ${
+                      selectedCategory === "mobile"
+                        ? "bg-[#111113] text-white shadow-sm"
+                        : "text-stone-400 hover:text-stone-900"
                     }`}
                   >
-                    <p.Icon size={15} aria-hidden />
+                    <Smartphone size={16} aria-hidden />
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory("tablet");
+                      if (selectedDevice.category !== "tablet") {
+                        setSelectedDevice(
+                          DEVICE_MODELS.find((m) => m.id === "tablet-ipad-air") ?? DEVICE_MODELS[7]
+                        );
+                      }
+                    }}
+                    aria-label="Tablet preview"
+                    aria-pressed={selectedCategory === "tablet"}
+                    title="Tablet preview"
+                    className={`grid size-8 place-items-center rounded-lg transition ${
+                      selectedCategory === "tablet"
+                        ? "bg-[#111113] text-white shadow-sm"
+                        : "text-stone-400 hover:text-stone-900"
+                    }`}
+                  >
+                    <Tablet size={16} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory("desktop");
+                      if (selectedDevice.category !== "desktop") {
+                        setSelectedDevice(
+                          DEVICE_MODELS.find((m) => m.id === "laptop-air") ?? DEVICE_MODELS[0]
+                        );
+                      }
+                    }}
+                    aria-label="Desktop and Laptop preview"
+                    aria-pressed={selectedCategory === "desktop"}
+                    title="Desktop & Laptop preview"
+                    className={`grid size-8 place-items-center rounded-lg transition ${
+                      selectedCategory === "desktop"
+                        ? "bg-[#111113] text-white shadow-sm"
+                        : "text-stone-400 hover:text-stone-900"
+                    }`}
+                  >
+                    <Monitor size={16} aria-hidden />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="studio-preview-dots min-h-0 h-[70vh] flex-1 p-2 sm:p-5 lg:h-auto">
-            <ScaledPreview designWidth={preset.designWidth} onScale={setZoom}>
-              {preset.id === "laptop" && (
-                <div className="flex items-center gap-1.5 border-b border-stone-200 bg-stone-100 px-3.5 py-2.5" aria-hidden>
-                  <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="size-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="size-2.5 rounded-full bg-[#28c840]" />
-                </div>
-              )}
-              <div className="relative min-h-[320px] bg-[#070708] text-white">
-                <SiteCanvas />
-                <div className="relative">
-                  {order.map((k) =>
-                    draft.sections.visible[k] === false ? null : previewBlocks[k]
-                  )}
-                  <Footer data={draft} />
-                </div>
+
+            {/* Dotted Canvas Card with Centered Floating Mockup */}
+            <div className="flex-1 min-h-0 px-4 pb-4 pt-1">
+              <div className="studio-preview-dots h-full w-full rounded-2xl sm:rounded-3xl border border-stone-200/90 shadow-sm p-4 flex items-center justify-center overflow-hidden">
+                <ScaledPreview device={selectedDevice} draft={draft} onScale={setZoom} />
               </div>
-            </ScaledPreview>
-          </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1632,6 +2207,54 @@ export function StudioApp({
           Sign out
         </button>
       </div>
+
+      {/* Session Inactivity Timeout Warning Modal */}
+      {showTimeoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            className="w-full max-w-[400px] rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid size-11 place-items-center rounded-xl bg-amber-100 text-amber-600">
+                <Clock className="size-5" />
+              </div>
+              <div>
+                <h3 className="font-heading text-[17px] font-bold text-stone-900">Session Timeout Warning</h3>
+                <p className="text-[12px] text-stone-500">Inactivity detected in studio</p>
+              </div>
+            </div>
+            <p className="mt-3 text-[13px] leading-relaxed text-stone-600">
+              For security, your session will automatically log out in:
+            </p>
+            <div className="mt-3 flex items-center justify-center rounded-xl border border-amber-200 bg-amber-50/80 py-2.5">
+              <span className="font-mono text-[22px] font-bold tracking-wider text-amber-900">
+                {Math.floor(timeoutSecondsLeft / 60)}:{String(timeoutSecondsLeft % 60).padStart(2, "0")}
+              </span>
+            </div>
+            <p className="mt-2 text-center text-[11px] text-stone-400">
+              All your latest drafts are auto-saved safely.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={resetActivity}
+                className="flex-1 rounded-full bg-black py-2.5 text-[13px] font-semibold text-white transition hover:bg-stone-800 active:scale-[0.99]"
+              >
+                Stay Signed In
+              </button>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="rounded-full border border-stone-200 bg-white px-4 py-2.5 text-[13px] font-medium text-stone-600 transition hover:bg-stone-100"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

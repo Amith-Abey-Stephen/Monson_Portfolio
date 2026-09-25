@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Clock, ShieldAlert, CheckCircle2 } from "lucide-react";
 
-export default function StudioLoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reason = searchParams.get("reason");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,53 +37,104 @@ export default function StudioLoginPage() {
   };
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f4f2ec] px-4 text-stone-900">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-[380px] rounded-2xl border border-stone-200/90 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)] sm:p-8"
+    <form
+      onSubmit={submit}
+      className="w-full max-w-[390px] rounded-2xl border border-stone-200/90 bg-white p-6 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] sm:p-8"
+    >
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white">
+          S
+        </span>
+        <div>
+          <h1 className="font-heading text-[20px] font-bold tracking-tight text-stone-950">Content Studio</h1>
+          <p className="text-[12px] text-stone-500">Monson Sunny Portfolio CMS</p>
+        </div>
+      </div>
+
+      {reason === "timeout" && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-left">
+          <Clock className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <div className="text-[12px] leading-relaxed text-amber-900">
+            <span className="font-semibold">Session Timed Out:</span> You were logged out after inactivity. Your latest draft edits have been preserved.
+          </div>
+        </div>
+      )}
+
+      {reason === "expired" && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/90 p-3 text-left">
+          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-rose-600" />
+          <div className="text-[12px] leading-relaxed text-rose-900">
+            <span className="font-semibold">Session Expired:</span> Your login session has expired. Please sign in again to continue editing.
+          </div>
+        </div>
+      )}
+
+      {reason === "logout" && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-stone-200 bg-stone-50 p-3 text-left">
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-stone-600" />
+          <div className="text-[12px] leading-relaxed text-stone-700">
+            You have successfully signed out of Content Studio.
+          </div>
+        </div>
+      )}
+
+      <p className="mt-4 text-[13px] text-stone-500">
+        Owner sign-in. Drafts stay private until you publish to the live site.
+      </p>
+
+      <label className="mt-5 block text-[13px] font-semibold text-stone-800">
+        Email
+        <input
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200"
+          placeholder="you@example.com"
+        />
+      </label>
+
+      <label className="mt-3 block text-[13px] font-semibold text-stone-800">
+        Password
+        <input
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200"
+          placeholder="••••••••"
+        />
+      </label>
+
+      {error && (
+        <p role="alert" className="mt-3 rounded-lg bg-red-50 p-2.5 text-[13px] font-medium text-red-600">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={busy}
+        className="mt-5 min-h-[46px] w-full rounded-full bg-black font-heading text-[14px] font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-[0.99] disabled:opacity-50"
       >
-        <h1 className="font-heading text-[22px] font-bold tracking-tight">Content Studio</h1>
-        <p className="mt-1 text-[13px] text-stone-500">Owner sign-in. Drafts stay private until you publish.</p>
-        <label className="mt-5 block text-[13px] font-semibold text-stone-800">
-          Email
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 min-h-[48px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
-            placeholder="you@example.com"
-          />
-        </label>
-        <label className="mt-3 block text-[13px] font-semibold text-stone-800">
-          Password
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 min-h-[48px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
-            placeholder="••••••••"
-          />
-        </label>
-        {error && (
-          <p role="alert" className="mt-3 text-[13px] font-medium text-red-600">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-5 min-h-[48px] w-full rounded-full bg-black font-heading text-[15px] font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
-        >
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
-        <Link href="/" className="mt-4 block text-center text-[13px] text-stone-500 hover:text-stone-900">
-          ← Back to site
-        </Link>
-      </form>
+        {busy ? "Signing in…" : "Sign in to Studio"}
+      </button>
+
+      <Link href="/" className="mt-4 block text-center text-[13px] text-stone-500 transition hover:text-stone-900">
+        ← Back to live site
+      </Link>
+    </form>
+  );
+}
+
+export default function StudioLoginPage() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#f4f2ec] px-4 text-stone-900">
+      <Suspense fallback={<div className="text-[13px] text-stone-400">Loading…</div>}>
+        <LoginForm />
+      </Suspense>
     </main>
   );
 }

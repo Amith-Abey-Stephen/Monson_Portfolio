@@ -6,5 +6,5 @@ export const runtime = "nodejs";
 export async function GET() {
   const s = await getSession();
   if (!s) return NextResponse.json({ authenticated: false }, { status: 401 });
-  return NextResponse.json({ authenticated: true, email: s.email });
+  return NextResponse.json({ authenticated: true, email: s.email, expiresAt: s.expiresAt });
 }
