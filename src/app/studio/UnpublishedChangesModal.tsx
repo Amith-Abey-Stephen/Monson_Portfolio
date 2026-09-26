@@ -12,8 +12,6 @@ import {
   Layers,
   Check,
   AlertCircle,
-  Eye,
-  EyeOff,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -22,7 +20,7 @@ import type { TabId } from "./StudioApp";
 // Map TOP_KEYS to friendly section names and tabs
 const KEY_INFO: Record<string, { label: string; tab: TabId; iconName?: string }> = {
   site: { label: "Site Identity & Contact", tab: "contact" },
-  navLinks: { label: "Navigation Links", tab: "contact" },
+  navLinks: { label: "Navigation Links", tab: "sections" },
   hero: { label: "Hero Header", tab: "hero" },
   clientLogos: { label: "Client Logos (Text)", tab: "site-settings" },
   logoImages: { label: "Client Logos (Images)", tab: "site-settings" },

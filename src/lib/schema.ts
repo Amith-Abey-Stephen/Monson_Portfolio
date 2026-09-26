@@ -163,6 +163,7 @@ export const SECTION_KEYS = [
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];
+export const FALLBACK_ORDER: readonly SectionKey[] = SECTION_KEYS;
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
   hero: "Hero",

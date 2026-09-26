@@ -12,6 +12,7 @@ export function Field({
   max,
   required,
   hint,
+  dirty,
   children,
 }: {
   label: string;
@@ -19,6 +20,7 @@ export function Field({
   max?: number;
   required?: boolean;
   hint?: string;
+  dirty?: boolean;
   children: React.ReactNode;
 }) {
   const len = typeof value === "string" ? value.length : Array.isArray(value) ? value.length : undefined;
@@ -26,9 +28,15 @@ export function Field({
   return (
     <label className="block">
       <span className="flex items-baseline justify-between gap-2 text-[13px] font-semibold text-stone-800">
-        <span>
+        <span className="flex items-center gap-1.5">
           {label}
-          {required && <span className="ml-1 text-red-500">*</span>}
+          {required && <span className="text-red-500">*</span>}
+          {dirty && (
+            <span
+              title="This field has unpublished edits"
+              className="inline-block size-1.5 rounded-full bg-amber-500 ring-2 ring-amber-100"
+            />
+          )}
         </span>
         {max !== undefined && len !== undefined && (
           <span className={`shrink-0 font-normal tabular-nums text-[12px] ${over ? "text-red-500" : "text-stone-400"}`}>

@@ -6,8 +6,8 @@ import {
   about as fallbackAbout,
   galleryItems as fallbackGallery,
   site as fallbackSite,
+  quote as fallbackQuote,
 } from "@/data/content";
-import { quote as fallbackQuote } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
 import { GridLines, ScrollReveal, ScrollWipe } from "./ui";
 

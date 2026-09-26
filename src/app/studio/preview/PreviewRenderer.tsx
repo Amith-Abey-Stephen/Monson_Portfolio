@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { SectionKey, SiteContent } from "@/lib/schema";
+import { FALLBACK_ORDER, type SectionKey, type SiteContent } from "@/lib/schema";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { AboutIntro } from "@/components/AboutIntro";
@@ -19,24 +19,6 @@ import { Faq } from "@/components/Faq";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { SiteCanvas } from "@/components/SiteCanvas";
-
-const FALLBACK_ORDER: SectionKey[] = [
-  "hero",
-  "intro",
-  "projects",
-  "skills",
-  "services",
-  "process",
-  "techstack",
-  "pricing",
-  "awards",
-  "gallery",
-  "quote",
-  "about",
-  "testimonials",
-  "faq",
-  "contact",
-];
 
 export function PreviewRenderer({ initialContent }: { initialContent: SiteContent }) {
   const [content, setContent] = useState<SiteContent>(() => {

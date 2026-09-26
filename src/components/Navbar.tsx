@@ -82,7 +82,7 @@ export function Navbar({
       window.removeEventListener("resize", onResize);
       document.body.style.overflow = prev;
     };
-  }, [open ]);
+  }, [open]);
 
   return (
     <>

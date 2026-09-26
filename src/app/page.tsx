@@ -16,27 +16,9 @@ import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { SiteCanvas } from "@/components/SiteCanvas";
 import { getPublishedContent } from "@/lib/content";
-import type { SectionKey } from "@/lib/schema";
+import { FALLBACK_ORDER, type SectionKey } from "@/lib/schema";
 
 export const dynamic = "force-dynamic";
-
-const FALLBACK_ORDER: SectionKey[] = [
-  "hero",
-  "intro",
-  "projects",
-  "skills",
-  "services",
-  "process",
-  "techstack",
-  "pricing",
-  "awards",
-  "gallery",
-  "quote",
-  "about",
-  "testimonials",
-  "faq",
-  "contact",
-];
 
 /**
  * Public site — reads PUBLISHED content only (docs/v1.md S15).

@@ -197,20 +197,13 @@ export function MagneticButton({
   children,
   className,
   href,
-  strength = 0.22,
   target,
 }: {
   children: ReactNode;
   className?: string;
   href?: string;
-  strength?: number;
   target?: string;
 }) {
-  // Matched to the Framer recording: hero CTAs stay perfectly fixed.
-  // No JS translate on hover (the old magnetic pull made the button
-  // chase the cursor, so it flickered — disappeared / re-appeared —
-  // when the cursor sat on its edge). Only a stable CSS brighten.
-  void strength;
   const isExternal = target === "_blank";
   return (
     <motion.a

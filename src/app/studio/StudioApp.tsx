@@ -15,7 +15,6 @@ import {
   Map,
   MessagesSquare,
   Monitor,
-  Laptop,
   Smartphone,
   Tablet,
   PanelRight,
@@ -25,7 +24,6 @@ import {
   Quote,
   Redo2,
   Search,
-  Send,
   Settings,
   Sparkles,
   Eye,
@@ -38,7 +36,6 @@ import {
   ChevronDown,
   Plus,
   Trash2,
-  X,
   Check,
   GitBranch,
   Cpu,
@@ -92,7 +89,7 @@ const TABS: {
   Icon: React.ComponentType<{ size?: number; className?: string; "aria-hidden"?: boolean }>;
 }[] = [
   { id: "overview", label: "Overview", Icon: Home },
-  { id: "sections", label: "Sections", Icon: Layers },
+  { id: "sections", label: "Sections & Nav", Icon: Layers },
   { id: "hero", label: "Hero", Icon: Sparkles },
   { id: "intro", label: "Intro", Icon: AlignLeft },
   { id: "work", label: "Work", Icon: Briefcase },
@@ -110,7 +107,6 @@ const TABS: {
   { id: "contact", label: "Contact", Icon: Mail },
   { id: "site-settings", label: "Site settings", Icon: Settings },
   { id: "seo", label: "SEO & Reach", Icon: Globe },
-  { id: "publish", label: "Publish", Icon: Send },
   { id: "history", label: "Version history", Icon: History },
 ];
 
@@ -398,305 +394,6 @@ export const TAB_TO_SECTION_KEY: Partial<Record<TabId, SectionKey>> = {
   contact: "contact",
 };
 
-export type SectionTemplate = {
-  key: SectionKey;
-  name: string;
-  category: "Offerings" | "Workflow" | "Technical" | "Commercial" | "Credibility" | "Portfolio" | "Content";
-  description: string;
-  animationType: string;
-  features: string[];
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-};
-
-export const SECTION_TEMPLATES: SectionTemplate[] = [
-  {
-    key: "services",
-    name: "Services & Capabilities",
-    category: "Offerings",
-    description: "High-impact spotlight cards detailing core design offerings, custom deliverable tags, and interactive previews.",
-    animationType: "3D Spotlight & ScrollWipe Heading",
-    features: ["Interactive ambient spotlight", "Custom deliverable tags", "Hover preview triggers", "Responsive 2-column grid"],
-    icon: Sparkles,
-  },
-  {
-    key: "process",
-    name: "Process & Methodology",
-    category: "Workflow",
-    description: "Multi-step timeline showcasing your end-to-end design framework from strategy to developer handoff.",
-    animationType: "ScrollReveal Stagger & Micro-arrow Transitions",
-    features: ["Step milestone badges (01, 02…)", "Deliverable achievement tags", "Hover gradient highlights", "Responsive 4-step deck"],
-    icon: GitBranch,
-  },
-  {
-    key: "techstack",
-    name: "Tech Stack & Tools",
-    category: "Technical",
-    description: "Grid of design software, prototyping engines, frontend frameworks, and proficiency ratings.",
-    animationType: "Card Hover Lift & Glowing Accents",
-    features: ["Category categorization", "Proficiency tags (Expert, Advanced)", "Fluid responsive cards", "Modern icon wrappers"],
-    icon: Cpu,
-  },
-  {
-    key: "pricing",
-    name: "Pricing & Packages",
-    category: "Commercial",
-    description: "Transparent engagement tier cards with highlighted 'Most Popular' package and direct booking buttons.",
-    animationType: "Gradient Shimmer Border & Scaled Hover",
-    features: ["Featured tier glow border", "Deliverable feature checklist", "Direct Calendly/Contact CTAs", "Responsive 3-column deck"],
-    icon: CreditCard,
-  },
-  {
-    key: "awards",
-    name: "Awards & Recognition",
-    category: "Credibility",
-    description: "Honors and design award showcase celebrating industry recognition, client achievements, and press.",
-    animationType: "Row Hover Glow & Ambient Backlight",
-    features: ["Year badges", "Organizing body citations", "External verified links", "Clean responsive list"],
-    icon: Trophy,
-  },
-  {
-    key: "projects",
-    name: "Work / Projects",
-    category: "Portfolio",
-    description: "Featured case studies with custom hero imagery, metadata tags, and external links.",
-    animationType: "Curtain wipe & Parallax image tilt",
-    features: ["16:10 case study previews", "Behance & live URL links", "Custom accent color badges"],
-    icon: Briefcase,
-  },
-  {
-    key: "testimonials",
-    name: "Client Testimonials",
-    category: "Credibility",
-    description: "Quotes and recommendations from founders, CTOs, and product leaders.",
-    animationType: "Subtle pulse & quotation marks reveal",
-    features: ["Author name and role tags", "Clean quote presentation", "High-credibility cards"],
-    icon: MessagesSquare,
-  },
-  {
-    key: "gallery",
-    name: "Visual Gallery",
-    category: "Portfolio",
-    description: "Visual exploration grid displaying high-fidelity mobile and web UI shots.",
-    animationType: "Zoom on hover & lightbox trigger",
-    features: ["Flexible image assets", "Responsive multi-column view", "Asset title overlays"],
-    icon: Images,
-  },
-  {
-    key: "faq",
-    name: "Frequently Asked Questions",
-    category: "Content",
-    description: "Accordion style FAQ answering common questions about engagement, timelines, and rates.",
-    animationType: "Smooth height expand & chevron rotate",
-    features: ["Ghost huge title integration", "Clean collapsible answers", "Zero leak when hidden"],
-    icon: CircleHelp,
-  },
-];
-
-export function TemplatePreview({ sectionKey }: { sectionKey: SectionKey }) {
-  switch (sectionKey) {
-    case "services":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
-          <div className="flex items-center justify-between text-[10px] text-purple-400 font-mono">
-            <span>{"// 01 CAPABILITIES"}</span>
-            <span className="rounded-full bg-purple-500/20 px-1.5 py-0.2 text-[8.5px] font-semibold text-purple-300">3D Spotlight</span>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            <div className="rounded-lg border border-purple-500/30 bg-white/[0.04] p-2">
-              <span className="font-mono text-[9px] text-purple-400 font-bold">{"// 01"}</span>
-              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Product Design</p>
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Figma</span>
-                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Tokens</span>
-              </div>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
-              <span className="font-mono text-[9px] text-purple-400 font-bold">{"// 02"}</span>
-              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Design Systems</p>
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Components</span>
-                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Specs</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "process":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[11px] font-bold text-purple-400">01</span>
-                <span className="text-[10px] text-purple-400">→</span>
-              </div>
-              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Discovery</p>
-              <p className="mt-1 text-[8.5px] text-purple-300 font-medium">✓ Product Brief</p>
-            </div>
-            <div className="rounded-lg border border-purple-500/30 bg-purple-950/20 p-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[11px] font-bold text-purple-400">02</span>
-                <span className="text-[10px] text-purple-400">→</span>
-              </div>
-              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Wireframes</p>
-              <p className="mt-1 text-[8.5px] text-purple-300 font-medium">✓ UX Flows</p>
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[9px] text-white/50 border-t border-white/10 pt-1.5">
-            <span>4-step progressive timeline cards</span>
-            <span className="text-purple-400 font-semibold">Interactive Flow</span>
-          </div>
-        </div>
-      );
-
-    case "techstack":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-purple-400" />
-                <span className="text-[11px] font-semibold text-white">Figma</span>
-              </div>
-              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Expert</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-purple-400" />
-                <span className="text-[11px] font-semibold text-white">Framer</span>
-              </div>
-              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Advanced</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-purple-400" />
-                <span className="text-[11px] font-semibold text-white">Tailwind</span>
-              </div>
-              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Expert</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-purple-400" />
-                <span className="text-[11px] font-semibold text-white">Spline 3D</span>
-              </div>
-              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Advanced</span>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "pricing":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-purple-500/40 bg-[#0c0a14] p-3 text-white shadow-inner">
-          <div className="flex items-center justify-between">
-            <span className="font-heading text-[12px] font-bold text-white">Full Product MVP</span>
-            <span className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-xs">
-              ★ Popular
-            </span>
-          </div>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className="font-heading text-[17px] font-extrabold text-white">$6,500</span>
-            <span className="text-[9px] text-white/50">/ project</span>
-          </div>
-          <div className="mt-1.5 space-y-0.5 text-[9.5px] text-white/70">
-            <div className="flex items-center gap-1">
-              <span className="text-purple-400 font-bold">✓</span>
-              <span>Full UI/UX Design System</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-purple-400 font-bold">✓</span>
-              <span>Developer Specs & Tokens</span>
-            </div>
-          </div>
-          <div className="mt-2 rounded-lg bg-purple-600 py-1 text-center text-[10px] font-bold text-white">
-            Book Package →
-          </div>
-        </div>
-      );
-
-    case "awards":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner space-y-1.5">
-          <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-2 py-1.5 border border-white/5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] font-bold text-amber-400">2024</span>
-              <span className="text-[11px] font-semibold text-white">Best Mobile Experience</span>
-            </div>
-            <span className="text-[9px] text-amber-300 font-medium">Award ↗</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-2 py-1.5 border border-white/5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] font-bold text-amber-400">2023</span>
-              <span className="text-[11px] font-semibold text-white">Featured UI Designer</span>
-            </div>
-            <span className="text-[9px] text-amber-300 font-medium">Award ↗</span>
-          </div>
-        </div>
-      );
-
-    case "projects":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
-          <div className="aspect-[16/9] w-full rounded-lg bg-gradient-to-br from-purple-950/60 via-stone-900 to-black border border-white/10 p-2.5 flex flex-col justify-end">
-            <span className="text-[8.5px] font-semibold uppercase tracking-wider text-purple-400">FinTech Platform</span>
-            <p className="font-heading text-[12px] font-bold text-white">Global Wealth Management</p>
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[9px] text-white/50">
-            <span>16:10 Case Study View</span>
-            <span className="text-purple-400 font-medium">Live Demo ↗</span>
-          </div>
-        </div>
-      );
-
-    case "testimonials":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
-          <p className="text-[10.5px] italic text-white/80 leading-snug">
-            &ldquo;Monson designed a breathtaking product for our Series A launch. Intuitive and polished.&rdquo;
-          </p>
-          <div className="mt-2 flex items-center gap-2 border-t border-white/10 pt-1.5">
-            <div className="size-5 rounded-full bg-purple-500/20 text-purple-300 text-[9px] font-bold grid place-items-center">
-              A
-            </div>
-            <div>
-              <p className="text-[9.5px] font-bold text-white leading-tight">Alex Rivera</p>
-              <p className="text-[8px] text-white/50 leading-tight">VP Product @ ScaleFlow</p>
-            </div>
-          </div>
-        </div>
-      );
-
-    case "gallery":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
-          <div className="grid grid-cols-3 gap-1.5">
-            <div className="h-10 rounded bg-gradient-to-br from-purple-800/40 to-black border border-white/10" />
-            <div className="h-10 rounded bg-gradient-to-br from-indigo-800/40 to-black border border-white/10" />
-            <div className="h-10 rounded bg-gradient-to-br from-pink-800/40 to-black border border-white/10" />
-          </div>
-          <p className="mt-1.5 text-center text-[9px] text-white/50">Visual exploration masonry grid</p>
-        </div>
-      );
-
-    case "faq":
-      return (
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner space-y-1.5">
-          <div className="rounded-lg bg-white/[0.04] p-2 border border-white/5 flex items-center justify-between">
-            <span className="text-[10.5px] font-semibold text-white">What is your turnaround time?</span>
-            <span className="text-[9px] text-purple-400">▾</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2 border border-white/5 flex items-center justify-between">
-            <span className="text-[10.5px] font-semibold text-white">How do we collaborate on Figma?</span>
-            <span className="text-[9px] text-purple-400">▾</span>
-          </div>
-        </div>
-      );
-
-    default:
-      return null;
-  }
-}
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -774,7 +471,7 @@ const TOP_KEYS = [
 
 const TAB_KEYS: Record<TabId, readonly string[]> = {
   overview: [],
-  sections: ["sections"],
+  sections: ["sections", "navLinks"],
   hero: ["hero"],
   intro: ["aboutIntro"],
   journey: ["journey", "stats"],
@@ -789,7 +486,7 @@ const TAB_KEYS: Record<TabId, readonly string[]> = {
   about: ["about"],
   testimonials: ["testimonials"],
   faq: ["faqs"],
-  contact: ["site", "socials", "navLinks"],
+  contact: ["site", "socials"],
   "site-settings": ["site", "clientLogos", "logoImages"],
   seo: ["seo"],
   publish: [],
@@ -949,6 +646,10 @@ export function StudioApp({
 
   const deleteSection = useCallback(
     (key: SectionKey) => {
+      const label = SECTION_LABELS[key] ?? key;
+      if (typeof window !== "undefined" && !window.confirm(`Remove "${label}" from your portfolio? You can re-add it anytime from the Template Library.`)) {
+        return;
+      }
       patch((d) => {
         d.sections.order = d.sections.order.filter((k) => k !== key);
         d.sections.visible[key] = false;
@@ -1000,7 +701,7 @@ export function StudioApp({
 
   const tabDirty = (id: TabId) => TAB_KEYS[id].some((k) => (changedKeys as readonly string[]).includes(k));
   const dirtyTabs = TABS.filter(
-    (t) => !["overview", "publish", "history"].includes(t.id) && tabDirty(t.id)
+    (t) => !["overview", "history"].includes(t.id) && tabDirty(t.id)
   );
 
   const revertKey = useCallback(
@@ -1011,7 +712,6 @@ export function StudioApp({
         );
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [publishedSnap]
   );
 
@@ -1023,7 +723,6 @@ export function StudioApp({
         );
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishedSnap]);
 
   // Autosave: debounce, show Saving/Saved/Error, never touch published.
@@ -1104,7 +803,7 @@ export function StudioApp({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [publish, toggleSidebar]);
+  }, [publish, toggleSidebar, dirty, publishing]);
 
   const restore = async (id: number) => {
     if (!window.confirm("Restore this version? Current published content will be archived first.")) return;
@@ -1297,10 +996,31 @@ export function StudioApp({
           <span className="grid size-8 place-items-center rounded-lg bg-black font-heading text-[14px] font-bold text-white lg:hidden">
             {(draft.site.name.charAt(0) || "S").toUpperCase()}
           </span>
-          <h1 className="text-[16px] font-bold tracking-tight">
-            {tab === "overview" ? "Overview" : activeTab.label}
-            <span className="ml-2 align-middle text-[12px] font-normal text-stone-400">{saveLabel}</span>
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[16px] font-bold tracking-tight">
+              {tab === "overview" ? "Overview" : activeTab.label}
+            </h1>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-all ${
+                saveState === "saving"
+                  ? "bg-amber-100/90 text-amber-800 ring-1 ring-amber-200"
+                  : saveState === "error"
+                  ? "bg-red-100 text-red-700 ring-1 ring-red-200"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${
+                  saveState === "saving"
+                    ? "bg-amber-500 animate-pulse"
+                    : saveState === "error"
+                    ? "bg-red-500"
+                    : "bg-emerald-500"
+                }`}
+              />
+              {saveLabel}
+            </span>
+          </div>
           <span className="ml-auto flex items-center gap-1.5">
             <button
               type="button"
@@ -1436,19 +1156,21 @@ export function StudioApp({
                     <Layers size={14} className="text-stone-400" />
                     Manage sections
                   </button>
-                  <button
-                    onClick={() => void publish()}
-                    disabled={publishing || !dirty}
-                    title={!dirty ? "No unpublished changes to publish" : "Publish draft changes live"}
-                    className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12.5px] font-semibold transition ${
-                      dirty
-                        ? "bg-black text-white shadow-sm hover:bg-stone-800 cursor-pointer"
-                        : "bg-stone-200 text-stone-400 cursor-not-allowed opacity-60"
-                    }`}
-                  >
-                    <Send size={13} />
-                    {publishing ? "Publishing…" : dirty ? "Publish changes" : "All changes live"}
-                  </button>
+                  {dirty ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowChangesModal(true)}
+                      className="flex items-center gap-1.5 rounded-full bg-black text-white shadow-sm hover:bg-stone-800 cursor-pointer px-4 py-1.5 text-[12.5px] font-semibold transition"
+                    >
+                      <Eye size={13} />
+                      <span>Review & Publish ({changedKeys.length})</span>
+                    </button>
+                  ) : (
+                    <span className="flex items-center gap-1.5 rounded-full bg-stone-200/60 text-stone-500 px-3.5 py-1.5 text-[12.5px] font-medium">
+                      <Check size={13} className="text-emerald-600" />
+                      <span>All changes live</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1506,16 +1228,10 @@ export function StudioApp({
                       <button
                         type="button"
                         onClick={() => setShowChangesModal(true)}
-                        className="rounded-full border border-amber-300 bg-white px-3 py-1 text-[12px] font-semibold text-amber-900 transition hover:bg-amber-100 shadow-xs"
+                        className="flex items-center gap-1.5 rounded-full bg-amber-900 px-4 py-1.5 text-[12px] font-semibold text-white transition hover:bg-amber-950 shadow-xs"
                       >
-                        Inspect & Revert
-                      </button>
-                      <button
-                        onClick={() => void publish()}
-                        disabled={publishing || !dirty}
-                        className="rounded-full bg-amber-900 px-3.5 py-1 text-[12px] font-semibold text-white transition hover:bg-amber-950 disabled:opacity-50"
-                      >
-                        {publishing ? "Publishing…" : "Publish live"}
+                        <Eye size={13} />
+                        <span>Inspect & Review Changes ({changedKeys.length})</span>
                       </button>
                     </div>
                   </div>
@@ -1537,64 +1253,6 @@ export function StudioApp({
                   </div>
                 </div>
               )}
-
-              {/* Quick Preview Switcher Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-stone-200/90 bg-white p-3 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Monitor size={15} className="text-stone-400" />
-                  <span className="text-[12px] font-semibold text-stone-700">Quick device preview:</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("desktop");
-                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "laptop-air")!);
-                      setPreviewOpen(true);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
-                      selectedCategory === "desktop" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                    }`}
-                  >
-                    <Laptop size={12} /> MacBook Air
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("desktop");
-                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "desktop-4k")!);
-                      setPreviewOpen(true);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
-                      selectedDevice.id === "desktop-4k" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                    }`}
-                  >
-                    <Monitor size={12} /> 4K Ultra HD
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("tablet");
-                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "tablet-ipad-air")!);
-                      setPreviewOpen(true);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
-                      selectedCategory === "tablet" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                    }`}
-                  >
-                    <Tablet size={12} /> iPad Air
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("mobile");
-                      setSelectedDevice(DEVICE_MODELS.find((m) => m.id === "phone-15-pro")!);
-                      setPreviewOpen(true);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
-                      selectedCategory === "mobile" ? "bg-black text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                    }`}
-                  >
-                    <Smartphone size={12} /> iPhone 15 Pro
-                  </button>
-                </div>
-              </div>
 
               {/* Sections Hub Grid */}
               <div>
@@ -1668,25 +1326,6 @@ export function StudioApp({
                       </div>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Session Security & Auto-save Status Card */}
-              <div className="rounded-2xl border border-stone-200/90 bg-stone-100/60 p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <span className="size-2 rounded-full bg-emerald-500" />
-                    <div>
-                      <p className="text-[12px] font-semibold text-stone-800">Active session: {email}</p>
-                      <p className="text-[11px] text-stone-500">Auto-save protected · Idle timeout after 20 minutes of inactivity</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => void logout()}
-                    className="self-start text-[12px] font-medium text-stone-500 hover:text-red-600 transition"
-                  >
-                    Sign out of Studio
-                  </button>
                 </div>
               </div>
             </section>
@@ -1804,6 +1443,52 @@ export function StudioApp({
                   );
                 })}
               </div>
+
+              {/* Header Navigation Links */}
+              <div className="pt-6 border-t border-stone-200/80">
+                <div className="flex items-center justify-between pb-2">
+                  <div>
+                    <h3 className="text-[15px] font-bold text-stone-900">Header Navigation Links ({draft.navLinks.length}/{MAX_COUNT.navLinks})</h3>
+                    <p className="text-[12px] text-stone-400">
+                      Configure quick-jump anchor links displayed in the floating site header.
+                    </p>
+                  </div>
+                  <button
+                    disabled={draft.navLinks.length >= MAX_COUNT.navLinks}
+                    onClick={() => patch((d) => { d.navLinks.push({ label: "New", href: "#hero", id: "hero" }); })}
+                    className={addBtnCls}
+                  >
+                    Add Link
+                  </button>
+                </div>
+                {draft.navLinks.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first navigation link.</p>}
+                <div className="space-y-2.5 mt-2">
+                  {draft.navLinks.map((l, i) => (
+                    <div key={i} className={cardCls}>
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[13px] font-semibold text-stone-600">Link {i + 1}: {l.label}</span>
+                        <RowButtons
+                          index={i}
+                          total={draft.navLinks.length}
+                          onMove={(dir) => patch((d) => { d.navLinks = move(d.navLinks, i, dir); })}
+                          onDelete={() => patch((d) => { d.navLinks.splice(i, 1); })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Field label="Label" value={l.label} max={LIMITS.nav.label}>
+                          <Text value={l.label} max={LIMITS.nav.label} onChange={(v) => patch((d) => { d.navLinks[i].label = v; })} />
+                        </Field>
+                        <Field label="Link" value={l.href} max={LIMITS.nav.href}>
+                          <Text value={l.href} max={LIMITS.nav.href} onChange={(v) => patch((d) => { d.navLinks[i].href = v; })} />
+                        </Field>
+                        <Field label="Section ID" value={l.id}>
+                          <Text value={l.id} onChange={(v) => patch((d) => { d.navLinks[i].id = v; })} />
+                        </Field>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </section>
           )}
 
@@ -1890,65 +1575,6 @@ export function StudioApp({
                     </Field>
                   </div>
                 </div>
-              ))}
-              <div className="flex items-center justify-between pt-2">
-                <h3 className="text-[14px] font-semibold">Services ({draft.services.length}/{MAX_COUNT.services})</h3>
-                <button
-                  disabled={draft.services.length >= MAX_COUNT.services}
-                  onClick={() =>
-                    patch((d) => {
-                      d.services.push({
-                        index: String(d.services.length + 1).padStart(2, "0"),
-                        title: "New service",
-                        description: "",
-                        tags: [],
-                        preview: "",
-                      });
-                    })
-                  }
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
-              </div>
-              {draft.services.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
-              {draft.services.map((s, i) => (
-                <ItemCard
-                  key={i}
-                  title={s.title || `Service ${s.index}`}
-                  badge={`Service ${s.index}${s.tags.length > 0 ? ` · ${s.tags.slice(0, 3).join(", ")}` : ""}`}
-                  thumb={s.preview}
-                  fallback={s.title}
-                  open={isOpen("services", i)}
-                  onToggle={() => toggleOpen("services", i)}
-                  actions={
-                    <RowButtons
-                      index={i}
-                      total={draft.services.length}
-                      onMove={(dir) => patch((d) => { d.services = move(d.services, i, dir); })}
-                      onDelete={() => patch((d) => { d.services.splice(i, 1); })}
-                      onDuplicate={() =>
-                        patch((d) => {
-                          if (d.services.length < MAX_COUNT.services)
-                            d.services.splice(i + 1, 0, structuredClone(d.services[i]));
-                        })
-                      }
-                    />
-                  }
-                >
-                  <div className="space-y-3">
-                    <Field label="Title" value={s.title} max={LIMITS.service.title} required>
-                      <Text value={s.title} max={LIMITS.service.title} onChange={(v) => patch((d) => { d.services[i].title = v; })} />
-                    </Field>
-                    <Field label="Description" value={s.description} max={LIMITS.service.description}>
-                      <Area value={s.description} max={LIMITS.service.description} rows={3} onChange={(v) => patch((d) => { d.services[i].description = v; })} />
-                    </Field>
-                    <TagsInput value={s.tags} max={MAX_COUNT.tagsPerService} onChange={(v) => patch((d) => { d.services[i].tags = v; })} />
-                    <Field label="Preview image" value={s.preview} hint="Cropped to 16:10. Empty hides the preview.">
-                      <ImageField value={s.preview} aspect="16/10" onChange={(v) => patch((d) => { d.services[i].preview = v; })} />
-                    </Field>
-                  </div>
-                </ItemCard>
               ))}
             </section>
           )}
@@ -2781,41 +2407,6 @@ export function StudioApp({
                     </Field>
                     <Field label="URL" value={s.href} max={LIMITS.social.href}>
                       <Text value={s.href} max={LIMITS.social.href} onChange={(v) => patch((d) => { d.socials[i].href = v; })} />
-                    </Field>
-                  </div>
-                </div>
-              ))}
-              <div className="flex items-center justify-between pt-2">
-                <h3 className="text-[14px] font-semibold">Navigation ({draft.navLinks.length}/{MAX_COUNT.navLinks})</h3>
-                <button
-                  disabled={draft.navLinks.length >= MAX_COUNT.navLinks}
-                  onClick={() => patch((d) => { d.navLinks.push({ label: "New", href: "#hero", id: "hero" }); })}
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
-              </div>
-              {draft.navLinks.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
-              {draft.navLinks.map((l, i) => (
-                <div key={i} className={cardCls}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[13px] font-semibold text-stone-600">Link {i + 1}</span>
-                    <RowButtons
-                      index={i}
-                      total={draft.navLinks.length}
-                      onMove={(dir) => patch((d) => { d.navLinks = move(d.navLinks, i, dir); })}
-                      onDelete={() => patch((d) => { d.navLinks.splice(i, 1); })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Field label="Label" value={l.label} max={LIMITS.nav.label}>
-                      <Text value={l.label} max={LIMITS.nav.label} onChange={(v) => patch((d) => { d.navLinks[i].label = v; })} />
-                    </Field>
-                    <Field label="Link" value={l.href} max={LIMITS.nav.href}>
-                      <Text value={l.href} max={LIMITS.nav.href} onChange={(v) => patch((d) => { d.navLinks[i].href = v; })} />
-                    </Field>
-                    <Field label="Section id" value={l.id}>
-                      <Text value={l.id} onChange={(v) => patch((d) => { d.navLinks[i].id = v; })} />
                     </Field>
                   </div>
                 </div>

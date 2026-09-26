@@ -384,17 +384,6 @@ body {
   }
 }
 
-@keyframes preloader-bar {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-
-
 /* Studio Layout: Live Preview at 1/3 (33.333%) of screen width on desktop */
 @media (min-width: 1024px) {
   .studio-grid-expanded-preview {
