@@ -210,6 +210,8 @@ export const siteContentSchema = z.object({
     title: z.string().max(LIMITS.hero.title),
     subtitle: z.string().max(LIMITS.hero.subtitle),
     quote: z.string().max(LIMITS.hero.quote),
+    personImage: imageOrEmpty(LIMITS.site.image).optional().default(""),
+    signatureImage: imageOrEmpty(LIMITS.site.image).optional().default(""),
   }),
   clientLogos: z.array(z.string().max(80)).max(MAX_COUNT.clientLogos),
   logoImages: z.array(imageOrEmpty(LIMITS.site.image)).max(MAX_COUNT.logoImages),

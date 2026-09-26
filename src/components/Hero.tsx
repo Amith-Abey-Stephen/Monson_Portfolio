@@ -51,31 +51,23 @@ function Wipe({
 export function Hero({ data }: { data?: HeroData } = {}) {
   const hero = data?.hero ?? fallbackHero;
   const site = data?.site ?? fallbackSite;
-  const hasImage = Boolean(site.heroImage);
+  const heroPersonSrc =
+    (hero as { personImage?: string }).personImage?.trim() ||
+    site.heroImage?.trim() ||
+    "/hero-person.png";
+  const signatureSrc = (hero as { signatureImage?: string }).signatureImage?.trim();
   const reduceMotion = useReducedMotion();
-  const entrance = (props: { opacity: number; y: number }) =>
+  const entrance = (props: { opacity: number; y: number; scale?: number }) =>
     reduceMotion ? false : props;
   return (
     <section
       id="hero"
       className="noise relative flex min-h-[100svh] flex-col overflow-hidden bg-transparent"
     >
-      {/* bg portrait + red grade — bottom edge feathered so it melts
-          into the shared canvas (no hard clip into the logo banner) */}
+      {/* background atmosphere without orange glow */}
       <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_66%,transparent_100%)]">
-        {hasImage && (
-          <Image
-            src={site.heroImage}
-            alt={`${site.name} portrait`}
-            fill
-            priority
-            sizes="100vw"
-            className="scale-[1.05] object-cover object-[50%_12%] sm:object-[50%_15%] md:object-[50%_18%]"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/15 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#7c3aed]/30 via-transparent to-black/45" />
-        <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_70%_20%,rgba(124,58,237,0.35),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_20%_80%,rgba(124,58,237,0.25),transparent_60%)]" />
       </div>
 
       <GridLines />
@@ -112,9 +104,49 @@ export function Hero({ data }: { data?: HeroData } = {}) {
           under the UI/UX description — swells up + settles down */}
       <div aria-hidden className="hero-breathe-glow pointer-events-none absolute bottom-0 left-0 z-[6] h-[80%] w-[65%]" />
 
-      {/* giant name — scrolls naturally with the page like the
-          reference (no parallax / fade, so it never lingers or pops) */}
-      <div className="pointer-events-none relative z-[5] mx-auto w-full max-w-[1500px] select-none px-4 pt-24 sm:px-6 md:px-8 md:pt-20">
+      {/* Person Portrait Cutout — standing centered/right with name behind it.
+          Fully responsive across all devices (mobile, tablet, laptop, ultrawide).
+          Follows the signature clip-path reveal animation. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[8] flex items-end justify-center overflow-hidden [mask-image:linear-gradient(to_bottom,black_75%,transparent_98%)]">
+        <motion.div
+          initial={
+            reduceMotion
+              ? { opacity: 0 }
+              : {
+                  clipPath: "inset(100% 0% 0% 0%)",
+                  opacity: 0,
+                  scale: 1.05,
+                  y: 28,
+                }
+          }
+          animate={{
+            clipPath: "inset(0% 0% 0% 0%)",
+            opacity: 1,
+            scale: 1,
+            y: 0,
+          }}
+          transition={{
+            clipPath: { duration: 1.25, ease: [0.76, 0, 0.24, 1], delay: 1.45 },
+            opacity: { duration: 0.8, ease: "easeOut", delay: 1.45 },
+            scale: { duration: 1.25, ease: [0.16, 1, 0.3, 1], delay: 1.45 },
+            y: { duration: 1.25, ease: [0.16, 1, 0.3, 1], delay: 1.45 },
+          }}
+          className="relative flex h-[50vh] sm:h-[66vh] md:h-[78vh] lg:h-[88vh] max-h-[960px] min-h-[300px] w-auto max-w-[92vw] sm:max-w-none justify-center will-change-[clip-path,transform]"
+        >
+          <Image
+            src={heroPersonSrc}
+            alt={`${site.name} portrait`}
+            width={1536}
+            height={1024}
+            priority
+            unoptimized={heroPersonSrc.startsWith("http") || heroPersonSrc.startsWith("/uploads")}
+            className="h-full w-auto object-contain object-bottom select-none"
+          />
+        </motion.div>
+      </div>
+
+      {/* giant name — lowered slightly for visual breathing room below navbar */}
+      <div className="pointer-events-none relative z-[5] mx-auto w-full max-w-[1500px] select-none px-4 pt-32 sm:px-6 sm:pt-36 md:px-8 md:pt-32 lg:pt-36">
         <motion.div
           initial={entrance({ opacity: 0, y: 90 })}
           animate={{ opacity: 1, y: 0 }}
@@ -133,7 +165,7 @@ export function Hero({ data }: { data?: HeroData } = {}) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 1.7 }}
           aria-hidden
-          className="-mt-[5vw] flex justify-end font-heading text-[clamp(64px,20vw,220px)] font-bold leading-[0.88] tracking-tight md:-mt-[2vw] md:text-[clamp(80px,11.5vw,180px)]"
+          className="-mt-[5vw] flex justify-end font-heading text-[clamp(64px,20vw,220px)] font-bold leading-[0.88] tracking-tight md:-mt-[1.5vw] md:text-[clamp(80px,11.5vw,180px)]"
         >
           <Wipe delay={1.8} className="-m-4 p-4">
             <span className="name-float name-float-delay bg-gradient-to-r from-white via-white to-white/30 bg-clip-text text-transparent">
@@ -195,14 +227,30 @@ export function Hero({ data }: { data?: HeroData } = {}) {
           </div>
 
           <div className="min-w-0 lg:justify-self-end lg:text-right">
-            <motion.p
-              initial={entrance({ opacity: 0, y: 20 })}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.55, duration: 0.9 }}
-              className="font-script -rotate-[4deg] text-[36px] leading-none text-white/90 sm:text-[44px] md:text-[58px]"
-            >
-              {site.name}
-            </motion.p>
+            {signatureSrc ? (
+              <motion.div
+                initial={entrance({ opacity: 0, y: 20 })}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.55, duration: 0.9 }}
+                className="-rotate-[3deg] inline-block lg:ml-auto select-none"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={signatureSrc}
+                  alt={`${site.name} signature`}
+                  className="h-10 sm:h-12 md:h-16 w-auto max-w-[240px] sm:max-w-[300px] object-contain opacity-95 brightness-0 invert drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]"
+                />
+              </motion.div>
+            ) : (
+              <motion.p
+                initial={entrance({ opacity: 0, y: 20 })}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.55, duration: 0.9 }}
+                className="font-script -rotate-[4deg] text-[36px] leading-none text-white/90 sm:text-[44px] md:text-[58px]"
+              >
+                {site.name}
+              </motion.p>
+            )}
             <motion.p
               initial={entrance({ opacity: 0, y: 20 })}
               animate={{ opacity: 1, y: 0 }}

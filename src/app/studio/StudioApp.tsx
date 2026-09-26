@@ -1511,7 +1511,157 @@ export function StudioApp({
               <Field label="Quote" value={draft.hero.quote} max={LIMITS.hero.quote}>
                 <Text value={draft.hero.quote} max={LIMITS.hero.quote} onChange={(v) => patch((d) => { d.hero.quote = v; })} />
               </Field>
-              <p className="text-[12px] text-stone-400">CTA buttons and the client-logo banner live under Site settings and the Contact tab.</p>
+              <Field
+                label="Hero Portrait Cutout / Image"
+                value={draft.hero.personImage || draft.site.heroImage}
+                hint="Upload or paste an image URL (transparent PNG cutout recommended). Defaults to /hero-person.png when empty."
+              >
+                <ImageField
+                  value={draft.hero.personImage || draft.site.heroImage}
+                  onChange={(v) =>
+                    patch((d) => {
+                      d.hero.personImage = v;
+                      d.site.heroImage = v;
+                    })
+                  }
+                />
+              </Field>
+              <Field
+                label="Signature Image (Optional)"
+                value={draft.hero.signatureImage}
+                hint="Upload or paste a handwritten signature image (white or transparent PNG/SVG). If empty, your name renders in script font."
+              >
+                <ImageField
+                  value={draft.hero.signatureImage}
+                  onChange={(v) =>
+                    patch((d) => {
+                      d.hero.signatureImage = v;
+                    })
+                  }
+                />
+              </Field>
+              {/* Company Names / Marquee Banner List */}
+              <div className="pt-4 border-t border-stone-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-[14px] font-semibold">
+                      Company Names / Marquee Strip ({draft.clientLogos.length}/{MAX_COUNT.clientLogos})
+                    </h3>
+                    <p className="text-[12px] text-stone-400">
+                      Company and client names that scroll continuously across the bottom of the hero page.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={draft.clientLogos.length >= MAX_COUNT.clientLogos}
+                    onClick={() =>
+                      patch((d) => {
+                        d.clientLogos.push(`Company ${d.clientLogos.length + 1}`);
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    + Add Company
+                  </button>
+                </div>
+
+                {draft.clientLogos.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-stone-300 py-6 text-center">
+                    <p className="text-[13px] text-stone-500">No company names added yet.</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patch((d) => {
+                          d.clientLogos.push("Company 1");
+                        })
+                      }
+                      className="mt-2 text-[12px] font-medium text-stone-900 underline hover:text-stone-700"
+                    >
+                      Click here to add your first company name
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {draft.clientLogos.map((companyName, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2.5 rounded-xl border border-stone-200 bg-white p-2.5 shadow-xs"
+                      >
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-[12px] font-semibold text-stone-600">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="text"
+                            value={companyName}
+                            maxLength={80}
+                            placeholder="e.g. Caxita Tech Solutions, Jay4Web, Google"
+                            onChange={(e) =>
+                              patch((d) => {
+                                d.clientLogos[idx] = e.target.value;
+                              })
+                            }
+                            className="w-full rounded-lg border border-stone-200 bg-stone-50/50 px-3 py-1.5 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                        <RowButtons
+                          index={idx}
+                          total={draft.clientLogos.length}
+                          onMove={(dir) =>
+                            patch((d) => {
+                              d.clientLogos = move(d.clientLogos, idx, dir);
+                              if (d.logoImages[idx] !== undefined) {
+                                d.logoImages = move(d.logoImages, idx, dir);
+                              }
+                            })
+                          }
+                          onDelete={() =>
+                            patch((d) => {
+                              d.clientLogos.splice(idx, 1);
+                              if (d.logoImages[idx] !== undefined) {
+                                d.logoImages.splice(idx, 1);
+                              }
+                            })
+                          }
+                          onDuplicate={() =>
+                            patch((d) => {
+                              if (d.clientLogos.length < MAX_COUNT.clientLogos) {
+                                d.clientLogos.splice(idx + 1, 0, d.clientLogos[idx]);
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Marquee Speed Slider */}
+                <div className="rounded-xl border border-stone-200 bg-stone-50/70 p-3">
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="font-semibold text-stone-700">Banner Scroll Speed</span>
+                    <span className="font-mono text-stone-500">{draft.logoMarqueeSpeed ?? 8} / 10</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    value={draft.logoMarqueeSpeed ?? 8}
+                    onChange={(e) =>
+                      patch((d) => {
+                        d.logoMarqueeSpeed = Math.min(10, Math.max(1, Number(e.target.value) || 1));
+                      })
+                    }
+                    className="mt-2 w-full accent-stone-900"
+                  />
+                  <div className="mt-1 flex justify-between text-[11px] text-stone-400">
+                    <span>Fast (1)</span>
+                    <span>Standard Pace (8)</span>
+                    <span>Slow Crawl (10)</span>
+                  </div>
+                </div>
+              </div>
             </section>
           )}
 
@@ -2495,8 +2645,20 @@ export function StudioApp({
               <Field label="Tagline" value={draft.site.tagline} max={LIMITS.site.tagline}>
                 <Text value={draft.site.tagline} max={LIMITS.site.tagline} onChange={(v) => patch((d) => { d.site.tagline = v; })} />
               </Field>
-              <Field label="Hero background image" value={draft.site.heroImage} hint="Empty shows the gradient only.">
-                <ImageField value={draft.site.heroImage} onChange={(v) => patch((d) => { d.site.heroImage = v; })} />
+              <Field
+                label="Hero Portrait Cutout / Image"
+                value={draft.hero.personImage || draft.site.heroImage}
+                hint="Transparent PNG cutout or portrait photo. Defaults to /hero-person.png when empty."
+              >
+                <ImageField
+                  value={draft.hero.personImage || draft.site.heroImage}
+                  onChange={(v) =>
+                    patch((d) => {
+                      d.hero.personImage = v;
+                      d.site.heroImage = v;
+                    })
+                  }
+                />
               </Field>
               <Field label="About portrait" value={draft.site.aboutImage} hint="Cropped to 4:5. Empty hides the portrait.">
                 <ImageField value={draft.site.aboutImage} aspect="4/5" onChange={(v) => patch((d) => { d.site.aboutImage = v; })} />

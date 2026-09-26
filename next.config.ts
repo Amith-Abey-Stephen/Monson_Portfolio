@@ -9,15 +9,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "framerusercontent.com",
+        hostname: "**",
       },
       {
-        protocol: "https",
-        hostname: "fonts.gstatic.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },

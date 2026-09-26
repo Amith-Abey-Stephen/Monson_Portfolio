@@ -1,7 +1,6 @@
 "use client";
-
 import { useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Link2, Trash2, Upload } from "lucide-react";
 
 export const inputCls =
   "mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none";
@@ -98,8 +97,12 @@ export function Area({
 }
 
 /**
- * Image field: URL editing + upload with server-side cover-crop to
- * the component's aspect ratio, live preview, replace/remove.
+ * Image field with explicit "Upload Image" or "Image Link" choice:
+ * - Segmented toggle to choose between Uploading a file or Pasting an image link
+ * - Upload mode: drag/browse file upload with server-side crop to aspect ratio
+ * - Link mode: direct URL input with quick preview
+ * - Live preview with dark background (ideal for cutouts and light assets)
+ * - Source badge and quick remove button
  */
 export function ImageField({
   value,
@@ -115,6 +118,8 @@ export function ImageField({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const isUrl = Boolean(value && /^https?:\/\//i.test(value));
+  const [mode, setMode] = useState<"upload" | "link">(isUrl ? "link" : "upload");
 
   const upload = async (f: File) => {
     setUploading(true);
@@ -135,44 +140,91 @@ export function ImageField({
   };
 
   return (
-    <div>
-      {value ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={value}
-          alt="preview"
-          className="mb-2 max-h-40 w-full rounded-xl border border-stone-200 bg-stone-100 object-contain"
-        />
-      ) : (
-        <p className="mb-2 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-[13px] text-stone-400">
-          Nothing here yet — upload or paste an image URL.
-        </p>
-      )}
-      <div className="flex gap-2">
-        <input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="https://… or /uploads/…"
-          className={`${inputCls} mt-0 flex-1`}
-        />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="shrink-0 rounded-full border border-stone-200 bg-white px-4 text-[13px] font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
-        >
-          {uploading ? "…" : "Upload"}
-        </button>
+    <div className="space-y-2.5">
+      {/* Choice Selector: Upload Image vs Image Link */}
+      <div className="flex items-center justify-between">
+        <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 text-[12px] font-medium">
+          <button
+            type="button"
+            onClick={() => setMode("upload")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 transition-colors ${
+              mode === "upload"
+                ? "bg-white text-stone-900 shadow-xs font-semibold"
+                : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            <Upload size={13} />
+            <span>Upload Image</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("link")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 transition-colors ${
+              mode === "link"
+                ? "bg-white text-stone-900 shadow-xs font-semibold"
+                : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            <Link2 size={13} />
+            <span>Image Link</span>
+          </button>
+        </div>
+
         {value && (
           <button
             type="button"
             onClick={() => onChange("")}
-            className="shrink-0 rounded-full border border-stone-200 bg-white px-4 text-[13px] text-stone-500 hover:bg-stone-100"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition"
           >
-            Remove
+            <Trash2 size={12} />
+            <span>Remove</span>
           </button>
         )}
       </div>
+
+      {/* Mode 1: Upload File */}
+      {mode === "upload" && (
+        <div className="rounded-xl border border-stone-200 bg-stone-50/70 p-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2 text-[13px] font-medium text-stone-700 shadow-xs hover:border-stone-400 hover:bg-stone-50 disabled:opacity-50 transition"
+            >
+              <Upload size={14} className="text-stone-500" />
+              <span>{uploading ? "Uploading..." : "Choose Image File"}</span>
+            </button>
+            <span className="text-[12px] text-stone-400">PNG, JPG, WebP, SVG</span>
+          </div>
+          {value && value.startsWith("/uploads") && (
+            <p className="mt-2 text-[11px] font-mono text-stone-500 truncate">
+              Uploaded: {value}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Mode 2: Image Link */}
+      {mode === "link" && (
+        <div className="rounded-xl border border-stone-200 bg-stone-50/70 p-3 space-y-2">
+          <div className="relative flex items-center">
+            <Link2 size={14} className="absolute left-3 text-stone-400 pointer-events-none" />
+            <input
+              type="url"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="https://images.unsplash.com/... or https://..."
+              className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+            />
+          </div>
+          <p className="text-[11px] text-stone-400">
+            Paste a direct URL from Unsplash, Imgur, Cloudinary, or any website.
+          </p>
+        </div>
+      )}
+
+      {/* Hidden file input */}
       <input
         ref={fileRef}
         type="file"
@@ -184,14 +236,45 @@ export function ImageField({
           if (f) void upload(f);
         }}
       />
+
+      {/* Live Preview */}
+      {value ? (
+        <div className="relative overflow-hidden rounded-xl border border-stone-200 bg-[#121214] p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value}
+            alt="Preview"
+            className="max-h-40 w-full rounded-lg object-contain"
+          />
+          <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] text-stone-400">
+            <span className="inline-flex items-center gap-1 font-mono truncate max-w-[80%]">
+              {value.startsWith("http") ? "🔗 Direct Web Link" : "📁 Uploaded File"}
+            </span>
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-400 hover:text-white transition"
+              title="Open full image in new tab"
+            >
+              Open ↗
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-stone-300 py-3 text-center text-[12px] text-stone-400">
+          No image set. Choose &ldquo;Upload Image&rdquo; or provide an &ldquo;Image Link&rdquo; above.
+        </div>
+      )}
+
       {aspect && (
-        <p className="mt-1 text-[12px] text-stone-400">
-          Saved images are cropped to {aspect} to match the site design.
+        <p className="text-[11px] text-stone-400">
+          Uploaded images will be auto-cropped to {aspect}.
         </p>
       )}
-      {hint && <p className="mt-1 text-[12px] text-stone-400">{hint}</p>}
+      {hint && <p className="text-[11px] text-stone-400">{hint}</p>}
       {error && (
-        <p role="alert" className="mt-1 text-[12px] text-red-600">
+        <p role="alert" className="text-[12px] font-medium text-red-600">
           {error}
         </p>
       )}

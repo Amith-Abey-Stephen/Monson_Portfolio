@@ -42,6 +42,8 @@ export const hero = {
   subtitle:
     "Creative and detail-oriented UI/UX designer with 4 years of experience, crafting intuitive interfaces with Figma and AI-powered design tools — from wireframes and prototypes to complete design systems.",
   quote: "I turn ideas into intuitive experiences",
+  personImage: "",
+  signatureImage: "",
 };
 
 export const clientLogos = ["Caxita Tech Solutions", "Jay4Web"];
