@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { testimonials as fallbackTestimonials } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
-import { GridLines, ScrollReveal, ScrollBlocks, ScrollWipe } from "./ui";
+import { GridLines, ScrollBlocks, ScrollWipe } from "./ui";
 
 /** illustrated avatars (memoji-like) with a gradient fallback underneath */
 const avatarSeeds = [
@@ -69,18 +69,8 @@ export function Testimonials({
   data?: Pick<SiteContent, "testimonials">;
 } = {}) {
   const testimonials = data?.testimonials ?? fallbackTestimonials;
-  // Defensive: with no entries the marquee would be an empty shell —
-  // render only the gradient + FAQs ghost so the page flow into the
-  // FAQ section keeps its designed continuity.
   if (testimonials.length === 0) {
-    return (
-      <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_64%,#6d28d9_76%,#5b21b6_87%,#2e1065_100%)] py-16 sm:py-20 md:py-28">
-        <GridLines />
-        <ScrollReveal className="text-center">
-          <p aria-hidden className="ghost-huge px-4 text-[22vw] leading-none sm:text-[26vw] md:text-[13vw]">FAQs</p>
-        </ScrollReveal>
-      </section>
-    );
+    return null;
   }
   return (
     <section aria-label="Client testimonials" className="relative z-10 overflow-hidden bg-[linear-gradient(to_bottom,transparent_0%,#000_22%,#0d0716_40%,#22103d_52%,#4c1d95_64%,#6d28d9_76%,#5b21b6_87%,#2e1065_100%)] py-16 sm:py-20 md:py-28">
@@ -120,10 +110,6 @@ export function Testimonials({
             the marquee once when the section is reached */}
         <ScrollBlocks cols={8} rows={2} direction="left" className="absolute inset-0 z-20" />
       </motion.div>
-
-      <ScrollReveal className="mt-12 text-center md:mt-14">
-        <p aria-hidden className="ghost-huge px-4 text-[22vw] leading-none sm:text-[26vw] md:text-[13vw]">FAQs</p>
-      </ScrollReveal>
     </section>
   );
 }

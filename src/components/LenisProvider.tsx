@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   useEffect(() => {
+    // Studio is a multi-pane editing workspace with nested scrollable panels and modals;
+    // disable Lenis on /studio so mouse wheel, trackpad, and human cursor scrolling work natively.
+    if (pathname?.startsWith("/studio")) return;
+
     // Intuitive + accessible: no smooth-scroll hijack for users who
     // prefer reduced motion — native scrolling stays instant.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -38,7 +45,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("click", onClick);
       lenis.destroy();
     };
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 }

@@ -3,6 +3,11 @@ import { Hero } from "@/components/Hero";
 import { AboutIntro } from "@/components/AboutIntro";
 import { Projects } from "@/components/Projects";
 import { Journey } from "@/components/Journey";
+import { Services } from "@/components/Services";
+import { Process } from "@/components/Process";
+import { TechStack } from "@/components/TechStack";
+import { Pricing } from "@/components/Pricing";
+import { Awards } from "@/components/Awards";
 import { Gallery } from "@/components/Gallery";
 import { Quote, About } from "@/components/About";
 import { Testimonials } from "@/components/Testimonials";
@@ -20,6 +25,11 @@ const FALLBACK_ORDER: SectionKey[] = [
   "intro",
   "projects",
   "skills",
+  "services",
+  "process",
+  "techstack",
+  "pricing",
+  "awards",
   "gallery",
   "quote",
   "about",
@@ -35,9 +45,6 @@ const FALLBACK_ORDER: SectionKey[] = [
  */
 export default async function HomePage() {
   const content = await getPublishedContent();
-  const order = (content.sections?.order ?? FALLBACK_ORDER).filter((k): k is SectionKey =>
-    FALLBACK_ORDER.includes(k)
-  );
   const visible = content.sections?.visible;
 
   const blocks: Record<SectionKey, React.ReactNode> = {
@@ -45,6 +52,11 @@ export default async function HomePage() {
     intro: <AboutIntro key="intro" data={content} />,
     projects: <Projects key="projects" data={content} />,
     skills: <Journey key="skills" data={content} />,
+    services: <Services key="services" data={content} />,
+    process: <Process key="process" data={content} />,
+    techstack: <TechStack key="techstack" data={content} />,
+    pricing: <Pricing key="pricing" data={content} />,
+    awards: <Awards key="awards" data={content} />,
     gallery: <Gallery key="gallery" data={content} />,
     quote: <Quote key="quote" data={content} />,
     about: <About key="about" data={content} />,
@@ -52,6 +64,10 @@ export default async function HomePage() {
     faq: <Faq key="faq" data={content} />,
     contact: <Contact key="contact" data={content} />,
   };
+
+  const order = (content.sections?.order ?? FALLBACK_ORDER).filter((k): k is SectionKey =>
+    k in blocks
+  );
 
   return (
     <main className="relative min-h-screen bg-[#070708] text-white">

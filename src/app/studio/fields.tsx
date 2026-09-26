@@ -229,9 +229,8 @@ export function RowButtons({
         <button
           type="button"
           aria-label="Delete"
-          onClick={() => {
-            if (window.confirm("Delete this item?")) onDelete();
-          }}
+          title="Delete item"
+          onClick={onDelete}
           className={`${btn} hover:!bg-red-50 hover:text-red-600`}
         >
           ✕

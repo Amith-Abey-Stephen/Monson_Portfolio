@@ -361,6 +361,101 @@ export const sections: SiteContent["sections"] = {
   },
 };
 
+export const process: SiteContent["process"] = [
+  {
+    step: "01",
+    title: "Discovery & Strategy",
+    description: "Deep dive into business goals, user personas, core pain points, and competitive architecture.",
+    deliverable: "Product Brief & Roadmap",
+  },
+  {
+    step: "02",
+    title: "Wireframing & UX Architecture",
+    description: "Mapping intuitive user flows, rapid low-fidelity wireframing, and validating flow hierarchy early.",
+    deliverable: "Wireframe Flows & Sitemaps",
+  },
+  {
+    step: "03",
+    title: "UI Design & Design System",
+    description: "Crafting accessible, modern high-fidelity UI with tokenized typography, fluid components, and sleek dark modes.",
+    deliverable: "Figma Design System & Screens",
+  },
+  {
+    step: "04",
+    title: "Interactive Prototype & Dev Handoff",
+    description: "Clickable micro-interactions, pixel-perfect developer handoff specifications, asset exports, and QA support.",
+    deliverable: "Production Specs & Asset Pack",
+  },
+];
+
+export const techstack: SiteContent["techstack"] = [
+  { name: "Figma", category: "UI/UX Design", proficiency: "Expert" },
+  { name: "Framer", category: "Interactive & Prototyping", proficiency: "Advanced" },
+  { name: "Design Systems", category: "Architecture & Tokens", proficiency: "Expert" },
+  { name: "Tailwind CSS", category: "Frontend Styling", proficiency: "Expert" },
+  { name: "Next.js / React", category: "Web Engineering", proficiency: "Proficient" },
+  { name: "Spline 3D", category: "3D Motion Design", proficiency: "Advanced" },
+  { name: "Claude & AI UX", category: "AI-Powered Workflows", proficiency: "Expert" },
+  { name: "User Research", category: "Product Strategy", proficiency: "Advanced" },
+];
+
+export const pricing: SiteContent["pricing"] = [
+  {
+    name: "Design Sprint",
+    price: "$2,400",
+    period: "1–2 weeks",
+    description: "Targeted product sprint to audit UX, redesign a core feature flow, or build a proof-of-concept prototype.",
+    features: ["Heuristic UX Audit", "Key User Flow Redesign", "Clickable Figma Prototype", "Design Handoff Documentation", "1 Iteration Cycle"],
+    popular: false,
+    ctaText: "Start Sprint",
+    ctaHref: "#contact",
+  },
+  {
+    name: "Full Product MVP",
+    price: "$6,500",
+    period: "4–6 weeks",
+    description: "Complete design transformation from zero to launch-ready web or mobile app experience.",
+    features: ["End-to-End Product Architecture", "Scalable Design System (Tokens & Components)", "Responsive Web & Mobile Layouts", "Developer Specs & Asset Export", "Weekly Strategy Syncs", "30-Day Post-Launch Support"],
+    popular: true,
+    ctaText: "Book MVP Project",
+    ctaHref: "#contact",
+  },
+  {
+    name: "Monthly Retainer",
+    price: "$3,800",
+    period: "per month",
+    description: "Dedicated design partnership for scaling teams needing continuous UI/UX iterations.",
+    features: ["Up to 30 hours per month", "Priority async channel", "Continuous feature design & QA", "Turnaround in 48–72 hours", "Pause or cancel anytime"],
+    popular: false,
+    ctaText: "Inquire Retainer",
+    ctaHref: "#contact",
+  },
+];
+
+export const awards: SiteContent["awards"] = [
+  {
+    year: "2024",
+    title: "Best Mobile Experience",
+    organization: "Design Innovation Awards",
+    project: "Finance & Wealth App",
+    link: "",
+  },
+  {
+    year: "2023",
+    title: "Featured UI Designer",
+    organization: "Contra Independent Network",
+    project: "Design Systems Showcase",
+    link: "",
+  },
+  {
+    year: "2022",
+    title: "Excellence in Web Design",
+    organization: "Arena Animation Showcase",
+    project: "Portfolio & Interactive 3D",
+    link: "",
+  },
+];
+
 /** Whole-document fallback used when the DB is unreachable. */
 export const defaultContent: SiteContent = {
   site,
@@ -373,6 +468,10 @@ export const defaultContent: SiteContent = {
   journey,
   stats,
   services,
+  process,
+  techstack,
+  pricing,
+  awards,
   projects,
   galleryItems,
   quote,

@@ -18,7 +18,7 @@ export function Faq({
   if (faqs.length === 0) return null;
 
   return (
-    <section aria-label="Frequently asked questions" className="relative overflow-hidden bg-[linear-gradient(to_bottom,#2e1065_0%,#1a1030_15%,transparent_45%)] px-4 pb-16 pt-4 sm:px-6 md:px-10 md:pb-20">
+    <section aria-label="Frequently asked questions" className="relative overflow-hidden bg-[linear-gradient(to_bottom,#2e1065_0%,#1a1030_15%,transparent_45%)] px-4 pb-16 pt-6 sm:px-6 md:px-10 md:pb-20">
       <GridLines />
       {/* single soft wash behind the card — melts into Testimonials'
           violet above and Contact's dark below, no painted gradient */}
@@ -26,6 +26,9 @@ export function Faq({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_0%,rgba(139,92,246,0.25),transparent_70%)]"
       />
+      <ScrollReveal className="mb-8 text-center sm:mb-12">
+        <p aria-hidden className="ghost-huge px-4 text-[22vw] leading-none sm:text-[26vw] md:text-[13vw]">FAQs</p>
+      </ScrollReveal>
       <div className="relative mx-auto max-w-[1100px] overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
         {faqs.map((f, i) => {
           const isOpen = open === i;

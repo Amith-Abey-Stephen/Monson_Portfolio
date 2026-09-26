@@ -12,7 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { navLinks as fallbackLinks, site as fallbackSite } from "@/data/content";
-import type { SiteContent } from "@/lib/schema";
+import type { SectionKey, SiteContent } from "@/lib/schema";
 
 const icons: Record<string, typeof User> = {
   hero: User,
@@ -22,12 +22,26 @@ const icons: Record<string, typeof User> = {
   contact: Link2,
 };
 
+const navIdToSectionKey: Record<string, SectionKey> = {
+  hero: "hero",
+  projects: "projects",
+  skills: "skills",
+  experience: "about",
+  contact: "contact",
+};
+
 export function Navbar({
   data,
 }: {
-  data?: Pick<SiteContent, "navLinks" | "site">;
+  data?: Pick<SiteContent, "navLinks" | "site" | "sections">;
 } = {}) {
-  const navLinks = data?.navLinks ?? fallbackLinks;
+  const visible = data?.sections?.visible;
+  const rawNavLinks = data?.navLinks ?? fallbackLinks;
+  const navLinks = rawNavLinks.filter((l) => {
+    const secKey = navIdToSectionKey[l.id];
+    if (!secKey || !visible) return true;
+    return visible[secKey] !== false;
+  });
   const site = data?.site ?? fallbackSite;
   const brand = site.name.split(" ")[0] || site.name;
   const [active, setActive] = useState("hero");

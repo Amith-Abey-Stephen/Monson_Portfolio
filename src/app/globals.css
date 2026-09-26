@@ -63,6 +63,35 @@ body {
   border-radius: 99px;
 }
 
+/* High-contrast scrollbars for light-background studio modals & scroll panels */
+.studio-modal-scroll,
+[data-studio-scroll] {
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 #f1f5f9 !important;
+}
+.studio-modal-scroll::-webkit-scrollbar,
+[data-studio-scroll]::-webkit-scrollbar {
+  -webkit-appearance: none !important;
+  width: 10px !important;
+  height: 10px !important;
+  display: block !important;
+}
+.studio-modal-scroll::-webkit-scrollbar-track,
+[data-studio-scroll]::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 9999px !important;
+}
+.studio-modal-scroll::-webkit-scrollbar-thumb,
+[data-studio-scroll]::-webkit-scrollbar-thumb {
+  background: #94a3b8 !important;
+  border-radius: 9999px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+.studio-modal-scroll::-webkit-scrollbar-thumb:hover,
+[data-studio-scroll]::-webkit-scrollbar-thumb:hover {
+  background: #64748b !important;
+}
+
 /* ---------- studio-only ---------- */
 .studio-preview-dots {
   background-color: #eeebe5;

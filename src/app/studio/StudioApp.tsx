@@ -36,11 +36,22 @@ import {
   Clock,
   ChevronRight,
   ChevronDown,
+  Plus,
+  Trash2,
+  X,
+  Check,
+  GitBranch,
+  Cpu,
+  CreditCard,
+  Trophy,
 } from "lucide-react";
 import type { SectionKey, SiteContent } from "@/lib/schema";
 import { LIMITS, MAX_COUNT, SECTION_KEYS, SECTION_LABELS } from "@/lib/schema";
+import { defaultContent } from "@/data/content";
 import { autoDerivedKeywords } from "@/lib/seo";
-import { Area, Field, ImageField, ItemCard, RowButtons, Text, move } from "./fields";
+import { Area, Field, ImageField, ItemCard, RowButtons, Text, move, inputCls } from "./fields";
+import { UnpublishedChangesModal } from "./UnpublishedChangesModal";
+import { TemplateLibraryModal } from "./TemplateLibraryModal";
 
 export type HistoryEntry = {
   id: number;
@@ -52,13 +63,18 @@ export type HistoryEntry = {
 type SaveState = "saved" | "saving" | "error";
 type View = "edit" | "preview";
 
-type TabId =
+export type TabId =
   | "overview"
   | "sections"
   | "hero"
   | "intro"
   | "journey"
   | "work"
+  | "services"
+  | "process"
+  | "techstack"
+  | "pricing"
+  | "awards"
   | "gallery"
   | "quote"
   | "about"
@@ -70,13 +86,22 @@ type TabId =
   | "publish"
   | "history";
 
-const TABS: { id: TabId; label: string; Icon: typeof Home }[] = [
+const TABS: {
+  id: TabId;
+  label: string;
+  Icon: React.ComponentType<{ size?: number; className?: string; "aria-hidden"?: boolean }>;
+}[] = [
   { id: "overview", label: "Overview", Icon: Home },
   { id: "sections", label: "Sections", Icon: Layers },
   { id: "hero", label: "Hero", Icon: Sparkles },
   { id: "intro", label: "Intro", Icon: AlignLeft },
-  { id: "journey", label: "Journey", Icon: Map },
   { id: "work", label: "Work", Icon: Briefcase },
+  { id: "services", label: "Services", Icon: Sparkles },
+  { id: "process", label: "Process", Icon: GitBranch },
+  { id: "techstack", label: "Tech Stack", Icon: Cpu },
+  { id: "pricing", label: "Pricing", Icon: CreditCard },
+  { id: "awards", label: "Awards", Icon: Trophy },
+  { id: "journey", label: "Journey", Icon: Map },
   { id: "gallery", label: "Gallery", Icon: Images },
   { id: "quote", label: "Quote", Icon: Quote },
   { id: "about", label: "About", Icon: FileText },
@@ -310,7 +335,17 @@ function sectionCount(key: SectionKey, d: SiteContent): string | null {
     case "projects":
       return `${d.projects.length} items`;
     case "skills":
-      return `${d.stats.length + d.services.length} items`;
+      return `${d.stats.length} stats`;
+    case "services":
+      return `${d.services?.length ?? 0} offerings`;
+    case "process":
+      return `${d.process?.length ?? 0} steps`;
+    case "techstack":
+      return `${d.techstack?.length ?? 0} tools`;
+    case "pricing":
+      return `${d.pricing?.length ?? 0} packages`;
+    case "awards":
+      return `${d.awards?.length ?? 0} honors`;
     case "gallery":
       return `${d.galleryItems.length} items`;
     case "testimonials":
@@ -319,6 +354,345 @@ function sectionCount(key: SectionKey, d: SiteContent): string | null {
       return `${d.faqs.length} items`;
     case "contact":
       return `${d.socials.length} items`;
+    default:
+      return null;
+  }
+}
+
+export function sectionKeyToTab(key: SectionKey): TabId {
+  switch (key) {
+    case "hero": return "hero";
+    case "intro": return "intro";
+    case "projects": return "work";
+    case "skills": return "journey";
+    case "services": return "services";
+    case "process": return "process";
+    case "techstack": return "techstack";
+    case "pricing": return "pricing";
+    case "awards": return "awards";
+    case "gallery": return "gallery";
+    case "quote": return "quote";
+    case "about": return "about";
+    case "testimonials": return "testimonials";
+    case "faq": return "faq";
+    case "contact": return "contact";
+    default: return "overview";
+  }
+}
+
+export const TAB_TO_SECTION_KEY: Partial<Record<TabId, SectionKey>> = {
+  hero: "hero",
+  intro: "intro",
+  work: "projects",
+  journey: "skills",
+  services: "services",
+  process: "process",
+  techstack: "techstack",
+  pricing: "pricing",
+  awards: "awards",
+  gallery: "gallery",
+  quote: "quote",
+  about: "about",
+  testimonials: "testimonials",
+  faq: "faq",
+  contact: "contact",
+};
+
+export type SectionTemplate = {
+  key: SectionKey;
+  name: string;
+  category: "Offerings" | "Workflow" | "Technical" | "Commercial" | "Credibility" | "Portfolio" | "Content";
+  description: string;
+  animationType: string;
+  features: string[];
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+};
+
+export const SECTION_TEMPLATES: SectionTemplate[] = [
+  {
+    key: "services",
+    name: "Services & Capabilities",
+    category: "Offerings",
+    description: "High-impact spotlight cards detailing core design offerings, custom deliverable tags, and interactive previews.",
+    animationType: "3D Spotlight & ScrollWipe Heading",
+    features: ["Interactive ambient spotlight", "Custom deliverable tags", "Hover preview triggers", "Responsive 2-column grid"],
+    icon: Sparkles,
+  },
+  {
+    key: "process",
+    name: "Process & Methodology",
+    category: "Workflow",
+    description: "Multi-step timeline showcasing your end-to-end design framework from strategy to developer handoff.",
+    animationType: "ScrollReveal Stagger & Micro-arrow Transitions",
+    features: ["Step milestone badges (01, 02…)", "Deliverable achievement tags", "Hover gradient highlights", "Responsive 4-step deck"],
+    icon: GitBranch,
+  },
+  {
+    key: "techstack",
+    name: "Tech Stack & Tools",
+    category: "Technical",
+    description: "Grid of design software, prototyping engines, frontend frameworks, and proficiency ratings.",
+    animationType: "Card Hover Lift & Glowing Accents",
+    features: ["Category categorization", "Proficiency tags (Expert, Advanced)", "Fluid responsive cards", "Modern icon wrappers"],
+    icon: Cpu,
+  },
+  {
+    key: "pricing",
+    name: "Pricing & Packages",
+    category: "Commercial",
+    description: "Transparent engagement tier cards with highlighted 'Most Popular' package and direct booking buttons.",
+    animationType: "Gradient Shimmer Border & Scaled Hover",
+    features: ["Featured tier glow border", "Deliverable feature checklist", "Direct Calendly/Contact CTAs", "Responsive 3-column deck"],
+    icon: CreditCard,
+  },
+  {
+    key: "awards",
+    name: "Awards & Recognition",
+    category: "Credibility",
+    description: "Honors and design award showcase celebrating industry recognition, client achievements, and press.",
+    animationType: "Row Hover Glow & Ambient Backlight",
+    features: ["Year badges", "Organizing body citations", "External verified links", "Clean responsive list"],
+    icon: Trophy,
+  },
+  {
+    key: "projects",
+    name: "Work / Projects",
+    category: "Portfolio",
+    description: "Featured case studies with custom hero imagery, metadata tags, and external links.",
+    animationType: "Curtain wipe & Parallax image tilt",
+    features: ["16:10 case study previews", "Behance & live URL links", "Custom accent color badges"],
+    icon: Briefcase,
+  },
+  {
+    key: "testimonials",
+    name: "Client Testimonials",
+    category: "Credibility",
+    description: "Quotes and recommendations from founders, CTOs, and product leaders.",
+    animationType: "Subtle pulse & quotation marks reveal",
+    features: ["Author name and role tags", "Clean quote presentation", "High-credibility cards"],
+    icon: MessagesSquare,
+  },
+  {
+    key: "gallery",
+    name: "Visual Gallery",
+    category: "Portfolio",
+    description: "Visual exploration grid displaying high-fidelity mobile and web UI shots.",
+    animationType: "Zoom on hover & lightbox trigger",
+    features: ["Flexible image assets", "Responsive multi-column view", "Asset title overlays"],
+    icon: Images,
+  },
+  {
+    key: "faq",
+    name: "Frequently Asked Questions",
+    category: "Content",
+    description: "Accordion style FAQ answering common questions about engagement, timelines, and rates.",
+    animationType: "Smooth height expand & chevron rotate",
+    features: ["Ghost huge title integration", "Clean collapsible answers", "Zero leak when hidden"],
+    icon: CircleHelp,
+  },
+];
+
+export function TemplatePreview({ sectionKey }: { sectionKey: SectionKey }) {
+  switch (sectionKey) {
+    case "services":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
+          <div className="flex items-center justify-between text-[10px] text-purple-400 font-mono">
+            <span>{"// 01 CAPABILITIES"}</span>
+            <span className="rounded-full bg-purple-500/20 px-1.5 py-0.2 text-[8.5px] font-semibold text-purple-300">3D Spotlight</span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <div className="rounded-lg border border-purple-500/30 bg-white/[0.04] p-2">
+              <span className="font-mono text-[9px] text-purple-400 font-bold">{"// 01"}</span>
+              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Product Design</p>
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Figma</span>
+                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Tokens</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
+              <span className="font-mono text-[9px] text-purple-400 font-bold">{"// 02"}</span>
+              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Design Systems</p>
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Components</span>
+                <span className="rounded bg-white/10 px-1 py-0.2 text-[8px] text-white/70">Specs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+    case "process":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold text-purple-400">01</span>
+                <span className="text-[10px] text-purple-400">→</span>
+              </div>
+              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Discovery</p>
+              <p className="mt-1 text-[8.5px] text-purple-300 font-medium">✓ Product Brief</p>
+            </div>
+            <div className="rounded-lg border border-purple-500/30 bg-purple-950/20 p-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold text-purple-400">02</span>
+                <span className="text-[10px] text-purple-400">→</span>
+              </div>
+              <p className="mt-0.5 text-[11px] font-bold text-white leading-tight">Wireframes</p>
+              <p className="mt-1 text-[8.5px] text-purple-300 font-medium">✓ UX Flows</p>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[9px] text-white/50 border-t border-white/10 pt-1.5">
+            <span>4-step progressive timeline cards</span>
+            <span className="text-purple-400 font-semibold">Interactive Flow</span>
+          </div>
+        </div>
+      );
+
+    case "techstack":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-purple-400" />
+                <span className="text-[11px] font-semibold text-white">Figma</span>
+              </div>
+              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Expert</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-purple-400" />
+                <span className="text-[11px] font-semibold text-white">Framer</span>
+              </div>
+              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Advanced</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-purple-400" />
+                <span className="text-[11px] font-semibold text-white">Tailwind</span>
+              </div>
+              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Expert</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-purple-400" />
+                <span className="text-[11px] font-semibold text-white">Spline 3D</span>
+              </div>
+              <span className="rounded bg-purple-500/20 px-1 py-0.2 text-[8px] font-semibold text-purple-300">Advanced</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    case "pricing":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-purple-500/40 bg-[#0c0a14] p-3 text-white shadow-inner">
+          <div className="flex items-center justify-between">
+            <span className="font-heading text-[12px] font-bold text-white">Full Product MVP</span>
+            <span className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-xs">
+              ★ Popular
+            </span>
+          </div>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="font-heading text-[17px] font-extrabold text-white">$6,500</span>
+            <span className="text-[9px] text-white/50">/ project</span>
+          </div>
+          <div className="mt-1.5 space-y-0.5 text-[9.5px] text-white/70">
+            <div className="flex items-center gap-1">
+              <span className="text-purple-400 font-bold">✓</span>
+              <span>Full UI/UX Design System</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-purple-400 font-bold">✓</span>
+              <span>Developer Specs & Tokens</span>
+            </div>
+          </div>
+          <div className="mt-2 rounded-lg bg-purple-600 py-1 text-center text-[10px] font-bold text-white">
+            Book Package →
+          </div>
+        </div>
+      );
+
+    case "awards":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner space-y-1.5">
+          <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-2 py-1.5 border border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-bold text-amber-400">2024</span>
+              <span className="text-[11px] font-semibold text-white">Best Mobile Experience</span>
+            </div>
+            <span className="text-[9px] text-amber-300 font-medium">Award ↗</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-white/[0.03] px-2 py-1.5 border border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-bold text-amber-400">2023</span>
+              <span className="text-[11px] font-semibold text-white">Featured UI Designer</span>
+            </div>
+            <span className="text-[9px] text-amber-300 font-medium">Award ↗</span>
+          </div>
+        </div>
+      );
+
+    case "projects":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
+          <div className="aspect-[16/9] w-full rounded-lg bg-gradient-to-br from-purple-950/60 via-stone-900 to-black border border-white/10 p-2.5 flex flex-col justify-end">
+            <span className="text-[8.5px] font-semibold uppercase tracking-wider text-purple-400">FinTech Platform</span>
+            <p className="font-heading text-[12px] font-bold text-white">Global Wealth Management</p>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[9px] text-white/50">
+            <span>16:10 Case Study View</span>
+            <span className="text-purple-400 font-medium">Live Demo ↗</span>
+          </div>
+        </div>
+      );
+
+    case "testimonials":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-3 text-white shadow-inner">
+          <p className="text-[10.5px] italic text-white/80 leading-snug">
+            &ldquo;Monson designed a breathtaking product for our Series A launch. Intuitive and polished.&rdquo;
+          </p>
+          <div className="mt-2 flex items-center gap-2 border-t border-white/10 pt-1.5">
+            <div className="size-5 rounded-full bg-purple-500/20 text-purple-300 text-[9px] font-bold grid place-items-center">
+              A
+            </div>
+            <div>
+              <p className="text-[9.5px] font-bold text-white leading-tight">Alex Rivera</p>
+              <p className="text-[8px] text-white/50 leading-tight">VP Product @ ScaleFlow</p>
+            </div>
+          </div>
+        </div>
+      );
+
+    case "gallery":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner">
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="h-10 rounded bg-gradient-to-br from-purple-800/40 to-black border border-white/10" />
+            <div className="h-10 rounded bg-gradient-to-br from-indigo-800/40 to-black border border-white/10" />
+            <div className="h-10 rounded bg-gradient-to-br from-pink-800/40 to-black border border-white/10" />
+          </div>
+          <p className="mt-1.5 text-center text-[9px] text-white/50">Visual exploration masonry grid</p>
+        </div>
+      );
+
+    case "faq":
+      return (
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0c0c0e] p-2.5 text-white shadow-inner space-y-1.5">
+          <div className="rounded-lg bg-white/[0.04] p-2 border border-white/5 flex items-center justify-between">
+            <span className="text-[10.5px] font-semibold text-white">What is your turnaround time?</span>
+            <span className="text-[9px] text-purple-400">▾</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2 border border-white/5 flex items-center justify-between">
+            <span className="text-[10.5px] font-semibold text-white">How do we collaborate on Figma?</span>
+            <span className="text-[9px] text-purple-400">▾</span>
+          </div>
+        </div>
+      );
+
     default:
       return null;
   }
@@ -343,6 +717,11 @@ function editorReducer(s: EditorState, a: EditorAction): EditorState {
   switch (a.type) {
     case "patch": {
       const next = structuredClone(s.draft);
+      next.process = next.process ?? [];
+      next.techstack = next.techstack ?? [];
+      next.pricing = next.pricing ?? [];
+      next.awards = next.awards ?? [];
+      next.services = next.services ?? [];
       a.fn(next);
       return { draft: next, past: [...s.past.slice(-49), s.draft], future: [] };
     }
@@ -378,6 +757,10 @@ const TOP_KEYS = [
   "journey",
   "stats",
   "services",
+  "process",
+  "techstack",
+  "pricing",
+  "awards",
   "projects",
   "galleryItems",
   "quote",
@@ -394,8 +777,13 @@ const TAB_KEYS: Record<TabId, readonly string[]> = {
   sections: ["sections"],
   hero: ["hero"],
   intro: ["aboutIntro"],
-  journey: ["journey", "stats", "services"],
+  journey: ["journey", "stats"],
   work: ["projects"],
+  services: ["services"],
+  process: ["process"],
+  techstack: ["techstack"],
+  pricing: ["pricing"],
+  awards: ["awards"],
   gallery: ["galleryItems"],
   quote: ["quote"],
   about: ["about"],
@@ -456,6 +844,8 @@ export function StudioApp({
   const [previewOpen, setPreviewOpen] = useState(true);
   const [zoom, setZoom] = useState<number | null>(null);
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showChangesModal, setShowChangesModal] = useState(false);
   const firstRender = useRef(true);
   const filterRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -557,6 +947,42 @@ export function StudioApp({
   const undo = () => dispatch({ type: "undo" });
   const redo = () => dispatch({ type: "redo" });
 
+  const deleteSection = useCallback(
+    (key: SectionKey) => {
+      patch((d) => {
+        d.sections.order = d.sections.order.filter((k) => k !== key);
+        d.sections.visible[key] = false;
+      });
+      if (tab === sectionKeyToTab(key)) {
+        setTab("sections");
+      }
+    },
+    [tab]
+  );
+
+  const addSection = useCallback(
+    (key: SectionKey) => {
+      patch((d) => {
+        if (!d.sections.order.includes(key)) {
+          d.sections.order.push(key);
+        }
+        d.sections.visible[key] = true;
+        if (key === "process" && (!d.process || d.process.length === 0)) {
+          d.process = structuredClone(defaultContent.process || []);
+        } else if (key === "techstack" && (!d.techstack || d.techstack.length === 0)) {
+          d.techstack = structuredClone(defaultContent.techstack || []);
+        } else if (key === "pricing" && (!d.pricing || d.pricing.length === 0)) {
+          d.pricing = structuredClone(defaultContent.pricing || []);
+        } else if (key === "awards" && (!d.awards || d.awards.length === 0)) {
+          d.awards = structuredClone(defaultContent.awards || []);
+        } else if (key === "services" && (!d.services || d.services.length === 0)) {
+          d.services = structuredClone(defaultContent.services || []);
+        }
+      });
+    },
+    []
+  );
+
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(publishedSnap),
     [draft, publishedSnap]
@@ -576,6 +1002,29 @@ export function StudioApp({
   const dirtyTabs = TABS.filter(
     (t) => !["overview", "publish", "history"].includes(t.id) && tabDirty(t.id)
   );
+
+  const revertKey = useCallback(
+    (key: string) => {
+      patch((d) => {
+        (d as Record<string, unknown>)[key] = structuredClone(
+          (publishedSnap as Record<string, unknown>)[key]
+        );
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [publishedSnap]
+  );
+
+  const revertAll = useCallback(() => {
+    patch((d) => {
+      for (const key of TOP_KEYS) {
+        (d as Record<string, unknown>)[key] = structuredClone(
+          (publishedSnap as Record<string, unknown>)[key]
+        );
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publishedSnap]);
 
   // Autosave: debounce, show Saving/Saved/Error, never touch published.
   useEffect(() => {
@@ -611,6 +1060,7 @@ export function StudioApp({
   }, []);
 
   const publish = useCallback(async () => {
+    if (!dirty || publishing) return;
     setPublishing(true);
     setPublishMsg("");
     try {
@@ -627,7 +1077,7 @@ export function StudioApp({
     } finally {
       setPublishing(false);
     }
-  }, [draft, loadHistory]);
+  }, [dirty, publishing, draft, loadHistory]);
 
   // Shortcuts: ⌘/Ctrl+Enter publish · ⌘/Ctrl+Z undo · ⇧⌘Z redo · / search.
   // Typing inside fields keeps native behavior.
@@ -638,7 +1088,9 @@ export function StudioApp({
       const mod = e.metaKey || e.ctrlKey;
       if (mod && e.key.toLowerCase() === "enter") {
         e.preventDefault();
-        void publish();
+        if (dirty && !publishing) {
+          void publish();
+        }
       } else if (mod && e.key.toLowerCase() === "b" && !typing) {
         e.preventDefault();
         toggleSidebar();
@@ -685,9 +1137,19 @@ export function StudioApp({
     router.refresh();
   };
 
-  const order = draft.sections.order.filter((k) => (SECTION_KEYS as readonly string[]).includes(k));
+  const order = draft.sections.order.filter((k): k is SectionKey =>
+    (SECTION_KEYS as readonly string[]).includes(k)
+  );
   const autoKeywords = useMemo(() => autoDerivedKeywords(draft), [draft]);
   const ownerFirst = (draft.site.name.split(" ")[0] || draft.site.name || "there");
+
+  const sidebarTabs = useMemo(() => {
+    return TABS.filter((t) => {
+      const secKey = TAB_TO_SECTION_KEY[t.id];
+      if (!secKey) return true;
+      return draft.sections.order.includes(secKey);
+    });
+  }, [draft.sections.order]);
 
   const activeTab = TABS.find((t) => t.id === tab) ?? TABS[0];
   const saveLabel = saveState === "saved" ? "Saved" : saveState === "saving" ? "Saving…" : "Save failed";
@@ -706,7 +1168,7 @@ export function StudioApp({
 
       <div className="my-1.5 h-px w-8 bg-stone-200/80" />
 
-      {TABS.map((t) => (
+      {sidebarTabs.map((t) => (
         <button
           key={t.id}
           onClick={() => setTab(t.id)}
@@ -774,7 +1236,7 @@ export function StudioApp({
       </div>
 
       <div className="space-y-0.5">
-        {TABS.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
+        {sidebarTabs.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -840,15 +1302,20 @@ export function StudioApp({
             <span className="ml-2 align-middle text-[12px] font-normal text-stone-400">{saveLabel}</span>
           </h1>
           <span className="ml-auto flex items-center gap-1.5">
-            <span
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium ${
-                dirty ? "bg-red-500/10 text-red-600" : "bg-green-600/10 text-green-700"
+            <button
+              type="button"
+              onClick={() => setShowChangesModal(true)}
+              aria-label={dirty ? `Review ${changedKeys.length} unpublished changes` : "Draft matches published"}
+              title={dirty ? "Click to review and revert unpublished changes" : "Draft matches live site"}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition cursor-pointer ${
+                dirty
+                  ? "bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:ring-1 hover:ring-red-300 shadow-xs active:scale-[0.98]"
+                  : "bg-green-600/10 text-green-700 hover:bg-green-600/20"
               }`}
-              title={dirty ? `Changed: ${changedKeys.join(", ")}` : "Draft matches published"}
             >
-              {dirty && <span aria-hidden className="size-1.5 rounded-full bg-red-500" />}
+              {dirty && <span aria-hidden className="size-1.5 rounded-full bg-red-500 animate-pulse" />}
               {dirty ? `Unpublished changes${changedKeys.length > 0 ? ` (${changedKeys.length})` : ""}` : "Everything is published"}
-            </span>
+            </button>
             <button
               onClick={undo}
               disabled={editor.past.length === 0}
@@ -901,10 +1368,15 @@ export function StudioApp({
           </div>
           <button
             onClick={() => void publish()}
-            disabled={publishing}
-            className="rounded-full bg-black px-5 py-2 text-[13px] font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+            disabled={publishing || !dirty}
+            title={!dirty ? "No unpublished changes" : "Publish changes live (⌘↵)"}
+            className={`rounded-full px-5 py-2 text-[13px] font-semibold transition ${
+              dirty
+                ? "bg-black text-white hover:bg-stone-800 shadow-sm cursor-pointer"
+                : "bg-stone-200 text-stone-400 cursor-not-allowed opacity-60"
+            }`}
           >
-            {publishing ? "Publishing…" : "Publish"}
+            {publishing ? "Publishing…" : dirty ? "Publish" : "Published"}
           </button>
         </div>
         {publishMsg && (
@@ -925,7 +1397,10 @@ export function StudioApp({
             : "studio-grid-expanded-no-preview"
       }`}>
         {/* sidebar */}
-        <aside className={`${view === "preview" ? "hidden" : ""} lg:block transition-all duration-200`}>
+        <aside
+          data-lenis-prevent="true"
+          className={`${view === "preview" ? "hidden" : ""} lg:block transition-all duration-200`}
+        >
           <nav
             aria-label="Studio sections"
             className={`flex gap-1 overflow-x-auto border-b border-stone-200/80 px-3 py-2 lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r ${
@@ -937,7 +1412,10 @@ export function StudioApp({
         </aside>
 
         {/* editor */}
-        <main className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[880px] lg:border-r-0"}`}>
+        <main
+          data-lenis-prevent="true"
+          className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[880px] lg:border-r-0"}`}
+        >
           {tab === "overview" && (
             <section className="space-y-5">
               {/* Welcome Header */}
@@ -960,11 +1438,16 @@ export function StudioApp({
                   </button>
                   <button
                     onClick={() => void publish()}
-                    disabled={publishing}
-                    className="flex items-center gap-1.5 rounded-full bg-black px-4 py-1.5 text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:opacity-50"
+                    disabled={publishing || !dirty}
+                    title={!dirty ? "No unpublished changes to publish" : "Publish draft changes live"}
+                    className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12.5px] font-semibold transition ${
+                      dirty
+                        ? "bg-black text-white shadow-sm hover:bg-stone-800 cursor-pointer"
+                        : "bg-stone-200 text-stone-400 cursor-not-allowed opacity-60"
+                    }`}
                   >
                     <Send size={13} />
-                    {publishing ? "Publishing…" : dirty ? "Publish changes" : "Publish now"}
+                    {publishing ? "Publishing…" : dirty ? "Publish changes" : "All changes live"}
                   </button>
                 </div>
               </div>
@@ -986,13 +1469,17 @@ export function StudioApp({
                   </p>
                 </div>
 
-                <div className={cardCls}>
+                <div
+                  onClick={() => dirty && setShowChangesModal(true)}
+                  title={dirty ? "Click to inspect and revert unpublished changes" : "All changes are published"}
+                  className={`${cardCls} ${dirty ? "cursor-pointer hover:border-amber-300 hover:shadow-xs transition" : ""}`}
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Draft status</p>
                     {dirty && <span className="size-2 rounded-full bg-amber-500 animate-pulse" />}
                   </div>
-                  <p className={`mt-1.5 text-[13px] font-semibold ${dirty ? "text-amber-700" : "text-emerald-700"}`}>
-                    {dirty ? "Unpublished changes" : "All changes live"}
+                  <p className={`mt-1.5 text-[13px] font-semibold ${dirty ? "text-amber-700 hover:underline" : "text-emerald-700"}`}>
+                    {dirty ? `Unpublished changes (${changedKeys.length}) →` : "All changes live"}
                   </p>
                 </div>
 
@@ -1008,20 +1495,29 @@ export function StudioApp({
               {/* Changed sections alert banner if dirty */}
               {dirtyTabs.length > 0 && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="size-2 rounded-full bg-amber-500 animate-ping" />
                       <p className="text-[13px] font-bold text-amber-950">
                         Unpublished changes in {dirtyTabs.length} {dirtyTabs.length === 1 ? "section" : "sections"}
                       </p>
                     </div>
-                    <button
-                      onClick={() => void publish()}
-                      disabled={publishing}
-                      className="rounded-full bg-amber-900 px-3.5 py-1 text-[12px] font-semibold text-white transition hover:bg-amber-950 disabled:opacity-50"
-                    >
-                      {publishing ? "Publishing…" : "Publish live"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowChangesModal(true)}
+                        className="rounded-full border border-amber-300 bg-white px-3 py-1 text-[12px] font-semibold text-amber-900 transition hover:bg-amber-100 shadow-xs"
+                      >
+                        Inspect & Revert
+                      </button>
+                      <button
+                        onClick={() => void publish()}
+                        disabled={publishing || !dirty}
+                        className="rounded-full bg-amber-900 px-3.5 py-1 text-[12px] font-semibold text-white transition hover:bg-amber-950 disabled:opacity-50"
+                      >
+                        {publishing ? "Publishing…" : "Publish live"}
+                      </button>
+                    </div>
                   </div>
                   <p className="mt-1 text-[12px] text-amber-800/90">
                     Edits are saved to your private draft. Click any section below to review before publishing:
@@ -1113,6 +1609,7 @@ export function StudioApp({
                     const tabKey = (k === "skills" ? "journey" : k === "projects" ? "work" : k) as TabId;
                     const tabMeta = TABS.find((t) => t.id === tabKey);
                     const count = sectionCount(k, draft);
+                    const isAdded = draft.sections.order.includes(k);
                     const isVisible = draft.sections.visible[k] !== false;
                     const isModified = tabDirty(tabKey);
 
@@ -1150,11 +1647,20 @@ export function StudioApp({
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium ${
-                                isVisible ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"
+                                !isAdded
+                                  ? "bg-stone-100 text-stone-400"
+                                  : isVisible
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-stone-100 text-stone-500"
                               }`}
                             >
-                              {isVisible ? <Eye size={10} /> : <EyeOff size={10} />}
-                              {isVisible ? "Visible" : "Hidden"}
+                              {!isAdded ? (
+                                "Removed"
+                              ) : isVisible ? (
+                                <><Eye size={10} /> Shown</>
+                              ) : (
+                                <><EyeOff size={10} /> Hidden</>
+                              )}
                             </span>
                             <ChevronRight size={14} className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-stone-600" />
                           </div>
@@ -1187,54 +1693,117 @@ export function StudioApp({
           )}
 
           {tab === "sections" && (
-            <section className="space-y-3">
-              <p className="text-[12px] leading-relaxed text-stone-400">
-                Reorder the page and toggle visibility. Item counts and visibility stay in sync with the live preview.
-                The layout itself never changes.
-              </p>
-              {order.map((key, i) => {
-                const count = sectionCount(key, draft);
-                const visible = draft.sections.visible[key] !== false;
-                return (
-                  <div key={key} className={`${cardCls} flex items-center gap-2.5`}>
-                    <div className="flex shrink-0 flex-col">
+            <section className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200">
+                <div>
+                  <h3 className="text-[15px] font-bold text-stone-900">Portfolio Sections ({order.length})</h3>
+                  <p className="text-[12px] text-stone-400">
+                    Add, remove, reorder, and toggle visibility. Changes update the live preview instantly.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition"
+                >
+                  <Plus size={16} />
+                  <span>Add Section</span>
+                </button>
+              </div>
+
+              {order.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-stone-300 p-8 text-center">
+                  <p className="text-[14px] font-medium text-stone-600">No sections currently active</p>
+                  <p className="mt-1 text-[12px] text-stone-400">Add sections from the template library to build your page.</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplateModal(true)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800 transition"
+                  >
+                    <Plus size={15} />
+                    <span>Browse Template Library</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-2.5">
+                {order.map((key, i) => {
+                  const count = sectionCount(key, draft);
+                  const visible = draft.sections.visible[key] !== false;
+                  const targetTab = sectionKeyToTab(key);
+                  return (
+                    <div key={key} className={`${cardCls} flex items-center gap-2.5 transition hover:border-stone-300`}>
+                      <div className="flex shrink-0 flex-col">
+                        <button
+                          aria-label={`Move ${SECTION_LABELS[key]} up`}
+                          disabled={i === 0}
+                          onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, -1); })}
+                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          aria-label={`Move ${SECTION_LABELS[key]} down`}
+                          disabled={i === order.length - 1}
+                          onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, 1); })}
+                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20"
+                        >
+                          ▼
+                        </button>
+                      </div>
+
+                      <span className="font-mono text-[11px] font-semibold text-stone-400 shrink-0 w-5">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-semibold text-stone-900">{SECTION_LABELS[key]}</p>
+                        <div className="flex items-center gap-2 text-[12px] text-stone-400">
+                          {count && <span>{count}</span>}
+                          {count && <span>·</span>}
+                          <span className={visible ? "text-emerald-600 font-medium" : "text-stone-400"}>
+                            {visible ? "Shown" : "Hidden"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Quick jump to edit this section */}
                       <button
-                        aria-label={`Move ${SECTION_LABELS[key]} up`}
-                        disabled={i === 0}
-                        onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, -1); })}
-                        className="px-1 text-[10px] text-stone-400 hover:text-stone-900 disabled:opacity-25"
+                        type="button"
+                        onClick={() => setTab(targetTab)}
+                        className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition"
                       >
-                        ▲
+                        <span>Edit</span>
+                        <ChevronRight size={13} className="text-stone-400" />
                       </button>
+
+                      {/* Toggle visibility */}
                       <button
-                        aria-label={`Move ${SECTION_LABELS[key]} down`}
-                        disabled={i === order.length - 1}
-                        onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, 1); })}
-                        className="px-1 text-[10px] text-stone-400 hover:text-stone-900 disabled:opacity-25"
+                        aria-label={visible ? `Hide ${SECTION_LABELS[key]}` : `Show ${SECTION_LABELS[key]}`}
+                        aria-pressed={visible}
+                        title={visible ? "Hide section on public site" : "Show section on public site"}
+                        onClick={() => patch((d) => { d.sections.visible[key] = !visible; })}
+                        className={`grid size-9 shrink-0 place-items-center rounded-xl border ${
+                          visible ? "border-stone-200 bg-white text-stone-700 hover:bg-stone-50" : "border-stone-200 bg-stone-100 text-stone-400 hover:bg-stone-200"
+                        }`}
                       >
-                        ▼
+                        {visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                      </button>
+
+                      {/* Delete / Remove section */}
+                      <button
+                        type="button"
+                        aria-label={`Delete ${SECTION_LABELS[key]} from portfolio`}
+                        title={`Delete ${SECTION_LABELS[key]} from portfolio`}
+                        onClick={() => deleteSection(key)}
+                        className="grid size-9 shrink-0 place-items-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition shadow-sm"
+                      >
+                        <Trash2 size={15} />
                       </button>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-semibold">{SECTION_LABELS[key]}</p>
-                      <p className="text-[12px] text-stone-400">
-                        {count ? `${count} · ` : ""}
-                        {visible ? "Shown" : "Hidden"}
-                      </p>
-                    </div>
-                    <button
-                      aria-label={visible ? `Hide ${SECTION_LABELS[key]}` : `Show ${SECTION_LABELS[key]}`}
-                      aria-pressed={visible}
-                      onClick={() => patch((d) => { d.sections.visible[key] = !visible; })}
-                      className={`grid size-9 shrink-0 place-items-center rounded-xl border ${
-                        visible ? "border-stone-200 bg-white text-stone-700" : "border-stone-200 bg-stone-100 text-stone-400"
-                      } hover:bg-stone-100`}
-                    >
-                      {visible ? <Eye size={16} /> : <EyeOff size={16} />}
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </section>
           )}
 
@@ -1387,28 +1956,42 @@ export function StudioApp({
           {tab === "work" && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[14px] font-semibold">Projects ({draft.projects.length}/{MAX_COUNT.projects})</h3>
-                <button
-                  disabled={draft.projects.length >= MAX_COUNT.projects}
-                  onClick={() =>
-                    patch((d) => {
-                      d.projects.push({
-                        name: "New project",
-                        tag: "",
-                        description: "",
-                        mockTitle: "",
-                        mockSubtitle: "",
-                        image: "",
-                        accent: "#FFFFFF",
-                        href: "#projects",
-                        behanceUrl: "",
-                      });
-                    })
-                  }
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
+                <div>
+                  <h3 className="text-[14px] font-semibold">Projects ({draft.projects.length}/{MAX_COUNT.projects})</h3>
+                  <p className="text-[12px] text-stone-400">Featured case studies with mockups and live links.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("projects")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Projects section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.projects.length >= MAX_COUNT.projects}
+                    onClick={() =>
+                      patch((d) => {
+                        d.projects.push({
+                          name: "New project",
+                          tag: "",
+                          description: "",
+                          mockTitle: "",
+                          mockSubtitle: "",
+                          image: "",
+                          accent: "#FFFFFF",
+                          href: "#projects",
+                          behanceUrl: "",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
               {draft.projects.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — the Work section stays hidden until you add one.</p>}
               {draft.projects.map((p, i) => (
@@ -1491,14 +2074,28 @@ export function StudioApp({
           {tab === "gallery" && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[14px] font-semibold">Gallery ({draft.galleryItems.length}/{MAX_COUNT.galleryItems})</h3>
-                <button
-                  disabled={draft.galleryItems.length >= MAX_COUNT.galleryItems}
-                  onClick={() => patch((d) => { d.galleryItems.push({ title: "New work", image: "" }); })}
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
+                <div>
+                  <h3 className="text-[14px] font-semibold">Gallery ({draft.galleryItems.length}/{MAX_COUNT.galleryItems})</h3>
+                  <p className="text-[12px] text-stone-400">Needs 3+ images with URLs — fewer hides the section publicly.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("gallery")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Gallery section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.galleryItems.length >= MAX_COUNT.galleryItems}
+                    onClick={() => patch((d) => { d.galleryItems.push({ title: "New work", image: "" }); })}
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
               <p className="text-[12px] text-stone-400">Needs 3+ images with URLs — fewer hides the section publicly.</p>
               {draft.galleryItems.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
@@ -1570,14 +2167,28 @@ export function StudioApp({
           {tab === "testimonials" && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[14px] font-semibold">Testimonials ({draft.testimonials.length}/{MAX_COUNT.testimonials})</h3>
-                <button
-                  disabled={draft.testimonials.length >= MAX_COUNT.testimonials}
-                  onClick={() => patch((d) => { d.testimonials.push({ quote: "", name: "", role: "" }); })}
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
+                <div>
+                  <h3 className="text-[14px] font-semibold">Testimonials ({draft.testimonials.length}/{MAX_COUNT.testimonials})</h3>
+                  <p className="text-[12px] text-stone-400">Client quotes and social proof.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("testimonials")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Testimonials section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.testimonials.length >= MAX_COUNT.testimonials}
+                    onClick={() => patch((d) => { d.testimonials.push({ quote: "", name: "", role: "" }); })}
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
               {draft.testimonials.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — the marquee stays hidden until you add one.</p>}
               {draft.testimonials.map((t, i) => (
@@ -1618,22 +2229,36 @@ export function StudioApp({
           {tab === "faq" && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[14px] font-semibold">FAQ ({draft.faqs.length}/{MAX_COUNT.faqs})</h3>
-                <button
-                  disabled={draft.faqs.length >= MAX_COUNT.faqs}
-                  onClick={() =>
-                    patch((d) => {
-                      d.faqs.push({
-                        index: String(d.faqs.length + 1).padStart(2, "0"),
-                        q: "",
-                        a: "",
-                      });
-                    })
-                  }
-                  className={addBtnCls}
-                >
-                  Add
-                </button>
+                <div>
+                  <h3 className="text-[14px] font-semibold">FAQ ({draft.faqs.length}/{MAX_COUNT.faqs})</h3>
+                  <p className="text-[12px] text-stone-400">Questions & answers shown on the home page.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("faq")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove FAQ section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.faqs.length >= MAX_COUNT.faqs}
+                    onClick={() =>
+                      patch((d) => {
+                        d.faqs.push({
+                          index: String(d.faqs.length + 1).padStart(2, "0"),
+                          q: "",
+                          a: "",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
               {draft.faqs.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first item.</p>}
               {draft.faqs.map((f, i) => (
@@ -1659,6 +2284,440 @@ export function StudioApp({
                     </Field>
                     <Field label="Answer" value={f.a} max={LIMITS.faq.a}>
                       <Area value={f.a} max={LIMITS.faq.a} rows={3} onChange={(v) => patch((d) => { d.faqs[i].a = v; })} />
+                    </Field>
+                  </div>
+                </ItemCard>
+              ))}
+            </section>
+          )}
+
+          {tab === "services" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-semibold">Services & Capabilities ({draft.services.length}/{MAX_COUNT.services})</h3>
+                  <p className="text-[12px] text-stone-400">Offerings shown with 3D spotlight cards and deliverable tags.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("services")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Services section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.services.length >= MAX_COUNT.services}
+                    onClick={() =>
+                      patch((d) => {
+                        d.services.push({
+                          index: String(d.services.length + 1).padStart(2, "0"),
+                          title: "New service",
+                          description: "",
+                          tags: [],
+                          preview: "",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {draft.services.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first service offering.</p>}
+              {draft.services.map((s, i) => (
+                <ItemCard
+                  key={i}
+                  title={s.title || `Service ${s.index}`}
+                  badge={`Service ${s.index}${s.tags.length > 0 ? ` · ${s.tags.slice(0, 3).join(", ")}` : ""}`}
+                  thumb={s.preview}
+                  fallback={s.title}
+                  open={isOpen("services", i)}
+                  onToggle={() => toggleOpen("services", i)}
+                  actions={
+                    <RowButtons
+                      index={i}
+                      total={draft.services.length}
+                      onMove={(dir) => patch((d) => { d.services = move(d.services, i, dir); })}
+                      onDelete={() => patch((d) => { d.services.splice(i, 1); })}
+                      onDuplicate={() =>
+                        patch((d) => {
+                          if (d.services.length < MAX_COUNT.services)
+                            d.services.splice(i + 1, 0, structuredClone(d.services[i]));
+                        })
+                      }
+                    />
+                  }
+                >
+                  <div className="space-y-3">
+                    <Field label="Title" value={s.title} max={LIMITS.service.title} required>
+                      <Text value={s.title} max={LIMITS.service.title} onChange={(v) => patch((d) => { d.services[i].title = v; })} />
+                    </Field>
+                    <Field label="Description" value={s.description} max={LIMITS.service.description}>
+                      <Area value={s.description} max={LIMITS.service.description} rows={3} onChange={(v) => patch((d) => { d.services[i].description = v; })} />
+                    </Field>
+                    <TagsInput value={s.tags} max={MAX_COUNT.tagsPerService} onChange={(v) => patch((d) => { d.services[i].tags = v; })} />
+                    <Field label="Preview image" value={s.preview} hint="Cropped to 16:10. Empty hides preview.">
+                      <ImageField value={s.preview} aspect="16/10" onChange={(v) => patch((d) => { d.services[i].preview = v; })} />
+                    </Field>
+                  </div>
+                </ItemCard>
+              ))}
+            </section>
+          )}
+
+          {tab === "process" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-semibold">Process & Methodology ({draft.process.length}/{MAX_COUNT.process})</h3>
+                  <p className="text-[12px] text-stone-400">Step-by-step framework displayed with glowing flow cards and deliverable tags.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("process")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Process section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.process.length >= MAX_COUNT.process}
+                    onClick={() =>
+                      patch((d) => {
+                        d.process.push({
+                          step: String(d.process.length + 1).padStart(2, "0"),
+                          title: "New step",
+                          description: "",
+                          deliverable: "",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {draft.process.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first workflow step.</p>}
+              {draft.process.map((p, i) => (
+                <ItemCard
+                  key={i}
+                  title={p.title || `Step ${p.step || i + 1}`}
+                  badge={`Step ${p.step || `0${i + 1}`}${p.deliverable ? ` · ${p.deliverable}` : ""}`}
+                  fallback={p.step || `0${i + 1}`}
+                  open={isOpen("process", i)}
+                  onToggle={() => toggleOpen("process", i)}
+                  actions={
+                    <RowButtons
+                      index={i}
+                      total={draft.process.length}
+                      onMove={(dir) => patch((d) => { d.process = move(d.process, i, dir); })}
+                      onDelete={() => patch((d) => { d.process.splice(i, 1); })}
+                      onDuplicate={() =>
+                        patch((d) => {
+                          if (d.process.length < MAX_COUNT.process)
+                            d.process.splice(i + 1, 0, structuredClone(d.process[i]));
+                        })
+                      }
+                    />
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="col-span-1">
+                        <Field label="Step" value={p.step} max={LIMITS.process.step} required>
+                          <Text value={p.step} max={LIMITS.process.step} placeholder="01" onChange={(v) => patch((d) => { d.process[i].step = v; })} />
+                        </Field>
+                      </div>
+                      <div className="col-span-3">
+                        <Field label="Title" value={p.title} max={LIMITS.process.title} required>
+                          <Text value={p.title} max={LIMITS.process.title} onChange={(v) => patch((d) => { d.process[i].title = v; })} />
+                        </Field>
+                      </div>
+                    </div>
+                    <Field label="Description" value={p.description} max={LIMITS.process.description}>
+                      <Area value={p.description} max={LIMITS.process.description} rows={3} onChange={(v) => patch((d) => { d.process[i].description = v; })} />
+                    </Field>
+                    <Field label="Key deliverable" value={p.deliverable} max={LIMITS.process.deliverable} hint="e.g. Design Specs & Component Library">
+                      <Text value={p.deliverable} max={LIMITS.process.deliverable} onChange={(v) => patch((d) => { d.process[i].deliverable = v; })} />
+                    </Field>
+                  </div>
+                </ItemCard>
+              ))}
+            </section>
+          )}
+
+          {tab === "techstack" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-semibold">Tech Stack & Tools ({draft.techstack.length}/{MAX_COUNT.techstack})</h3>
+                  <p className="text-[12px] text-stone-400">Software, frameworks, and tools displayed with proficiency tags.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("techstack")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Tech Stack section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.techstack.length >= MAX_COUNT.techstack}
+                    onClick={() =>
+                      patch((d) => {
+                        d.techstack.push({
+                          name: "New tool",
+                          category: "Design",
+                          proficiency: "Expert",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {draft.techstack.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first tool.</p>}
+              <div className="space-y-2">
+                {draft.techstack.map((t, i) => (
+                  <div key={i} className={`${cardCls} flex flex-col gap-2.5`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[13px] font-semibold text-stone-800">{t.name || `Tool ${i + 1}`}</span>
+                      <RowButtons
+                        index={i}
+                        total={draft.techstack.length}
+                        onMove={(dir) => patch((d) => { d.techstack = move(d.techstack, i, dir); })}
+                        onDelete={() => patch((d) => { d.techstack.splice(i, 1); })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <Field label="Tool name" value={t.name} max={LIMITS.techstack.name} required>
+                        <Text value={t.name} max={LIMITS.techstack.name} onChange={(v) => patch((d) => { d.techstack[i].name = v; })} />
+                      </Field>
+                      <Field label="Category" value={t.category} max={LIMITS.techstack.category}>
+                        <Text value={t.category} max={LIMITS.techstack.category} placeholder="UI/UX Design" onChange={(v) => patch((d) => { d.techstack[i].category = v; })} />
+                      </Field>
+                      <Field label="Proficiency" value={t.proficiency} max={LIMITS.techstack.proficiency}>
+                        <Text value={t.proficiency} max={LIMITS.techstack.proficiency} placeholder="Expert / Advanced" onChange={(v) => patch((d) => { d.techstack[i].proficiency = v; })} />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {tab === "pricing" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-semibold">Pricing & Packages ({draft.pricing.length}/{MAX_COUNT.pricing})</h3>
+                  <p className="text-[12px] text-stone-400">Engagement packages with feature checklists and popular highlights.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("pricing")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Pricing section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.pricing.length >= MAX_COUNT.pricing}
+                    onClick={() =>
+                      patch((d) => {
+                        d.pricing.push({
+                          name: "New tier",
+                          price: "$2,500",
+                          period: "per project",
+                          description: "",
+                          features: ["Deliverable 1", "Deliverable 2"],
+                          popular: false,
+                          ctaText: "Book Package",
+                          ctaHref: "#contact",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {draft.pricing.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first package.</p>}
+              {draft.pricing.map((p, i) => (
+                <ItemCard
+                  key={i}
+                  title={p.name || `Package ${i + 1}`}
+                  badge={`${p.price}${p.period ? ` / ${p.period}` : ""}${p.popular ? " · Most Popular" : ""}`}
+                  fallback={p.name}
+                  open={isOpen("pricing", i)}
+                  onToggle={() => toggleOpen("pricing", i)}
+                  actions={
+                    <RowButtons
+                      index={i}
+                      total={draft.pricing.length}
+                      onMove={(dir) => patch((d) => { d.pricing = move(d.pricing, i, dir); })}
+                      onDelete={() => patch((d) => { d.pricing.splice(i, 1); })}
+                      onDuplicate={() =>
+                        patch((d) => {
+                          if (d.pricing.length < MAX_COUNT.pricing)
+                            d.pricing.splice(i + 1, 0, structuredClone(d.pricing[i]));
+                        })
+                      }
+                    />
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="Package name" value={p.name} max={LIMITS.pricing.name} required>
+                        <Text value={p.name} max={LIMITS.pricing.name} onChange={(v) => patch((d) => { d.pricing[i].name = v; })} />
+                      </Field>
+                      <div className="flex items-center gap-2 pt-6">
+                        <label className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-stone-700">
+                          <input
+                            type="checkbox"
+                            checked={p.popular}
+                            onChange={(e) => patch((d) => { d.pricing[i].popular = e.target.checked; })}
+                            className="rounded border-stone-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          Mark as &quot;Most Popular&quot;
+                        </label>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="Price" value={p.price} max={LIMITS.pricing.price} required>
+                        <Text value={p.price} max={LIMITS.pricing.price} placeholder="$4,500" onChange={(v) => patch((d) => { d.pricing[i].price = v; })} />
+                      </Field>
+                      <Field label="Billing period" value={p.period} max={LIMITS.pricing.period}>
+                        <Text value={p.period} max={LIMITS.pricing.period} placeholder="2–3 weeks / monthly" onChange={(v) => patch((d) => { d.pricing[i].period = v; })} />
+                      </Field>
+                    </div>
+                    <Field label="Description" value={p.description} max={LIMITS.pricing.description}>
+                      <Area value={p.description} max={LIMITS.pricing.description} rows={2} onChange={(v) => patch((d) => { d.pricing[i].description = v; })} />
+                    </Field>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-stone-800">Features (one per line, up to 10)</label>
+                      <textarea
+                        rows={4}
+                        value={p.features.join("\n")}
+                        onChange={(e) => {
+                          const feats = e.target.value.split("\n").filter((f) => f.trim().length > 0).slice(0, 10);
+                          patch((d) => { d.pricing[i].features = feats; });
+                        }}
+                        placeholder="Full Product Architecture&#10;Design System & Tokens&#10;Weekly Strategy Calls"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="Button text" value={p.ctaText} max={LIMITS.pricing.cta}>
+                        <Text value={p.ctaText} max={LIMITS.pricing.cta} placeholder="Book Package" onChange={(v) => patch((d) => { d.pricing[i].ctaText = v; })} />
+                      </Field>
+                      <Field label="Button URL" value={p.ctaHref} max={500}>
+                        <Text value={p.ctaHref} max={500} placeholder="#contact or https://calendly.com/…" onChange={(v) => patch((d) => { d.pricing[i].ctaHref = v; })} />
+                      </Field>
+                    </div>
+                  </div>
+                </ItemCard>
+              ))}
+            </section>
+          )}
+
+          {tab === "awards" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-[14px] font-semibold">Awards & Honors ({draft.awards.length}/{MAX_COUNT.awards})</h3>
+                  <p className="text-[12px] text-stone-400">Design awards, industry recognitions, and publication features.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => deleteSection("awards")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50/70 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:border-red-300 hover:bg-red-100 transition shadow-sm"
+                    title="Remove Awards section from portfolio"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove Section</span>
+                  </button>
+                  <button
+                    disabled={draft.awards.length >= MAX_COUNT.awards}
+                    onClick={() =>
+                      patch((d) => {
+                        d.awards.push({
+                          year: new Date().getFullYear().toString(),
+                          title: "New award",
+                          organization: "Design Award",
+                          project: "",
+                          link: "",
+                        });
+                      })
+                    }
+                    className={addBtnCls}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {draft.awards.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — add your first award or honor.</p>}
+              {draft.awards.map((a, i) => (
+                <ItemCard
+                  key={i}
+                  title={a.title || `Award ${i + 1}`}
+                  badge={`${a.year} · ${a.organization}${a.project ? ` · ${a.project}` : ""}`}
+                  fallback={a.year}
+                  open={isOpen("awards", i)}
+                  onToggle={() => toggleOpen("awards", i)}
+                  actions={
+                    <RowButtons
+                      index={i}
+                      total={draft.awards.length}
+                      onMove={(dir) => patch((d) => { d.awards = move(d.awards, i, dir); })}
+                      onDelete={() => patch((d) => { d.awards.splice(i, 1); })}
+                      onDuplicate={() =>
+                        patch((d) => {
+                          if (d.awards.length < MAX_COUNT.awards)
+                            d.awards.splice(i + 1, 0, structuredClone(d.awards[i]));
+                        })
+                      }
+                    />
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="col-span-1">
+                        <Field label="Year" value={a.year} max={LIMITS.award.year} required>
+                          <Text value={a.year} max={LIMITS.award.year} placeholder="2024" onChange={(v) => patch((d) => { d.awards[i].year = v; })} />
+                        </Field>
+                      </div>
+                      <div className="col-span-3">
+                        <Field label="Award / Honor title" value={a.title} max={LIMITS.award.title} required>
+                          <Text value={a.title} max={LIMITS.award.title} onChange={(v) => patch((d) => { d.awards[i].title = v; })} />
+                        </Field>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="Organization / Body" value={a.organization} max={LIMITS.award.organization} required>
+                        <Text value={a.organization} max={LIMITS.award.organization} placeholder="e.g. Awwwards, UX Design Awards" onChange={(v) => patch((d) => { d.awards[i].organization = v; })} />
+                      </Field>
+                      <Field label="Project name" value={a.project} max={LIMITS.award.project}>
+                        <Text value={a.project} max={LIMITS.award.project} placeholder="e.g. FinTech App" onChange={(v) => patch((d) => { d.awards[i].project = v; })} />
+                      </Field>
+                    </div>
+                    <Field label="Verification URL (optional)" value={a.link} max={500} hint="External link to view the award announcement.">
+                      <Text value={a.link} max={500} placeholder="https://…" onChange={(v) => patch((d) => { d.awards[i].link = v; })} />
                     </Field>
                   </div>
                 </ItemCard>
@@ -2003,10 +3062,15 @@ export function StudioApp({
               </div>
               <button
                 onClick={() => void publish()}
-                disabled={publishing}
-                className="w-full rounded-full bg-black py-3 text-[14px] font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+                disabled={publishing || !dirty}
+                title={!dirty ? "No unpublished changes to publish" : `Publish draft as v${version + 1}`}
+                className={`w-full rounded-full py-3 text-[14px] font-semibold transition ${
+                  dirty
+                    ? "bg-black text-white hover:bg-stone-800 shadow-sm cursor-pointer"
+                    : "bg-stone-200 text-stone-400 cursor-not-allowed opacity-60"
+                }`}
               >
-                {publishing ? "Publishing…" : `Publish draft as v${version + 1}`}
+                {publishing ? "Publishing…" : dirty ? `Publish draft as v${version + 1}` : "No unpublished changes to publish"}
               </button>
               {dirtyTabs.length > 0 && (
                 <div>
@@ -2255,6 +3319,30 @@ export function StudioApp({
           </div>
         </div>
       )}
+
+      {/* Unpublished Changes Inspector Modal */}
+      <UnpublishedChangesModal
+        isOpen={showChangesModal}
+        onClose={() => setShowChangesModal(false)}
+        draft={draft}
+        publishedSnap={publishedSnap}
+        changedKeys={changedKeys}
+        onRevertKey={revertKey}
+        onRevertAll={revertAll}
+        onNavigateTab={(targetTab) => setTab(targetTab)}
+        onPublish={() => void publish()}
+        publishing={publishing}
+        version={version}
+      />
+
+      {/* Template Library Modal with Guaranteed Smooth Scrolling */}
+      <TemplateLibraryModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        order={order}
+        onAddSection={addSection}
+        onNavigateToSection={(sectionKey) => setTab(sectionKeyToTab(sectionKey))}
+      />
     </div>
   );
 }

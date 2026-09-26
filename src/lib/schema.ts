@@ -18,6 +18,10 @@ export const LIMITS = {
   nav: { label: 30, href: 60 },
   service: { title: 80, description: 500, preview: 1000 },
   stat: { label: 80, value: 16, suffix: 8 },
+  process: { step: 8, title: 80, description: 400, deliverable: 80 },
+  techstack: { name: 40, category: 40, proficiency: 30 },
+  pricing: { name: 60, price: 40, period: 40, description: 300, feature: 80, cta: 40 },
+  award: { year: 12, title: 80, organization: 80, project: 80 },
   seo: { title: 70, description: 200, keyword: 60, handle: 40, url: 500, verification: 200, analytics: 40 },
   copyright: 120,
 } as const;
@@ -27,9 +31,13 @@ export const MAX_COUNT = {
   clientLogos: 12,
   logoImages: 12,
   stats: 6,
-  services: 6,
+  services: 8,
   tagsPerService: 8,
   projects: 12,
+  process: 8,
+  techstack: 24,
+  pricing: 6,
+  awards: 10,
   galleryItems: 12,
   aboutTags: 10,
   testimonials: 12,
@@ -103,12 +111,49 @@ export const socialSchema = z.object({
   href: urlOrEmpty(LIMITS.social.href),
 });
 
-/** Existing public sections. Navbar/footer are chrome (always rendered). */
+export const processStepSchema = z.object({
+  step: z.string().max(LIMITS.process.step),
+  title: z.string().min(1).max(LIMITS.process.title),
+  description: z.string().max(LIMITS.process.description),
+  deliverable: z.string().max(LIMITS.process.deliverable).optional().default(""),
+});
+
+export const techToolSchema = z.object({
+  name: z.string().min(1).max(LIMITS.techstack.name),
+  category: z.string().max(LIMITS.techstack.category),
+  proficiency: z.string().max(LIMITS.techstack.proficiency).optional().default("Expert"),
+});
+
+export const pricingTierSchema = z.object({
+  name: z.string().min(1).max(LIMITS.pricing.name),
+  price: z.string().max(LIMITS.pricing.price),
+  period: z.string().max(LIMITS.pricing.period),
+  description: z.string().max(LIMITS.pricing.description),
+  features: z.array(z.string().max(LIMITS.pricing.feature)).max(10),
+  popular: z.boolean().default(false),
+  ctaText: z.string().max(LIMITS.pricing.cta).default("Book Package"),
+  ctaHref: z.string().max(500).default("#contact"),
+});
+
+export const awardSchema = z.object({
+  year: z.string().max(LIMITS.award.year),
+  title: z.string().min(1).max(LIMITS.award.title),
+  organization: z.string().max(LIMITS.award.organization),
+  project: z.string().max(LIMITS.award.project).optional().default(""),
+  link: urlOrEmpty(500).optional().default(""),
+});
+
+/** Available public sections. Any section can be added, removed, reordered, or hidden. */
 export const SECTION_KEYS = [
   "hero",
   "intro",
   "projects",
   "skills",
+  "services",
+  "process",
+  "techstack",
+  "pricing",
+  "awards",
   "gallery",
   "quote",
   "about",
@@ -124,6 +169,11 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   intro: "Intro",
   projects: "Work / Projects",
   skills: "Journey / Skills",
+  services: "Services & Offerings",
+  process: "Process & Workflow",
+  techstack: "Tech Stack & Tools",
+  pricing: "Pricing & Packages",
+  awards: "Awards & Recognition",
   gallery: "Gallery",
   quote: "Quote",
   about: "About / Experience",
@@ -188,6 +238,10 @@ export const siteContentSchema = z.object({
   }),
   testimonials: z.array(testimonialSchema).max(MAX_COUNT.testimonials),
   faqs: z.array(faqSchema).max(MAX_COUNT.faqs),
+  process: z.array(processStepSchema).max(MAX_COUNT.process).optional().default([]),
+  techstack: z.array(techToolSchema).max(MAX_COUNT.techstack).optional().default([]),
+  pricing: z.array(pricingTierSchema).max(MAX_COUNT.pricing).optional().default([]),
+  awards: z.array(awardSchema).max(MAX_COUNT.awards).optional().default([]),
   socials: z.array(socialSchema).max(MAX_COUNT.socials),
   seo: z
     .object({
@@ -215,8 +269,8 @@ export const siteContentSchema = z.object({
       noIndex: false,
     }),
   sections: z.object({
-    order: z.array(z.enum(SECTION_KEYS)).max(SECTION_KEYS.length),
-    visible: z.record(z.enum(SECTION_KEYS), z.boolean()),
+    order: z.array(z.string()).max(SECTION_KEYS.length + 5),
+    visible: z.record(z.string(), z.boolean()),
   }),
 });
 
@@ -224,3 +278,7 @@ export type SiteContent = z.infer<typeof siteContentSchema>;
 export type Project = SiteContent["projects"][number];
 export type Service = SiteContent["services"][number];
 export type Stat = SiteContent["stats"][number];
+export type ProcessStep = z.infer<typeof processStepSchema>;
+export type TechTool = z.infer<typeof techToolSchema>;
+export type PricingTier = z.infer<typeof pricingTierSchema>;
+export type Award = z.infer<typeof awardSchema>;
