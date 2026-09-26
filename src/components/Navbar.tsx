@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Briefcase,
@@ -35,6 +36,8 @@ export function Navbar({
 }: {
   data?: Pick<SiteContent, "navLinks" | "site" | "sections">;
 } = {}) {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const visible = data?.sections?.visible;
   const rawNavLinks = data?.navLinks ?? fallbackLinks;
   const navLinks = rawNavLinks.filter((l) => {
@@ -44,10 +47,19 @@ export function Navbar({
   });
   const site = data?.site ?? fallbackSite;
   const brand = site.name.split(" ")[0] || site.name;
-  const [active, setActive] = useState("hero");
+  const [active, setActive] = useState(
+    pathname.startsWith("/work") ? "projects" : "hero"
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (!isHome) {
+      if (pathname.startsWith("/work")) {
+        setActive("projects");
+      }
+      return;
+    }
+
     const sections = navLinks
       .map((l) => document.getElementById(l.id))
       .filter(Boolean) as HTMLElement[];
@@ -61,7 +73,7 @@ export function Navbar({
     );
     sections.forEach((s) => obs.observe(s));
     return () => obs.disconnect();
-  }, [navLinks]);
+  }, [navLinks, isHome, pathname]);
 
   // Intuitive mobile menu: close on Escape, on resize to desktop,
   // and lock background scroll while open.
@@ -84,6 +96,13 @@ export function Navbar({
     };
   }, [open]);
 
+  const getEffectiveHref = (href: string) => {
+    if (!isHome && href.startsWith("#")) {
+      return `/${href}`;
+    }
+    return href;
+  };
+
   return (
     <>
       <motion.header
@@ -102,10 +121,11 @@ export function Navbar({
             {navLinks.map((l) => {
               const Icon = icons[l.id] ?? User;
               const isActive = active === l.id;
+              const effectiveHref = getEffectiveHref(l.href);
               return (
                 <a
                   key={l.id}
-                  href={l.href}
+                  href={effectiveHref}
                   aria-current={isActive ? "true" : undefined}
                   className={`relative flex items-center gap-2 rounded-full px-4 py-[10px] text-[14px] font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:px-6 lg:text-[15px] ${
                     isActive
@@ -122,7 +142,7 @@ export function Navbar({
 
           {/* mobile brand */}
           <a
-            href="#hero"
+            href={isHome ? "#hero" : "/#hero"}
             className="flex items-center gap-2 rounded-full px-4 py-2 text-[15px] font-semibold md:hidden"
           >
             <User size={17} /> {brand}
@@ -178,10 +198,11 @@ export function Navbar({
           >
             {navLinks.map((l) => {
               const Icon = icons[l.id] ?? User;
+              const effectiveHref = getEffectiveHref(l.href);
               return (
                 <a
                   key={l.id}
-                  href={l.href}
+                  href={effectiveHref}
                   onClick={() => setOpen(false)}
                   aria-current={active === l.id ? "true" : undefined}
                   className={`flex min-h-[48px] items-center gap-3 rounded-2xl px-4 py-3 text-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${

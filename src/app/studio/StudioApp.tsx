@@ -1600,6 +1600,7 @@ export function StudioApp({
                     disabled={draft.projects.length >= MAX_COUNT.projects}
                     onClick={() =>
                       patch((d) => {
+                        const featuredCount = d.projects.filter((x) => x.featured).length;
                         d.projects.push({
                           name: "New project",
                           tag: "",
@@ -1610,6 +1611,7 @@ export function StudioApp({
                           accent: "#FFFFFF",
                           href: "#projects",
                           behanceUrl: "",
+                          featured: featuredCount < 4,
                         });
                       })
                     }
@@ -1619,12 +1621,33 @@ export function StudioApp({
                   </button>
                 </div>
               </div>
+
+              {/* Front Page Selection Indicator */}
+              {(() => {
+                const featuredCount = draft.projects.filter((p) => p.featured).length;
+                return (
+                  <div className="flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 text-[12px] text-amber-900 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-2 rounded-full bg-amber-500" />
+                      <span>
+                        <strong>Front Page Selection:</strong> {featuredCount} of 4 selected to appear on homepage.
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-medium text-amber-800">
+                      {featuredCount === 4
+                        ? "✓ 4 of 4 filled"
+                        : `${4 - featuredCount} slot${4 - featuredCount === 1 ? "" : "s"} open`}
+                    </span>
+                  </div>
+                );
+              })()}
+
               {draft.projects.length === 0 && <p className="text-[13px] text-stone-400">Nothing here yet — the Work section stays hidden until you add one.</p>}
               {draft.projects.map((p, i) => (
                 <ItemCard
                   key={i}
                   title={p.name || `Project ${i + 1}`}
-                  badge={p.tag || p.description}
+                  badge={p.featured ? `★ Front Page • ${p.tag || p.description || "Featured"}` : (p.tag || p.description)}
                   thumb={p.image}
                   fallback={p.name}
                   open={isOpen("projects", i)}
@@ -1645,6 +1668,49 @@ export function StudioApp({
                   }
                 >
                   <div className="space-y-3">
+                    {/* Front Page Toggle */}
+                    <div className="flex items-center justify-between rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch((d) => {
+                              const current = Boolean(d.projects[i].featured);
+                              const count = d.projects.filter((x) => x.featured).length;
+                              if (!current && count >= 4) {
+                                alert("You already have 4 projects selected for the front page. Deselect one first to feature this project.");
+                                return;
+                              }
+                              d.projects[i].featured = !current;
+                            })
+                          }
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            p.featured ? "bg-amber-600" : "bg-stone-300"
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              p.featured ? "translate-x-4" : "translate-x-0"
+                            }`}
+                          />
+                        </button>
+                        <div>
+                          <p className="text-[12px] font-semibold text-stone-800">
+                            Show in 4 Front Page Slots
+                          </p>
+                          <p className="text-[11px] text-stone-500">
+                            {p.featured
+                              ? "Currently active in the 4 front page slots"
+                              : "Only displayed in the full /work archive"}
+                          </p>
+                        </div>
+                      </div>
+                      {p.featured && (
+                        <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                          ★ On Front Page
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       <Field label="Name" value={p.name} max={LIMITS.project.name} required>
                         <Text value={p.name} max={LIMITS.project.name} onChange={(v) => patch((d) => { d.projects[i].name = v; })} />

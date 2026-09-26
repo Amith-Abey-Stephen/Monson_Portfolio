@@ -115,6 +115,7 @@ export type Project = {
   accent: string;
   href: string;
   behanceUrl: string;
+  featured: boolean;
 };
 
 export const projects: Project[] = [
@@ -128,6 +129,7 @@ export const projects: Project[] = [
     accent: "#7CFFB2",
     href: "#projects",
     behanceUrl: "",
+    featured: true,
   },
   {
     name: "Finance Dashboard",
@@ -139,6 +141,7 @@ export const projects: Project[] = [
     accent: "#FFD84D",
     href: "#projects",
     behanceUrl: "",
+    featured: true,
   },
   {
     name: "Travel Booking Platform",
@@ -150,6 +153,7 @@ export const projects: Project[] = [
     accent: "#FFFFFF",
     href: "#projects",
     behanceUrl: "",
+    featured: true,
   },
   {
     name: "AI Chatbot",
@@ -161,6 +165,7 @@ export const projects: Project[] = [
     accent: "#FFB86B",
     href: "#projects",
     behanceUrl: "",
+    featured: true,
   },
   {
     name: "Car Rental Booking App",
@@ -172,6 +177,7 @@ export const projects: Project[] = [
     accent: "#8EC5FF",
     href: "#projects",
     behanceUrl: "",
+    featured: false,
   },
   {
     name: "Digital Marketing Landing Page",
@@ -183,6 +189,7 @@ export const projects: Project[] = [
     accent: "#D0A8FF",
     href: "#projects",
     behanceUrl: "",
+    featured: false,
   },
 ];
 

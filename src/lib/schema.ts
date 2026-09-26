@@ -87,6 +87,7 @@ export const projectSchema = z.object({
   accent: z.string().max(LIMITS.project.accent),
   href: z.string().max(LIMITS.project.href),
   behanceUrl: urlOrEmpty(LIMITS.project.href).optional().default(""),
+  featured: z.boolean().optional().default(false),
 });
 
 export const galleryItemSchema = z.object({
