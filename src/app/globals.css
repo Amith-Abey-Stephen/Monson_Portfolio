@@ -94,9 +94,9 @@ body {
 
 /* ---------- studio-only ---------- */
 .studio-preview-dots {
-  background-color: #eeebe5;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 1.25px, transparent 1.25px);
-  background-size: 20px 20px;
+  background-color: #f5f4f0;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1.25px, transparent 1.25px);
+  background-size: 18px 18px;
 }
 
 /* ---------- utilities ---------- */

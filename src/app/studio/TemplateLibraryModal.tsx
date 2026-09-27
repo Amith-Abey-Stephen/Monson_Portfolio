@@ -491,7 +491,7 @@ export function TemplateLibraryModal({
                   : "text-stone-600 hover:text-stone-900"
               }`}
             >
-              <Layers size={14} className={activeTab === "prebuilt" ? "text-purple-600" : "text-stone-400"} />
+              <Layers size={14} className={activeTab === "prebuilt" ? "text-stone-900" : "text-stone-400"} />
               <span>Pre-built Showcase Sections (9)</span>
             </button>
           </div>
@@ -568,9 +568,9 @@ export function TemplateLibraryModal({
                       key={cat}
                       type="button"
                       onClick={() => setSelectedCategory(cat)}
-                      className={`rounded-full px-3 py-1 text-[11.5px] font-medium transition ${
+                      className={`rounded-full px-3 py-1 text-[11.5px] font-medium transition cursor-pointer ${
                         isSelected
-                          ? "bg-purple-600 text-white shadow-xs"
+                          ? "bg-black text-white shadow-xs"
                           : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-100 hover:text-stone-900"
                       }`}
                     >
@@ -601,13 +601,13 @@ export function TemplateLibraryModal({
                         className={`flex flex-col justify-between rounded-2xl border p-4 sm:p-5 transition-all shadow-sm ${
                           isAdded
                             ? "border-emerald-200 bg-emerald-50/20"
-                            : "border-stone-200 bg-white hover:border-purple-300 hover:shadow-md"
+                            : "border-stone-200 bg-white hover:border-stone-400 hover:shadow-md"
                         }`}
                       >
                         <div>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
-                              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 border border-purple-100/80 shadow-xs">
+                              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-100 text-stone-900 border border-stone-200/80 shadow-xs">
                                 <IconComp size={18} />
                               </span>
                               <div>
@@ -616,8 +616,8 @@ export function TemplateLibraryModal({
                               </div>
                             </div>
 
-                            <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-1 text-[10.5px] font-medium text-purple-700">
-                              <Sparkles size={10} className="text-purple-500" />
+                            <span className="inline-flex items-center gap-1 rounded-md bg-stone-100 px-2 py-1 text-[10.5px] font-medium text-stone-800">
+                              <Sparkles size={10} className="text-stone-600" />
                               <span>{tmpl.animationType}</span>
                             </span>
                           </div>
@@ -625,7 +625,7 @@ export function TemplateLibraryModal({
                           <div className="mt-3">
                             <div className="flex items-center justify-between text-[10.5px] font-semibold uppercase tracking-wider text-stone-400 mb-1">
                               <span>Live Design Preview</span>
-                              <span className="text-[9.5px] text-purple-600 font-medium">Dark Canvas Mode</span>
+                              <span className="text-[9.5px] text-stone-500 font-medium">Dark Canvas Mode</span>
                             </div>
                             <TemplatePreview sectionKey={tmpl.key} />
                           </div>
@@ -643,7 +643,7 @@ export function TemplateLibraryModal({
                                   onClose();
                                   onNavigateToSection(tmpl.key);
                                 }}
-                                className="text-[12px] font-semibold text-purple-600 hover:text-purple-700 hover:underline"
+                                className="text-[12px] font-semibold text-stone-900 hover:text-black hover:underline cursor-pointer"
                               >
                                 Edit section content →
                               </button>

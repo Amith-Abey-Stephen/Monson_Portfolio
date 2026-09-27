@@ -39,15 +39,15 @@ function LoginForm() {
   return (
     <form
       onSubmit={submit}
-      className="w-full max-w-[390px] rounded-2xl border border-stone-200/90 bg-white p-6 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] sm:p-8"
+      className="w-full max-w-[400px] rounded-2xl border border-stone-200/80 bg-white p-7 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] sm:p-8"
     >
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white">
-          S
+      <div className="flex items-center gap-3">
+        <span className="grid size-10 place-items-center rounded-xl bg-black font-heading text-[16px] font-bold text-white shadow-xs">
+          M
         </span>
         <div>
-          <h1 className="font-heading text-[20px] font-bold tracking-tight text-stone-950">Content Studio</h1>
-          <p className="text-[12px] text-stone-500">Monson Sunny Portfolio CMS</p>
+          <h1 className="font-heading text-[20px] font-bold tracking-tight text-stone-900">Content Studio</h1>
+          <p className="text-[12px] font-medium text-stone-500">Monson Sunny Portfolio CMS</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ function LoginForm() {
         </div>
       )}
 
-      <p className="mt-4 text-[13px] text-stone-500">
+      <p className="mt-4 text-[13px] text-stone-500 leading-relaxed">
         Owner sign-in. Drafts stay private until you publish to the live site.
       </p>
 
@@ -90,7 +90,7 @@ function LoginForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200"
+          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 transition-all"
           placeholder="you@example.com"
         />
       </label>
@@ -103,7 +103,7 @@ function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200"
+          className="mt-1.5 min-h-[46px] w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 transition-all"
           placeholder="••••••••"
         />
       </label>
@@ -117,12 +117,12 @@ function LoginForm() {
       <button
         type="submit"
         disabled={busy}
-        className="mt-5 min-h-[46px] w-full rounded-full bg-black font-heading text-[14px] font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-[0.99] disabled:opacity-50"
+        className="mt-5 min-h-[46px] w-full rounded-xl bg-black font-heading text-[14px] font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
       >
         {busy ? "Signing in…" : "Sign in to Studio"}
       </button>
 
-      <Link href="/" className="mt-4 block text-center text-[13px] text-stone-500 transition hover:text-stone-900">
+      <Link href="/" className="mt-4 block text-center text-[13px] font-medium text-stone-500 transition hover:text-stone-900">
         ← Back to live site
       </Link>
     </form>
@@ -131,7 +131,7 @@ function LoginForm() {
 
 export default function StudioLoginPage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f4f2ec] px-4 text-stone-900">
+    <main className="grid min-h-screen place-items-center bg-[#faf9f6] px-4 text-stone-900">
       <Suspense fallback={<div className="text-[13px] text-stone-400">Loading…</div>}>
         <LoginForm />
       </Suspense>

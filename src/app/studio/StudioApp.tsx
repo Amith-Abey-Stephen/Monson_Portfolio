@@ -43,7 +43,7 @@ import {
   Trophy,
 } from "lucide-react";
 import type { SectionKey, SiteContent, CustomSection, CustomSectionTemplate } from "@/lib/schema";
-import { LIMITS, MAX_COUNT, SECTION_KEYS, SECTION_LABELS } from "@/lib/schema";
+import { LIMITS, MAX_COUNT, SECTION_LABELS } from "@/lib/schema";
 import { defaultContent } from "@/data/content";
 import { autoDerivedKeywords } from "@/lib/seo";
 import { Area, Field, ImageField, ItemCard, RowButtons, Text, move, inputCls } from "./fields";
@@ -109,6 +109,40 @@ const TABS: {
   { id: "site-settings", label: "Site settings", Icon: Settings },
   { id: "seo", label: "SEO & Reach", Icon: Globe },
   { id: "history", label: "Version history", Icon: History },
+];
+
+export const TAB_GROUPS: {
+  title: string;
+  tabIds: TabId[];
+}[] = [
+  {
+    title: "General",
+    tabIds: ["overview", "sections"],
+  },
+  {
+    title: "Portfolio Sections",
+    tabIds: [
+      "hero",
+      "intro",
+      "work",
+      "services",
+      "process",
+      "techstack",
+      "pricing",
+      "awards",
+      "journey",
+      "gallery",
+      "quote",
+      "about",
+      "testimonials",
+      "faq",
+      "contact",
+    ],
+  },
+  {
+    title: "Settings & System",
+    tabIds: ["site-settings", "seo", "history"],
+  },
 ];
 
 export type DeviceCategory = "desktop" | "tablet" | "mobile";
@@ -448,11 +482,11 @@ function editorReducer(s: EditorState, a: EditorAction): EditorState {
 }
 
 const cardCls =
-  "rounded-2xl border border-stone-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]";
+  "rounded-2xl border border-stone-200/80 bg-white p-4 shadow-2xs transition-all";
 const addBtnCls =
-  "rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-30";
+  "rounded-xl border border-stone-200 bg-stone-100 px-3.5 py-1.5 text-[13px] font-semibold text-stone-800 hover:bg-stone-200 disabled:opacity-30 transition cursor-pointer";
 const iconBtnCls =
-  "grid size-9 place-items-center rounded-xl border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 disabled:opacity-30";
+  "grid size-9 place-items-center rounded-xl border border-stone-200/80 bg-white text-stone-600 hover:border-stone-400 hover:bg-stone-50 hover:text-stone-900 disabled:opacity-30 transition cursor-pointer";
 
 const TOP_KEYS = [
   "site",
@@ -1015,9 +1049,9 @@ export function StudioApp({
         onClick={toggleSidebar}
         title="Expand sidebar (⌘B)"
         aria-label="Expand sidebar"
-        className="grid size-10 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white transition hover:bg-stone-800 shadow-sm"
+        className="grid size-10 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white transition hover:bg-stone-800 shadow-xs"
       >
-        {(draft.site.name.charAt(0) || "S").toUpperCase()}
+        {(draft.site.name.charAt(0) || "M").toUpperCase()}
       </button>
 
       <div className="my-1.5 h-px w-8 bg-stone-200/80" />
@@ -1030,7 +1064,9 @@ export function StudioApp({
           title={t.label}
           aria-label={t.label}
           className={`relative grid size-10 place-items-center rounded-xl transition ${
-            tab === t.id ? "bg-black text-white shadow-sm" : "text-stone-500 hover:bg-black/5 hover:text-stone-900"
+            tab === t.id
+              ? "bg-black text-white shadow-xs font-semibold"
+              : "text-stone-500 hover:bg-stone-100 hover:text-stone-900"
           }`}
         >
           <t.Icon size={17} aria-hidden />
@@ -1059,12 +1095,12 @@ export function StudioApp({
     <>
       <div className="hidden items-center justify-between px-3 pb-3 pt-1 lg:flex">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white shadow-sm">
-            {(draft.site.name.charAt(0) || "S").toUpperCase()}
+          <span className="grid size-9 place-items-center rounded-xl bg-black font-heading text-[15px] font-bold text-white shadow-xs">
+            {(draft.site.name.charAt(0) || "M").toUpperCase()}
           </span>
           <div>
-            <span className="block text-[14px] font-bold text-stone-900 leading-tight">Content studio</span>
-            <span className="block text-[11px] text-stone-400 font-medium">Monson Sunny</span>
+            <span className="block text-[14px] font-bold text-stone-900 leading-tight">Content Studio</span>
+            <span className="block text-[11px] text-stone-500 font-medium">Portfolio CMS</span>
           </div>
         </div>
         <button
@@ -1077,95 +1113,127 @@ export function StudioApp({
         </button>
       </div>
 
-      <div className="relative mb-2 hidden shrink-0 lg:block">
+      <div className="relative mb-3 hidden shrink-0 lg:block">
         <Search size={14} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
         <input
           ref={filterRef}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Search sections…  ( / )"
+          placeholder="Filter sections… ( / )"
           aria-label="Search sections"
-          className="w-full rounded-xl border border-stone-200 bg-white py-1.5 pl-8 pr-3 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none"
+          className="w-full rounded-xl border border-stone-200/90 bg-white py-1.5 pl-8 pr-3 text-[12.5px] text-stone-900 placeholder:text-stone-400 transition focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 focus:outline-none"
         />
       </div>
 
-      <div className="space-y-0.5">
-        {sidebarTabs.filter((t) => t.label.toLowerCase().includes(filter.trim().toLowerCase())).map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            aria-current={tab === t.id ? "true" : undefined}
-            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-medium transition ${
-              tab === t.id ? "bg-black text-white shadow-sm" : "text-stone-600 hover:bg-black/5 hover:text-stone-900"
-            }`}
-          >
-            <t.Icon size={16} className="shrink-0" aria-hidden />
-            <span className="truncate">{t.label}</span>
-            {tabDirty(t.id) && (
-              <span
-                aria-label="Has unpublished changes"
-                title="Has unpublished changes"
-                className={`ml-auto size-2 shrink-0 rounded-full ${tab === t.id ? "bg-amber-300" : "bg-amber-500"}`}
-              />
-            )}
-          </button>
-        ))}
+      <div className="space-y-4">
+        {TAB_GROUPS.map((grp) => {
+          const matchingTabs = sidebarTabs.filter(
+            (t) =>
+              grp.tabIds.includes(t.id) &&
+              t.label.toLowerCase().includes(filter.trim().toLowerCase())
+          );
+          if (matchingTabs.length === 0) return null;
+          return (
+            <div key={grp.title} className="space-y-1">
+              <p className="px-3 text-[10.5px] font-bold uppercase tracking-wider text-stone-400">
+                {grp.title}
+              </p>
+              <div className="space-y-0.5">
+                {matchingTabs.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    aria-current={tab === t.id ? "true" : undefined}
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-[12.5px] font-medium transition ${
+                      tab === t.id
+                        ? "bg-black text-white shadow-xs font-semibold"
+                        : "text-stone-600 hover:bg-stone-100/80 hover:text-stone-950"
+                    }`}
+                  >
+                    <t.Icon size={15} className={`shrink-0 ${tab === t.id ? "text-white" : "text-stone-400"}`} aria-hidden />
+                    <span className="truncate">{t.label}</span>
+                    {tabDirty(t.id) && (
+                      <span
+                        aria-label="Has unpublished changes"
+                        title="Has unpublished changes"
+                        className={`ml-auto size-2 shrink-0 rounded-full ${
+                          tab === t.id ? "bg-amber-300" : "bg-amber-500"
+                        }`}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
 
         {/* Custom Sections dynamic sidebar links */}
         {(draft.customSections || []).length > 0 && (
-          <div className="pt-2.5 mt-2 border-t border-stone-200/60">
-            <p className="px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-stone-400">
-              Custom Sections ({draft.customSections.length})
-            </p>
-            {draft.customSections.map((cs) => {
-              const isSelected = tab === "custom-section" && activeCustomSectionId === cs.id;
-              return (
-                <button
-                  key={cs.id}
-                  onClick={() => {
-                    setActiveCustomSectionId(cs.id);
-                    setTab("custom-section");
-                  }}
-                  className={`flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[12.5px] font-medium transition ${
-                    isSelected
-                      ? "bg-purple-600 text-white shadow-xs"
-                      : "text-stone-600 hover:bg-black/5 hover:text-stone-900"
-                  }`}
-                >
-                  <span
-                    className={`size-2 rounded-full shrink-0 ${
-                      cs.bgColor === "emerald" ? "bg-emerald-400" :
-                      cs.bgColor === "blue" ? "bg-blue-400" :
-                      cs.bgColor === "cyan" ? "bg-cyan-400" :
-                      cs.bgColor === "amber" ? "bg-amber-400" :
-                      cs.bgColor === "rose" ? "bg-rose-400" :
-                      cs.bgColor === "none" ? "bg-stone-400" : "bg-purple-400"
+          <div className="space-y-1">
+            <div className="flex items-center justify-between px-3">
+              <p className="text-[10.5px] font-bold uppercase tracking-wider text-stone-400">
+                Custom Sections ({draft.customSections.length})
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowTemplateModal(true)}
+                className="text-[11px] font-semibold text-stone-900 hover:underline"
+              >
+                + Add
+              </button>
+            </div>
+            <div className="space-y-0.5">
+              {draft.customSections.map((cs) => {
+                const isSelected = tab === "custom-section" && activeCustomSectionId === cs.id;
+                return (
+                  <button
+                    key={cs.id}
+                    onClick={() => {
+                      setActiveCustomSectionId(cs.id);
+                      setTab("custom-section");
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[12px] font-medium transition ${
+                      isSelected
+                        ? "bg-black text-white shadow-xs font-semibold"
+                        : "text-stone-600 hover:bg-stone-100/80 hover:text-stone-900"
                     }`}
-                  />
-                  <span className="truncate">{cs.title || "Custom Section"}</span>
-                  {cs.inNav && (
-                    <span className="ml-auto text-[9.5px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-                      Nav
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  >
+                    <span
+                      className={`size-2 rounded-full shrink-0 ${
+                        cs.bgColor === "emerald" ? "bg-emerald-400" :
+                        cs.bgColor === "blue" ? "bg-blue-400" :
+                        cs.bgColor === "cyan" ? "bg-cyan-400" :
+                        cs.bgColor === "amber" ? "bg-amber-400" :
+                        cs.bgColor === "rose" ? "bg-rose-400" :
+                        "bg-stone-400"
+                      }`}
+                    />
+                    <span className="truncate">{cs.title || "Custom Section"}</span>
+                    {cs.inNav && (
+                      <span className="ml-auto text-[9.5px] font-semibold uppercase px-1.5 py-0.2 rounded bg-stone-200 text-stone-800">
+                        Nav
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
 
       <div className="mt-auto hidden border-t border-stone-200/90 pt-3 lg:block">
-        <div className="rounded-xl bg-stone-100/80 p-2.5">
-          <p className="truncate text-[11px] font-medium text-stone-500">{email}</p>
+        <div className="rounded-xl bg-stone-100/70 border border-stone-200/80 p-2.5">
+          <p className="truncate text-[11px] font-medium text-stone-600">{email}</p>
           <div className="mt-1 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
+            <span className="flex items-center gap-1.5 text-[10px] text-emerald-700 font-semibold">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Active session
             </span>
             <button
               onClick={() => void logout()}
-              className="text-[11px] font-semibold text-stone-600 transition hover:text-red-600"
+              className="text-[11px] font-semibold text-stone-500 transition hover:text-red-600 cursor-pointer"
             >
               Sign out
             </button>
@@ -1179,32 +1247,39 @@ export function StudioApp({
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f2ec] text-stone-900">
+    <div className="min-h-screen bg-[#faf9f6] text-stone-900">
       {/* top bar */}
-      <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f4f2ec]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1720px] flex-wrap items-center gap-2 px-4 py-2.5">
-          <button
-            onClick={toggleSidebar}
-            aria-label={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
-            title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
-            className={`${iconBtnCls} hidden lg:grid`}
-          >
-            {sidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
-          </button>
-          <span className="grid size-8 place-items-center rounded-lg bg-black font-heading text-[14px] font-bold text-white lg:hidden">
-            {(draft.site.name.charAt(0) || "S").toUpperCase()}
-          </span>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[16px] font-bold tracking-tight">
-              {tab === "overview" ? "Overview" : activeTab.label}
-            </h1>
+      <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#faf9f6]/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1920px] items-center justify-between gap-3 px-4 py-2.5">
+          {/* Left: Brand, Sidebar Toggle, Breadcrumb & Save Status */}
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={toggleSidebar}
+              aria-label={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+              title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+              className={`${iconBtnCls} hidden lg:grid`}
+            >
+              {sidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-lg bg-black font-heading text-[13px] font-bold text-white shadow-xs">
+                {(draft.site.name.charAt(0) || "M").toUpperCase()}
+              </span>
+              <div className="hidden sm:block">
+                <span className="text-[13px] font-semibold text-stone-900">Monson Studio</span>
+                <span className="text-stone-400 mx-1.5">/</span>
+                <span className="text-[13px] font-medium text-stone-600">
+                  {tab === "overview" ? "Overview" : activeTab.label}
+                </span>
+              </div>
+            </div>
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-all ${
                 saveState === "saving"
-                  ? "bg-amber-100/90 text-amber-800 ring-1 ring-amber-200"
+                  ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                   : saveState === "error"
-                  ? "bg-red-100 text-red-700 ring-1 ring-red-200"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "bg-red-50 text-red-700 ring-1 ring-red-200"
+                  : "bg-stone-100 text-stone-700 ring-1 ring-stone-200"
               }`}
             >
               <span
@@ -1213,92 +1288,113 @@ export function StudioApp({
                     ? "bg-amber-500 animate-pulse"
                     : saveState === "error"
                     ? "bg-red-500"
-                    : "bg-emerald-500"
+                    : "bg-stone-500"
                 }`}
               />
               {saveLabel}
             </span>
           </div>
-          <span className="ml-auto flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setShowChangesModal(true)}
-              aria-label={dirty ? `Review ${changedKeys.length} unpublished changes` : "Draft matches published"}
-              title={dirty ? "Click to review and revert unpublished changes" : "Draft matches live site"}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition cursor-pointer ${
-                dirty
-                  ? "bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:ring-1 hover:ring-red-300 shadow-xs active:scale-[0.98]"
-                  : "bg-green-600/10 text-green-700 hover:bg-green-600/20"
-              }`}
-            >
-              {dirty && <span aria-hidden className="size-1.5 rounded-full bg-red-500 animate-pulse" />}
-              {dirty ? `Unpublished changes${changedKeys.length > 0 ? ` (${changedKeys.length})` : ""}` : "Everything is published"}
-            </button>
-            <button
-              onClick={undo}
-              disabled={editor.past.length === 0}
-              aria-label="Undo (⌘Z)"
-              title="Undo (⌘Z)"
-              className={iconBtnCls}
-            >
-              <Undo2 size={16} />
-            </button>
-            <button
-              onClick={redo}
-              disabled={editor.future.length === 0}
-              aria-label="Redo (⇧⌘Z)"
-              title="Redo (⇧⌘Z)"
-              className={iconBtnCls}
-            >
-              <Redo2 size={16} />
-            </button>
+
+          {/* Center: Review Changes Quick Action */}
+          <div className="hidden md:flex items-center">
+            {dirty ? (
+              <button
+                type="button"
+                onClick={() => setShowChangesModal(true)}
+                className="flex items-center gap-2 rounded-full border border-amber-200/90 bg-amber-50/80 px-3.5 py-1 text-[12px] font-semibold text-amber-900 shadow-2xs hover:bg-amber-100/80 transition cursor-pointer"
+              >
+                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>{changedKeys.length} Unpublished {changedKeys.length === 1 ? "Change" : "Changes"}</span>
+                <span className="text-[11px] text-amber-700/70 font-normal">· Review</span>
+              </button>
+            ) : (
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-stone-400">
+                <Check size={13} className="text-emerald-500" />
+                <span>All changes published</span>
+              </span>
+            )}
+          </div>
+
+          {/* Right: Actions, Undo/Redo, Preview Toggle & Publish */}
+          <div className="flex items-center gap-2">
+            {/* Undo / Redo Group */}
+            <div className="flex items-center rounded-xl border border-stone-200/80 bg-white p-0.5 shadow-2xs">
+              <button
+                onClick={undo}
+                disabled={editor.past.length === 0}
+                aria-label="Undo (⌘Z)"
+                title="Undo (⌘Z)"
+                className="grid size-8 place-items-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-30 transition cursor-pointer"
+              >
+                <Undo2 size={15} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={editor.future.length === 0}
+                aria-label="Redo (⇧⌘Z)"
+                title="Redo (⇧⌘Z)"
+                className="grid size-8 place-items-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-30 transition cursor-pointer"
+              >
+                <Redo2 size={15} />
+              </button>
+            </div>
+
+            {/* Split Preview Toggle */}
             <button
               onClick={() => setPreviewOpen((v) => !v)}
-              aria-label={previewOpen ? "Hide preview" : "Show preview"}
-              title={previewOpen ? "Hide preview" : "Show preview"}
+              aria-label={previewOpen ? "Hide live preview" : "Show live preview"}
+              title={previewOpen ? "Hide live preview" : "Show live preview"}
               className={`${iconBtnCls} hidden lg:grid`}
             >
               {previewOpen ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
             </button>
+
+            {/* View Live Site */}
             <a
               href="/"
               target="_blank"
               rel="noreferrer"
-              aria-label="View live site"
-              title="View live site"
+              aria-label="View live site in new tab"
+              title="View live site in new tab"
               className={iconBtnCls}
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={15} />
             </a>
-          </span>
-          <div className="flex rounded-full border border-stone-200 bg-white p-0.5 lg:hidden">
-            {(["edit", "preview"] as View[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1.5 text-[13px] font-medium capitalize ${
-                  view === v ? "bg-black text-white" : "text-stone-500"
-                }`}
-              >
-                {v}
-              </button>
-            ))}
+
+            {/* Mobile View Toggle */}
+            <div className="flex rounded-lg border border-stone-200 bg-white p-0.5 lg:hidden">
+              {(["edit", "preview"] as View[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={`rounded-md px-2.5 py-1 text-[12px] font-medium capitalize ${
+                    view === v ? "bg-black text-white" : "text-stone-500"
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+
+            {/* Publish CTA Button */}
+            <button
+              onClick={() => void publish()}
+              disabled={publishing || !dirty}
+              title={!dirty ? "No unpublished changes" : "Publish changes live (⌘↵)"}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
+                dirty
+                  ? "bg-black text-white shadow-sm hover:bg-stone-800 active:scale-[0.98] cursor-pointer"
+                  : "bg-stone-200/80 text-stone-400 cursor-not-allowed opacity-60"
+              }`}
+            >
+              <Sparkles size={14} className={dirty ? "text-stone-300" : ""} />
+              <span>{publishing ? "Publishing…" : dirty ? "Publish Live" : "Published"}</span>
+              {dirty && <kbd className="hidden sm:inline-block text-[10px] opacity-75 font-mono bg-white/20 px-1 py-0.2 rounded">⌘↵</kbd>}
+            </button>
           </div>
-          <button
-            onClick={() => void publish()}
-            disabled={publishing || !dirty}
-            title={!dirty ? "No unpublished changes" : "Publish changes live (⌘↵)"}
-            className={`rounded-full px-5 py-2 text-[13px] font-semibold transition ${
-              dirty
-                ? "bg-black text-white hover:bg-stone-800 shadow-sm cursor-pointer"
-                : "bg-stone-200 text-stone-400 cursor-not-allowed opacity-60"
-            }`}
-          >
-            {publishing ? "Publishing…" : dirty ? "Publish" : "Published"}
-          </button>
         </div>
         {publishMsg && (
-          <p aria-live="polite" className="border-t border-stone-200/80 px-4 py-1.5 text-center text-[13px] font-medium text-green-700">
+          <p aria-live="polite" className="border-t border-stone-200/80 bg-stone-100 px-4 py-1.5 text-center text-[13px] font-medium text-stone-900">
             {publishMsg}
           </p>
         )}
@@ -1317,7 +1413,7 @@ export function StudioApp({
         {/* sidebar */}
         <aside
           data-lenis-prevent="true"
-          className={`${view === "preview" ? "hidden" : ""} lg:block transition-all duration-200`}
+          className={`${view === "preview" ? "hidden" : ""} lg:block transition-all duration-200 bg-[#faf9f6]`}
         >
           <nav
             aria-label="Studio sections"
@@ -1332,200 +1428,145 @@ export function StudioApp({
         {/* editor */}
         <main
           data-lenis-prevent="true"
-          className={`${view === "preview" ? "hidden" : ""} space-y-5 px-4 py-5 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[880px] lg:border-r-0"}`}
+          className={`${view === "preview" ? "hidden" : ""} space-y-6 px-4 py-6 sm:px-6 lg:block lg:border-r lg:border-stone-200/80 ${previewOpen ? "" : "lg:mx-auto lg:w-full lg:max-w-[920px] lg:border-r-0"}`}
         >
           {tab === "overview" && (
-            <section className="space-y-5">
-              {/* Welcome Header */}
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                <div>
-                  <h2 className="font-heading text-[26px] font-bold tracking-tight text-stone-950">
-                    {greeting()}, {ownerFirst} 👋
-                  </h2>
-                  <p className="mt-0.5 text-[13px] text-stone-500">
-                    Manage portfolio content, inspect device previews, and publish live updates.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => setTab("sections")}
-                    className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-[12.5px] font-medium text-stone-700 shadow-sm transition hover:bg-stone-100"
-                  >
-                    <Layers size={14} className="text-stone-400" />
-                    Manage sections
-                  </button>
-                  {dirty ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowChangesModal(true)}
-                      className="flex items-center gap-1.5 rounded-full bg-black text-white shadow-sm hover:bg-stone-800 cursor-pointer px-4 py-1.5 text-[12.5px] font-semibold transition"
-                    >
-                      <Eye size={13} />
-                      <span>Review & Publish ({changedKeys.length})</span>
-                    </button>
-                  ) : (
-                    <span className="flex items-center gap-1.5 rounded-full bg-stone-200/60 text-stone-500 px-3.5 py-1.5 text-[12.5px] font-medium">
-                      <Check size={13} className="text-emerald-600" />
-                      <span>All changes live</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* 4 Key Metrics Cards */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className={cardCls}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Live version</p>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Live</span>
-                  </div>
-                  <p className="mt-1.5 font-heading text-[24px] font-bold text-stone-900">v{version}</p>
-                </div>
-
-                <div className={cardCls}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Last published</p>
-                  <p className="mt-1.5 font-heading text-[13px] font-bold leading-snug text-stone-800">
-                    {publishedAt ? new Date(publishedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not yet"}
-                  </p>
-                </div>
-
-                <div
-                  onClick={() => dirty && setShowChangesModal(true)}
-                  title={dirty ? "Click to inspect and revert unpublished changes" : "All changes are published"}
-                  className={`${cardCls} ${dirty ? "cursor-pointer hover:border-amber-300 hover:shadow-xs transition" : ""}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Draft status</p>
-                    {dirty && <span className="size-2 rounded-full bg-amber-500 animate-pulse" />}
-                  </div>
-                  <p className={`mt-1.5 text-[13px] font-semibold ${dirty ? "text-amber-700 hover:underline" : "text-emerald-700"}`}>
-                    {dirty ? `Unpublished changes (${changedKeys.length}) →` : "All changes live"}
-                  </p>
-                </div>
-
-                <div className={cardCls}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Version history</p>
-                    <button onClick={() => setTab("history")} className="text-[10px] font-semibold text-stone-400 hover:text-stone-900">View →</button>
-                  </div>
-                  <p className="mt-1.5 font-heading text-[24px] font-bold text-stone-900">{history.length}</p>
-                </div>
-              </div>
-
-              {/* Changed sections alert banner if dirty */}
-              {dirtyTabs.length > 0 && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+            <section className="space-y-6">
+              {/* Welcome & Quick Action Hero */}
+              <div className="relative overflow-hidden rounded-3xl border border-stone-200/90 bg-white p-6 sm:p-7 shadow-2xs">
+                <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                  <div>
                     <div className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-amber-500 animate-ping" />
-                      <p className="text-[13px] font-bold text-amber-950">
-                        Unpublished changes in {dirtyTabs.length} {dirtyTabs.length === 1 ? "section" : "sections"}
-                      </p>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-semibold text-stone-800">
+                        <Sparkles size={11} className="text-stone-600" />
+                        Studio Dashboard
+                      </span>
+                      <span className="text-[12px] text-stone-400">· Live version v{version}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <h2 className="mt-2 font-heading text-[26px] font-bold tracking-tight text-stone-950 sm:text-[28px]">
+                      {greeting()}, {ownerFirst} 👋
+                    </h2>
+                    <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-stone-500 sm:text-[14px]">
+                      Manage content, reorder sections, inspect responsive device previews, and publish live changes directly to production.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <button
+                      onClick={() => setTab("sections")}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-[12.5px] font-medium text-stone-700 shadow-2xs hover:bg-stone-50 transition cursor-pointer"
+                    >
+                      <Layers size={14} className="text-stone-400" />
+                      <span>Manage Sections</span>
+                    </button>
+
+                    {dirty ? (
                       <button
                         type="button"
                         onClick={() => setShowChangesModal(true)}
-                        className="flex items-center gap-1.5 rounded-full bg-amber-900 px-4 py-1.5 text-[12px] font-semibold text-white transition hover:bg-amber-950 shadow-xs"
+                        className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800 transition cursor-pointer"
                       >
-                        <Eye size={13} />
-                        <span>Inspect & Review Changes ({changedKeys.length})</span>
+                        <Eye size={14} />
+                        <span>Review & Publish ({changedKeys.length})</span>
                       </button>
-                    </div>
+                    ) : (
+                      <a
+                        href="/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-black px-4 py-2 text-[13px] font-semibold text-white shadow-xs hover:bg-stone-800 transition"
+                      >
+                        <ExternalLink size={14} />
+                        <span>View Live Site</span>
+                      </a>
+                    )}
                   </div>
-                  <p className="mt-1 text-[12px] text-amber-800/90">
-                    Edits are saved to your private draft. Click any section below to review before publishing:
+                </div>
+              </div>
+
+              {/* Key Metrics */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className={cardCls}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Live Status</p>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="font-heading text-[22px] font-bold text-stone-900">v{version}</span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Published</span>
+                  </div>
+                  <p className="mt-1 truncate text-[11px] text-stone-400">
+                    {publishedAt ? new Date(publishedAt).toLocaleDateString() : "Live on production"}
                   </p>
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                </div>
+
+                <div className={cardCls}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Active Sections</p>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="font-heading text-[22px] font-bold text-stone-900">{order.length}</span>
+                    <span className="text-[11px] text-stone-500 font-medium">on landing page</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-stone-400">Ordered & interactive</p>
+                </div>
+
+                <div className={cardCls}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Selected Works</p>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="font-heading text-[22px] font-bold text-stone-900">{draft.projects.length}</span>
+                    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-bold text-stone-800">
+                      {draft.projects.filter((p) => p.featured).length} Featured
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-stone-400">Complete case studies</p>
+                </div>
+
+                <div
+                  onClick={() => setTab("history")}
+                  className={`${cardCls} cursor-pointer hover:border-stone-400 transition`}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">Revisions</p>
+                    <span className="text-[11px] font-medium text-stone-900">History →</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="font-heading text-[22px] font-bold text-stone-900">{history.length}</span>
+                    <span className="text-[11px] text-stone-400">Versions</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-stone-400">Full rollback support</p>
+                </div>
+              </div>
+
+              {/* Unpublished Changes Spotlight */}
+              {dirtyTabs.length > 0 && (
+                <div className="rounded-2xl border border-amber-200/90 bg-amber-50/70 p-4 sm:p-5 shadow-2xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                      <h3 className="text-[14px] font-bold text-amber-950">
+                        {changedKeys.length} Unpublished {changedKeys.length === 1 ? "Change" : "Changes"} in {dirtyTabs.length} {dirtyTabs.length === 1 ? "Section" : "Sections"}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowChangesModal(true)}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-900 px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-2xs hover:bg-amber-950 transition cursor-pointer"
+                    >
+                      <Eye size={13} />
+                      <span>Review Diffs & Revert</span>
+                    </button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {dirtyTabs.map((t) => (
                       <button
                         key={t.id}
                         onClick={() => setTab(t.id)}
-                        className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-[12px] font-medium text-amber-900 shadow-sm transition hover:bg-amber-100"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white px-3 py-1 text-[12px] font-medium text-amber-900 shadow-2xs hover:bg-amber-50 transition cursor-pointer"
                       >
-                        <t.Icon size={12} aria-hidden />
-                        {t.label}
+                        <t.Icon size={13} />
+                        <span>{t.label}</span>
                         <ChevronRight size={12} className="text-amber-400" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Sections Hub Grid */}
-              <div>
-                <div className="flex items-center justify-between mb-2.5">
-                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-stone-500">
-                    Portfolio Sections Hub
-                  </h3>
-                  <span className="text-[11px] text-stone-400">Click any section to edit</span>
-                </div>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  {SECTION_KEYS.map((k) => {
-                    const tabKey = (k === "skills" ? "journey" : k === "projects" ? "work" : k) as TabId;
-                    const tabMeta = TABS.find((t) => t.id === tabKey);
-                    const count = sectionCount(k, draft);
-                    const isAdded = draft.sections.order.includes(k);
-                    const isVisible = draft.sections.visible[k] !== false;
-                    const isModified = tabDirty(tabKey);
-
-                    return (
-                      <div
-                        key={k}
-                        onClick={() => setTab(tabKey)}
-                        className={`group cursor-pointer rounded-2xl border bg-white p-3.5 transition-all hover:border-stone-400 hover:shadow-md ${
-                          isModified ? "border-amber-300 ring-1 ring-amber-200" : "border-stone-200/90"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`grid size-9 place-items-center rounded-xl transition ${
-                              isModified ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-700 group-hover:bg-black group-hover:text-white"
-                            }`}>
-                              {tabMeta ? <tabMeta.Icon size={16} /> : <Layers size={16} />}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-[14px] font-bold text-stone-900 group-hover:text-black">
-                                  {SECTION_LABELS[k]}
-                                </h4>
-                                {isModified && (
-                                  <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[9.5px] font-semibold text-amber-800">
-                                    Modified
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11.5px] text-stone-400">
-                                {count ?? "Single block"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium ${
-                                !isAdded
-                                  ? "bg-stone-100 text-stone-400"
-                                  : isVisible
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-stone-100 text-stone-500"
-                              }`}
-                            >
-                              {!isAdded ? (
-                                "Removed"
-                              ) : isVisible ? (
-                                <><Eye size={10} /> Shown</>
-                              ) : (
-                                <><EyeOff size={10} /> Hidden</>
-                              )}
-                            </span>
-                            <ChevronRight size={14} className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-stone-600" />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </section>
           )}
 
@@ -1541,7 +1582,7 @@ export function StudioApp({
                 <button
                   type="button"
                   onClick={() => setShowTemplateModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm hover:from-purple-500 hover:to-indigo-500 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-black px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800 transition cursor-pointer"
                 >
                   <Plus size={16} />
                   <span>Add Section</span>
@@ -2668,7 +2709,7 @@ export function StudioApp({
                             type="checkbox"
                             checked={p.popular}
                             onChange={(e) => patch((d) => { d.pricing[i].popular = e.target.checked; })}
-                            className="rounded border-stone-300 text-purple-600 focus:ring-purple-500"
+                            className="rounded border-stone-300 text-stone-900 focus:ring-stone-900"
                           />
                           Mark as &quot;Most Popular&quot;
                         </label>
@@ -3188,7 +3229,7 @@ export function StudioApp({
                   <button
                     type="button"
                     onClick={() => setTab("sections")}
-                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-600 hover:text-purple-700"
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-stone-900 hover:underline cursor-pointer"
                   >
                     ← Back to Sections & Nav
                   </button>
@@ -3197,7 +3238,7 @@ export function StudioApp({
                     <button
                       type="button"
                       onClick={() => setTab("sections")}
-                      className="mt-3 rounded-xl bg-black px-4 py-2 text-[12px] font-semibold text-white cursor-pointer"
+                      className="mt-3 rounded-xl bg-black px-4 py-2 text-[12px] font-semibold text-white cursor-pointer hover:bg-stone-800 transition"
                     >
                       Go to Sections & Nav
                     </button>
@@ -3222,7 +3263,7 @@ export function StudioApp({
                     </button>
                     <div className="flex items-center gap-2.5">
                       <h3 className="text-[17px] font-bold text-stone-900">{customSec.title || "Custom Section"}</h3>
-                      <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-700">
+                      <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-bold text-stone-800">
                         {tmplInfo?.name || customSec.template}
                       </span>
                       <span className="text-[11px] font-mono text-stone-400">#{customSec.id}</span>
@@ -3258,10 +3299,10 @@ export function StudioApp({
                 </div>
 
                 {/* Navigation Settings Card */}
-                <div className={`${cardCls} space-y-3.5 border-purple-200/80 bg-purple-50/20`}>
+                <div className={`${cardCls} space-y-3.5 border-stone-200/90 bg-white`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-black text-white shadow-xs">
                         <Layers size={14} />
                       </span>
                       <div>
@@ -3287,12 +3328,12 @@ export function StudioApp({
                         }
                         className="peer sr-only"
                       />
-                      <div className="peer h-6 w-11 rounded-full bg-stone-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-purple-600 peer-checked:after:translate-x-full peer-focus:outline-none" />
+                      <div className="peer h-6 w-11 rounded-full bg-stone-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-black peer-checked:after:translate-x-full peer-focus:outline-none" />
                     </label>
                   </div>
 
                   {customSec.inNav && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-200/50">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-200">
                       <div>
                         <label className="block text-[12.5px] font-semibold text-stone-700">Navbar Link Label</label>
                         <input
@@ -3400,7 +3441,7 @@ export function StudioApp({
                             }
                             className={`rounded-xl border p-2.5 text-left transition cursor-pointer ${
                               isSelected
-                                ? "border-purple-600 bg-purple-50/50 ring-2 ring-purple-600"
+                                ? "border-black bg-stone-100 ring-2 ring-black"
                                 : "border-stone-200 bg-white hover:bg-stone-50"
                             }`}
                           >
@@ -3937,12 +3978,12 @@ export function StudioApp({
         </main>
 
         {/* live preview — 1/3rd of screen column at right side */}
-        <div className={`${view === "edit" ? "hidden" : ""} ${previewOpen ? "lg:flex" : "lg:hidden"} min-w-0 flex-col border-t border-stone-200/80 bg-[#f7f6f2] lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
+        <div className={`${view === "edit" ? "hidden" : ""} ${previewOpen ? "lg:flex" : "lg:hidden"} min-w-0 flex-col border-t border-stone-200/80 bg-[#faf9f6] lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:overflow-hidden lg:border-l lg:border-t-0`}>
           <div className="flex h-full flex-col">
             {/* Top Bar: Title & Controls */}
             <div className="shrink-0 px-4 pt-4 pb-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-900">
                   LIVE PREVIEW
                 </span>
                 <span className="text-[12px] font-mono text-stone-400">
@@ -3964,7 +4005,7 @@ export function StudioApp({
                       }
                     }}
                     aria-label="Select device model"
-                    className="w-full appearance-none rounded-xl border border-stone-200 bg-white py-1.5 pl-3.5 pr-8 text-[12.5px] font-medium text-stone-800 shadow-sm transition hover:border-stone-300 focus:border-stone-400 focus:outline-none cursor-pointer"
+                    className="w-full appearance-none rounded-xl border border-stone-200/90 bg-white py-1.5 pl-3.5 pr-8 text-[12.5px] font-medium text-stone-800 shadow-2xs transition hover:border-stone-400 focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 focus:outline-none cursor-pointer"
                   >
                     <optgroup label="Desktop & Laptops">
                       {DEVICE_MODELS.filter((m) => m.category === "desktop").map((p) => (
@@ -3996,7 +4037,7 @@ export function StudioApp({
                 </div>
 
                 {/* Right: Segmented Category Switcher Icons [ Smartphone ] [ Tablet ] [ Monitor ] */}
-                <div className="flex shrink-0 items-center rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
+                <div className="flex shrink-0 items-center rounded-xl border border-stone-200/90 bg-white p-0.5 shadow-2xs">
                   <button
                     type="button"
                     onClick={() => {
@@ -4010,9 +4051,9 @@ export function StudioApp({
                     aria-label="Mobile phone preview"
                     aria-pressed={selectedCategory === "mobile"}
                     title="Mobile preview"
-                    className={`grid size-8 place-items-center rounded-lg transition ${
+                    className={`grid size-8 place-items-center rounded-lg transition cursor-pointer ${
                       selectedCategory === "mobile"
-                        ? "bg-[#111113] text-white shadow-sm"
+                        ? "bg-black text-white shadow-2xs"
                         : "text-stone-400 hover:text-stone-900"
                     }`}
                   >
@@ -4031,9 +4072,9 @@ export function StudioApp({
                     aria-label="Tablet preview"
                     aria-pressed={selectedCategory === "tablet"}
                     title="Tablet preview"
-                    className={`grid size-8 place-items-center rounded-lg transition ${
+                    className={`grid size-8 place-items-center rounded-lg transition cursor-pointer ${
                       selectedCategory === "tablet"
-                        ? "bg-[#111113] text-white shadow-sm"
+                        ? "bg-black text-white shadow-2xs"
                         : "text-stone-400 hover:text-stone-900"
                     }`}
                   >
@@ -4052,9 +4093,9 @@ export function StudioApp({
                     aria-label="Desktop and Laptop preview"
                     aria-pressed={selectedCategory === "desktop"}
                     title="Desktop & Laptop preview"
-                    className={`grid size-8 place-items-center rounded-lg transition ${
+                    className={`grid size-8 place-items-center rounded-lg transition cursor-pointer ${
                       selectedCategory === "desktop"
-                        ? "bg-[#111113] text-white shadow-sm"
+                        ? "bg-black text-white shadow-2xs"
                         : "text-stone-400 hover:text-stone-900"
                     }`}
                   >

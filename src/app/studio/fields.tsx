@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { ChevronDown, Link2, Trash2, Upload } from "lucide-react";
 
 export const inputCls =
-  "mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none";
+  "mt-1.5 w-full rounded-xl border border-stone-200/90 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 transition-all focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 focus:outline-none shadow-2xs";
 
 export function Field({
   label,
