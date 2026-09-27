@@ -25,14 +25,14 @@ export function Awards({
       {/* Radial ambient backlight */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_35%,rgba(234,179,8,0.08),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_35%,rgba(168,85,247,0.12),transparent_70%)]"
       />
 
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-6 md:px-12">
         <div className="mx-auto max-w-[800px] text-center">
           <ScrollReveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-950/30 px-3.5 py-1 text-[12px] font-medium uppercase tracking-wider text-amber-300 backdrop-blur-md">
-              <Trophy size={13} className="text-amber-400" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-950/40 px-3.5 py-1 text-[12px] font-medium uppercase tracking-wider text-purple-300 backdrop-blur-md">
+              <Trophy size={13} className="text-purple-400" />
               Honors & Recognition
             </span>
           </ScrollReveal>
@@ -69,11 +69,11 @@ export function Awards({
                   className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 sm:p-6 transition-colors duration-200 hover:bg-white/[0.04]"
                 >
                   <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-                    <span className="font-mono text-sm font-semibold text-amber-400/90 shrink-0">
+                    <span className="font-mono text-sm font-semibold text-purple-400/90 shrink-0">
                       {award.year}
                     </span>
                     <div className="min-w-0">
-                      <h4 className="font-heading text-[17px] font-bold text-white group-hover:text-amber-300 transition-colors">
+                      <h4 className="font-heading text-[17px] font-bold text-white group-hover:text-purple-300 transition-colors">
                         {award.title}
                       </h4>
                       <p className="text-[13px] text-white/50">
@@ -83,7 +83,7 @@ export function Awards({
                   </div>
 
                   {award.link && (
-                    <span className="self-end sm:self-center inline-flex items-center gap-1 text-[12px] font-medium text-white/40 group-hover:text-amber-300 transition-colors">
+                    <span className="self-end sm:self-center inline-flex items-center gap-1 text-[12px] font-medium text-white/40 group-hover:text-purple-300 transition-colors">
                       View Award <ArrowUpRight size={14} />
                     </span>
                   )}

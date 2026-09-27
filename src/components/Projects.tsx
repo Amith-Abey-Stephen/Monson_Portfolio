@@ -252,15 +252,15 @@ export function Projects({
           <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.03] via-white/[0.05] to-white/[0.03] p-5 backdrop-blur-md transition-all duration-500 hover:border-white/20 sm:p-8 md:p-10">
             {/* Ambient subtle glow */}
             <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-[#a855f7]/10 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 size-80 rounded-full bg-[#7CFFB2]/10 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 size-80 rounded-full bg-[#7c3aed]/12 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
 
             <div className="relative z-10 flex flex-col items-start justify-between gap-5 sm:gap-6 md:flex-row md:items-center">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex size-2 rounded-full bg-emerald-400">
-                    <span className="size-2 animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="flex size-2 rounded-full bg-purple-400">
+                    <span className="size-2 animate-ping rounded-full bg-purple-400 opacity-75" />
                   </span>
-                  <span className="text-[12px] font-semibold tracking-wider text-emerald-400 uppercase">
+                  <span className="text-[12px] font-semibold tracking-wider text-purple-300 uppercase">
                     Showing 4 of {projects.length} Selected Works
                   </span>
                 </div>

@@ -7,11 +7,11 @@ import type { SiteContent } from "@/lib/schema";
 import { GridLines, ScrollReveal, MagneticButton } from "./ui";
 
 const TILE_STYLES = [
-  "bg-gradient-to-br from-purple-600 via-pink-500 to-violet-400",
-  "bg-black",
-  "bg-[#ea4c89]",
-  "bg-[#1a1a1a]",
-  "bg-[#1a1a1a]",
+  "bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-500",
+  "bg-[#140a24] border border-purple-500/20",
+  "bg-gradient-to-br from-violet-700 to-purple-900",
+  "bg-[#1a1030] border border-purple-500/15",
+  "bg-[#0d0716] border border-purple-500/15",
 ];
 
 export function Contact({

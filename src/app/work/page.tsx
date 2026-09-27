@@ -59,8 +59,8 @@ export default async function WorkPage() {
 
             {/* Eyebrow & Status */}
             <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:mt-6 sm:gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] sm:text-[12px] font-medium text-emerald-400">
-                <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-[11px] sm:text-[12px] font-medium text-purple-300">
+                <span className="size-1.5 animate-pulse rounded-full bg-purple-400" />
                 Portfolio Archive • 2021–2026
               </span>
               <span className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] sm:text-[12px] font-medium text-white/60">
@@ -72,7 +72,7 @@ export default async function WorkPage() {
             <div className="mt-4 max-w-4xl">
               <h1 className="font-heading text-[32px] font-bold tracking-tight text-white sm:text-[48px] md:text-[60px] lg:text-[70px] leading-[1.08] sm:leading-[1.05]">
                 Selected Works &{" "}
-                <span className="font-script font-normal text-[#e9e1d3] tracking-normal">
+                <span className="font-script font-normal text-[#d8b4fe] tracking-normal">
                   Case Studies
                 </span>
               </h1>
@@ -102,7 +102,7 @@ export default async function WorkPage() {
                 <p className="text-[12px] text-white/50">Responsive & Tokenized</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4 backdrop-blur-sm">
-                <p className="font-heading text-[22px] font-bold text-[#7CFFB2] sm:text-[26px]">
+                <p className="font-heading text-[22px] font-bold text-purple-300 sm:text-[26px]">
                   Figma
                 </p>
                 <p className="text-[12px] text-white/50">& AI-Powered Workflows</p>

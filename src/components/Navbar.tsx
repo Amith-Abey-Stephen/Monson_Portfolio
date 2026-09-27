@@ -124,10 +124,10 @@ export function Navbar({
         className="fixed inset-x-0 top-3 z-[80] flex justify-center px-3 md:top-5"
       >
         <nav
-          // Matched to reference screenshot: warm translucent glass,
+          // Matched to reference aesthetic: dark violet translucent glass,
           // constant opacity (no scroll darkening), heavy blur + saturation
           // so the hero shows through like in the design.
-          className="flex w-full max-w-[1060px] items-center justify-between gap-2 rounded-full border border-white/[0.08] bg-[rgb(22_11_9/0.44)] py-[7px] pl-[7px] pr-[7px] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)] backdrop-blur-[18px] backdrop-saturate-[1.4]"
+          className="flex w-full max-w-[1060px] items-center justify-between gap-2 rounded-full border border-white/[0.08] bg-[rgb(16_10_26/0.58)] py-[7px] pl-[7px] pr-[7px] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)] backdrop-blur-[18px] backdrop-saturate-[1.4]"
         >
           <div className="hidden flex-1 items-center justify-center gap-1 lg:gap-2 md:flex">
             {navLinks.map((l) => {
@@ -141,7 +141,7 @@ export function Navbar({
                   aria-current={isActive ? "true" : undefined}
                   className={`relative flex items-center gap-2 rounded-full px-4 py-[10px] text-[14px] font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:px-6 lg:text-[15px] ${
                     isActive
-                      ? "bg-[#e9e1d3] text-[#2a2018]"
+                      ? "bg-white text-black shadow-sm"
                       : "text-white/[0.88] hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -206,7 +206,7 @@ export function Navbar({
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="fixed inset-x-3 top-[68px] z-[79] max-h-[calc(100svh-88px)] overflow-y-auto rounded-3xl border border-white/[0.08] bg-[rgb(22_11_9/0.92)] p-3 shadow-2xl backdrop-blur-[18px] backdrop-saturate-[1.4] md:hidden"
+            className="fixed inset-x-3 top-[68px] z-[79] max-h-[calc(100svh-88px)] overflow-y-auto rounded-3xl border border-white/[0.08] bg-[rgb(16_10_26/0.95)] p-3 shadow-2xl backdrop-blur-[18px] backdrop-saturate-[1.4] md:hidden"
           >
             {navLinks.map((l) => {
               const Icon = icons[l.id] ?? User;
@@ -219,7 +219,7 @@ export function Navbar({
                   aria-current={active === l.id ? "true" : undefined}
                   className={`flex min-h-[48px] items-center gap-3 rounded-2xl px-4 py-3 text-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                     active === l.id
-                      ? "bg-[#e9e1d3] font-medium text-[#2a2018]"
+                      ? "bg-white font-medium text-black"
                       : "text-white/[0.88] hover:bg-white/10"
                   }`}
                 >

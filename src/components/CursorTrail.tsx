@@ -90,8 +90,8 @@ export function CursorTrail() {
             const p0 = points[i - 1];
             const p1 = points[i];
             const t = i / (n - 1); // 0 = tail, 1 = head (at cursor)
-            // Tail purple/magenta (~288) → blue → cyan → green → head lime/yellow (~72)
-            const hue = 288 - t * 216;
+            // Cohesive glowing purple/violet trail (deep violet 260 -> electric purple 284)
+            const hue = 284 - (1 - t) * 24;
             const fade = Math.pow(t, 1.7); // transparent tail, opaque head
             const alpha = fade * 0.95 * pass.alphaScale;
             if (alpha < 0.01) continue;

@@ -70,7 +70,7 @@ export function Preloader({
           </p>
           <div className="mt-8 h-[2px] w-[min(220px,60vw)] overflow-hidden rounded-full bg-white/10 md:w-[320px]">
             <div
-              className="h-full w-full origin-left bg-gradient-to-r from-[#34ffb5] via-[#a855f7] to-[#e879f9]"
+              className="h-full w-full origin-left bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#c084fc]"
               style={{ transform: `scaleX(${progress / 100})` }}
             />
           </div>

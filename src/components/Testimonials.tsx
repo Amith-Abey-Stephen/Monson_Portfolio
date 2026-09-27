@@ -42,7 +42,7 @@ function Card({
         {t.quote}
       </blockquote>
       <figcaption className="relative mt-6 md:mt-8">
-        <div className="size-[52px] overflow-hidden rounded-full bg-gradient-to-br from-violet-300 via-rose-300 to-purple-400">
+        <div className="size-[52px] overflow-hidden rounded-full bg-gradient-to-br from-violet-400 via-purple-300 to-violet-600">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${a.seed}&backgroundColor=${a.bg}`}

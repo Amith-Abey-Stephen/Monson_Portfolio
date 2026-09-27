@@ -86,9 +86,9 @@ function JourneyLine({ target }: { target: React.RefObject<HTMLElement | null> }
     >
       <defs>
         <linearGradient id="journey-aurora" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#34ffb5" />
+          <stop offset="0%" stopColor="#7c3aed" />
           <stop offset="50%" stopColor="#a855f7" />
-          <stop offset="100%" stopColor="#e879f9" />
+          <stop offset="100%" stopColor="#c084fc" />
         </linearGradient>
         <filter id="journey-glow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="6" result="blur" />

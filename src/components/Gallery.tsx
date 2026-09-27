@@ -151,14 +151,14 @@ export function Gallery({
 
   return (
     <section ref={ref} aria-label="Design gallery" className="relative overflow-hidden bg-transparent">
-      {/* pink stage — long eased ramp from black above into rose
+      {/* purple stage — long eased ramp from black above into rich violet / purple
           (no hard edge at the section start), back to black below */}
       <div
         aria-hidden
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, #0d0507 4%, #3a161d 8%, #7c3540 12%, #b84e5d 17%, #d77f89 26%, #df8d97 36%, #df8d97 56%, #b84e5d 78%, #7c3540 84%, #3a161d 89%, #0d0507 94%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, #0d0716 4%, #1b0d2e 8%, #2e1065 14%, #4c1d95 24%, #6d28d9 36%, #6d28d9 56%, #4c1d95 76%, #2e1065 84%, #1b0d2e 90%, #0d0716 95%, rgba(0,0,0,0) 100%)",
         }}
       />
 
@@ -168,7 +168,7 @@ export function Gallery({
           style={{ y: headingY, opacity: headingOpacity }}
           className="relative z-[1] mx-auto max-w-[1600px] overflow-hidden px-2 pt-10 md:pt-16"
         >
-          <h2 className="-ml-[2vw] select-none whitespace-nowrap font-heading text-[26vw] font-bold leading-[0.8] tracking-[-0.04em] text-[#f8c2c8]/80 md:text-[19vw]">
+          <h2 className="-ml-[2vw] select-none whitespace-nowrap font-heading text-[26vw] font-bold leading-[0.8] tracking-[-0.04em] text-[#d8b4fe]/40 md:text-[19vw]">
             Gallery
           </h2>
         </motion.div>
