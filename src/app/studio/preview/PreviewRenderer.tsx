@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FALLBACK_ORDER, type SectionKey, type SiteContent } from "@/lib/schema";
+import { FALLBACK_ORDER, type SectionKey, type SiteContent, type CustomSection as CustomSectionType } from "@/lib/schema";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { AboutIntro } from "@/components/AboutIntro";
@@ -19,6 +19,7 @@ import { Faq } from "@/components/Faq";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { SiteCanvas } from "@/components/SiteCanvas";
+import { CustomSection } from "@/components/CustomSection";
 
 export function PreviewRenderer({ initialContent }: { initialContent: SiteContent }) {
   const [content, setContent] = useState<SiteContent>(() => {
@@ -35,15 +36,46 @@ export function PreviewRenderer({ initialContent }: { initialContent: SiteConten
   });
 
   useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
+
+  useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === "STUDIO_DRAFT_UPDATE" && event.data.draft) {
         setContent(event.data.draft);
+        try {
+          localStorage.setItem("studio_active_draft", JSON.stringify(event.data.draft));
+        } catch {}
       }
     };
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "studio_active_draft" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed && typeof parsed === "object") {
+            setContent(parsed);
+          }
+        } catch {}
+      }
+    };
+
     window.addEventListener("message", onMessage);
-    // Notify parent window that preview renderer is ready
+    window.addEventListener("storage", onStorage);
+
+    // Notify parent window that preview renderer is ready (with retries for race condition safety)
     window.parent?.postMessage({ type: "STUDIO_PREVIEW_READY" }, "*");
-    return () => window.removeEventListener("message", onMessage);
+    const timer = setInterval(() => {
+      window.parent?.postMessage({ type: "STUDIO_PREVIEW_READY" }, "*");
+    }, 400);
+    const cancelTimer = setTimeout(() => clearInterval(timer), 2400);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(cancelTimer);
+      window.removeEventListener("message", onMessage);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const visible = content.sections?.visible;
@@ -66,8 +98,13 @@ export function PreviewRenderer({ initialContent }: { initialContent: SiteConten
     contact: <Contact key="contact" data={content} />,
   };
 
-  const order = (content.sections?.order ?? FALLBACK_ORDER).filter((k): k is SectionKey =>
-    k in blocks
+  const customMap = new Map<string, CustomSectionType>();
+  (content.customSections || []).forEach((sec) => {
+    if (sec && sec.id) customMap.set(sec.id, sec);
+  });
+
+  const order = (content.sections?.order ?? FALLBACK_ORDER).filter(
+    (k) => k in blocks || customMap.has(k)
   );
 
   return (
@@ -75,7 +112,13 @@ export function PreviewRenderer({ initialContent }: { initialContent: SiteConten
       <SiteCanvas />
       <div className="relative">
         <Navbar data={content} />
-        {order.map((k) => (visible && visible[k] === false ? null : blocks[k]))}
+        {order.map((k) => {
+          if (visible && visible[k] === false) return null;
+          if (k in blocks) return blocks[k as SectionKey];
+          const customSec = customMap.get(k);
+          if (customSec) return <CustomSection key={k} section={customSec} />;
+          return null;
+        })}
         <Footer data={content} />
       </div>
     </main>

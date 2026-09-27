@@ -55,7 +55,7 @@ export function Process({
         {/* Process Steps Cards */}
         <div className="mt-12 sm:mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {steps.map((item, idx) => (
-            <ScrollReveal key={item.step || idx} delay={Math.min(idx * 0.08, 0.3)}>
+            <ScrollReveal key={`${item.step || "step"}-${idx}`} delay={Math.min(idx * 0.08, 0.3)}>
               <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl transition-all duration-300 hover:border-purple-500/40 hover:bg-white/[0.06] hover:shadow-[0_20px_40px_-15px_rgba(139,92,246,0.2)] sm:p-7">
                 {/* Ambient hover glow */}
                 <div

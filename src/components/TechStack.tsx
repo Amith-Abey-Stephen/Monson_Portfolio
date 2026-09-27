@@ -55,7 +55,7 @@ export function TechStack({
         {/* Responsive Grid of Tech items */}
         <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {tools.map((item, idx) => (
-            <ScrollReveal key={item.name || idx} delay={Math.min(idx * 0.05, 0.25)}>
+            <ScrollReveal key={`${item.name}-${idx}`} delay={Math.min(idx * 0.05, 0.25)}>
               <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-300 hover:border-purple-500/40 hover:bg-white/[0.06] hover:translate-y-[-2px]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">

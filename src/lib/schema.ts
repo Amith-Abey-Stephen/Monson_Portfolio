@@ -44,6 +44,7 @@ export const MAX_COUNT = {
   faqs: 12,
   socials: 8,
   customKeywords: 20,
+  customSections: 12,
 } as const;
 
 const urlOrEmpty = (max: number) =>
@@ -143,6 +144,62 @@ export const awardSchema = z.object({
   project: z.string().max(LIMITS.award.project).optional().default(""),
   link: urlOrEmpty(500).optional().default(""),
 });
+
+export const customSectionTemplateSchema = z.enum([
+  "text-story",
+  "image-text",
+  "cards-grid",
+  "metrics",
+  "quote-testimonial",
+  "cta",
+]);
+
+export type CustomSectionTemplate = z.infer<typeof customSectionTemplateSchema>;
+
+export const customSectionCardSchema = z.object({
+  id: z.string().max(50).optional(),
+  title: z.string().max(150).optional(),
+  description: z.string().max(800).optional(),
+  tag: z.string().max(60).optional(),
+  link: z.string().max(500).optional(),
+  badge: z.string().max(60).optional(),
+});
+
+export const customSectionMetricSchema = z.object({
+  id: z.string().max(50).optional(),
+  value: z.string().max(40).optional(),
+  target: z.number().int().min(0).max(100000).optional(),
+  suffix: z.string().max(20).optional(),
+  label: z.string().max(120).optional(),
+});
+
+export const customSectionSchema = z.object({
+  id: z.string().min(1).max(50),
+  template: customSectionTemplateSchema,
+  title: z.string().max(200).optional(),
+  eyebrow: z.string().max(100).optional(),
+  subtitle: z.string().max(600).optional(),
+  body: z.string().max(5000).optional(),
+  image: z.string().max(LIMITS.site.image).optional(),
+  imagePosition: z.enum(["left", "right"]).optional(),
+  cards: z.array(customSectionCardSchema).max(16).optional(),
+  metrics: z.array(customSectionMetricSchema).max(12).optional(),
+  quoteText: z.string().max(800).optional(),
+  quoteAuthor: z.string().max(100).optional(),
+  quoteRole: z.string().max(120).optional(),
+  ctaPrimaryText: z.string().max(80).optional(),
+  ctaPrimaryHref: z.string().max(500).optional(),
+  ctaSecondaryText: z.string().max(80).optional(),
+  ctaSecondaryHref: z.string().max(500).optional(),
+  inNav: z.boolean().optional(),
+  navLabel: z.string().max(40).optional(),
+  bgColor: z.string().max(40).optional(),
+  bgAnimation: z.enum(["pulse", "aurora", "drift", "none"]).optional(),
+});
+
+export type CustomSection = z.infer<typeof customSectionSchema>;
+export type CustomSectionCard = z.infer<typeof customSectionCardSchema>;
+export type CustomSectionMetric = z.infer<typeof customSectionMetricSchema>;
 
 /** Available public sections. Any section can be added, removed, reordered, or hidden. */
 export const SECTION_KEYS = [
@@ -272,8 +329,9 @@ export const siteContentSchema = z.object({
       analyticsId: "",
       noIndex: false,
     }),
+  customSections: z.array(customSectionSchema).max(MAX_COUNT.customSections).optional().default([]),
   sections: z.object({
-    order: z.array(z.string()).max(SECTION_KEYS.length + 5),
+    order: z.array(z.string()).max(SECTION_KEYS.length + MAX_COUNT.customSections + 5),
     visible: z.record(z.string(), z.boolean()),
   }),
 });

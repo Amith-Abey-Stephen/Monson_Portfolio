@@ -34,14 +34,26 @@ const navIdToSectionKey: Record<string, SectionKey> = {
 export function Navbar({
   data,
 }: {
-  data?: Pick<SiteContent, "navLinks" | "site" | "sections">;
+  data?: Pick<SiteContent, "navLinks" | "site" | "sections" | "customSections">;
 } = {}) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const visible = data?.sections?.visible;
   const rawNavLinks = data?.navLinks ?? fallbackLinks;
-  const navLinks = rawNavLinks.filter((l) => {
-    const secKey = navIdToSectionKey[l.id];
+
+  const order = data?.sections?.order ?? fallbackLinks.map((l) => l.id);
+  // Custom sections that have inNav enabled, are in active order, and are visible
+  const customNavLinks = (data?.customSections ?? [])
+    .filter((sec) => sec && sec.id && sec.inNav && order.includes(sec.id) && (!visible || visible[sec.id] !== false))
+    .map((sec) => ({
+      label: sec.navLabel?.trim() || sec.title || "Section",
+      href: `#${sec.id}`,
+      id: sec.id,
+    }));
+
+  const allNavLinks = [...rawNavLinks, ...customNavLinks];
+  const navLinks = allNavLinks.filter((l) => {
+    const secKey = navIdToSectionKey[l.id] || l.id;
     if (!secKey || !visible) return true;
     return visible[secKey] !== false;
   });

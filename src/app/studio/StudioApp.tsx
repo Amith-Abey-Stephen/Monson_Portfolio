@@ -42,13 +42,13 @@ import {
   CreditCard,
   Trophy,
 } from "lucide-react";
-import type { SectionKey, SiteContent } from "@/lib/schema";
+import type { SectionKey, SiteContent, CustomSection, CustomSectionTemplate } from "@/lib/schema";
 import { LIMITS, MAX_COUNT, SECTION_KEYS, SECTION_LABELS } from "@/lib/schema";
 import { defaultContent } from "@/data/content";
 import { autoDerivedKeywords } from "@/lib/seo";
 import { Area, Field, ImageField, ItemCard, RowButtons, Text, move, inputCls } from "./fields";
 import { UnpublishedChangesModal } from "./UnpublishedChangesModal";
-import { TemplateLibraryModal } from "./TemplateLibraryModal";
+import { TemplateLibraryModal, CUSTOM_SECTION_TEMPLATES } from "./TemplateLibraryModal";
 
 export type HistoryEntry = {
   id: number;
@@ -81,7 +81,8 @@ export type TabId =
   | "site-settings"
   | "seo"
   | "publish"
-  | "history";
+  | "history"
+  | "custom-section";
 
 const TABS: {
   id: TabId;
@@ -181,8 +182,8 @@ function ScaledPreview({
     return () => ro.disconnect();
   }, []);
 
-  // Post draft updates to the iframe whenever draft changes
-  useEffect(() => {
+  // Post draft updates to the iframe whenever draft changes or iframe is ready
+  const postDraftToIframe = useCallback(() => {
     try {
       localStorage.setItem("studio_active_draft", JSON.stringify(draft));
     } catch {}
@@ -192,16 +193,20 @@ function ScaledPreview({
     }
   }, [draft]);
 
-  // When iframe mounts and signals ready, push the current draft immediately
+  useEffect(() => {
+    postDraftToIframe();
+  }, [postDraftToIframe]);
+
+  // When iframe signals ready, immediately push latest draft
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
       if (e.data?.type === "STUDIO_PREVIEW_READY") {
-        iframeRef.current?.contentWindow?.postMessage({ type: "STUDIO_DRAFT_UPDATE", draft }, "*");
+        postDraftToIframe();
       }
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, [draft]);
+  }, [postDraftToIframe]);
 
   const isLaptop = device.frameStyle === "laptop";
   const isMobile = device.frameStyle === "mobile";
@@ -281,6 +286,7 @@ function ScaledPreview({
         >
           <iframe
             ref={iframeRef}
+            onLoad={postDraftToIframe}
             src="/studio/preview"
             title="Portfolio preview"
             tabIndex={-1}
@@ -419,6 +425,10 @@ function editorReducer(s: EditorState, a: EditorAction): EditorState {
       next.pricing = next.pricing ?? [];
       next.awards = next.awards ?? [];
       next.services = next.services ?? [];
+      next.customSections = next.customSections ?? [];
+      next.sections = next.sections ?? { order: [], visible: {} };
+      next.sections.order = next.sections.order ?? [];
+      next.sections.visible = next.sections.visible ?? {};
       a.fn(next);
       return { draft: next, past: [...s.past.slice(-49), s.draft], future: [] };
     }
@@ -467,11 +477,12 @@ const TOP_KEYS = [
   "socials",
   "seo",
   "sections",
+  "customSections",
 ] as const;
 
 const TAB_KEYS: Record<TabId, readonly string[]> = {
   overview: [],
-  sections: ["sections", "navLinks"],
+  sections: ["sections", "navLinks", "customSections"],
   hero: ["hero"],
   intro: ["aboutIntro"],
   journey: ["journey", "stats"],
@@ -491,6 +502,7 @@ const TAB_KEYS: Record<TabId, readonly string[]> = {
   seo: ["seo"],
   publish: [],
   history: [],
+  "custom-section": ["customSections", "sections"],
 };
 
 const IDLE_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
@@ -543,6 +555,7 @@ export function StudioApp({
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showChangesModal, setShowChangesModal] = useState(false);
+  const [activeCustomSectionId, setActiveCustomSectionId] = useState<string | null>(null);
   const firstRender = useRef(true);
   const filterRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -645,20 +658,23 @@ export function StudioApp({
   const redo = () => dispatch({ type: "redo" });
 
   const deleteSection = useCallback(
-    (key: SectionKey) => {
-      const label = SECTION_LABELS[key] ?? key;
-      if (typeof window !== "undefined" && !window.confirm(`Remove "${label}" from your portfolio? You can re-add it anytime from the Template Library.`)) {
-        return;
-      }
+    (key: string) => {
       patch((d) => {
-        d.sections.order = d.sections.order.filter((k) => k !== key);
-        d.sections.visible[key] = false;
+        d.sections = d.sections ?? { order: [], visible: {} };
+        d.sections.order = (d.sections.order ?? []).filter((k) => k !== key);
+        if (d.sections.visible) {
+          delete d.sections.visible[key];
+        }
+        d.customSections = (d.customSections ?? []).filter((s) => s.id !== key);
       });
-      if (tab === sectionKeyToTab(key)) {
+      if (tab === "custom-section" && activeCustomSectionId === key) {
+        setTab("sections");
+        setActiveCustomSectionId(null);
+      } else if (tab === sectionKeyToTab(key as SectionKey)) {
         setTab("sections");
       }
     },
-    [tab]
+    [tab, activeCustomSectionId]
   );
 
   const addSection = useCallback(
@@ -680,6 +696,132 @@ export function StudioApp({
           d.services = structuredClone(defaultContent.services || []);
         }
       });
+    },
+    []
+  );
+
+  const addCustomSection = useCallback(
+    (template: CustomSectionTemplate) => {
+      const id = `section-${Date.now().toString(36)}`;
+      let newSection: CustomSection;
+
+      switch (template) {
+        case "text-story":
+          newSection = {
+            id,
+            template: "text-story",
+            title: "Design Philosophy & Editorial Story",
+            eyebrow: "Our Perspective",
+            subtitle: "Crafting digital experiences with purpose, precision, and enduring impact.",
+            body: "Great design isn't just about how it looks—it's about how it works, how it feels, and the clarity it brings to complex ideas.\n\nOver the past eight years, I've partnered with venture-backed startups and category leaders to build software that scales effortlessly while maintaining distinct visual character.",
+            inNav: true,
+            navLabel: "Story",
+            bgColor: "violet",
+            bgAnimation: "aurora",
+          };
+          break;
+        case "image-text":
+          newSection = {
+            id,
+            template: "image-text",
+            title: "Architecting Digital Products that Resonate",
+            eyebrow: "Visual Focus",
+            subtitle: "Bridging the gap between ambitious product vision and pixel-perfect execution.",
+            body: "From rapid design sprints to comprehensive production design systems, every detail is engineered for measurable user adoption and brand elevation.",
+            image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
+            imagePosition: "right",
+            ctaPrimaryText: "Explore Process",
+            ctaPrimaryHref: "#process",
+            inNav: true,
+            navLabel: "Focus",
+            bgColor: "cyan",
+            bgAnimation: "pulse",
+          };
+          break;
+        case "cards-grid":
+          newSection = {
+            id,
+            template: "cards-grid",
+            title: "Core Principles & Architecture",
+            eyebrow: "What Guides Us",
+            subtitle: "A structured foundation powering high-velocity product execution.",
+            cards: [
+              { id: "c1", title: "Radical Simplicity", description: "Stripping away clutter to elevate what truly matters to your users.", tag: "UX Strategy" },
+              { id: "c2", title: "Design Systems at Scale", description: "Tokenized, token-driven component libraries built for swift developer handoff.", tag: "Architecture" },
+              { id: "c3", title: "Motion & Micro-interactions", description: "Subtle physics-based animations that reward attention without distraction.", tag: "Interaction" },
+            ],
+            inNav: true,
+            navLabel: "Principles",
+            bgColor: "emerald",
+            bgAnimation: "drift",
+          };
+          break;
+        case "metrics":
+          newSection = {
+            id,
+            template: "metrics",
+            title: "Measurable Impact & Milestones",
+            eyebrow: "Proven Track Record",
+            subtitle: "Data-backed results from multi-platform launches and enterprise redesigns.",
+            metrics: [
+              { id: "m1", value: "98.4%", label: "Client Satisfaction" },
+              { id: "m2", value: "4.8M+", label: "Active App Users" },
+              { id: "m3", value: "32+", label: "Design Systems Shipped" },
+              { id: "m4", value: "$120M+", label: "Client Funding Raised" },
+            ],
+            inNav: true,
+            navLabel: "Impact",
+            bgColor: "blue",
+            bgAnimation: "pulse",
+          };
+          break;
+        case "quote-testimonial":
+          newSection = {
+            id,
+            template: "quote-testimonial",
+            title: "Client Endorsement",
+            eyebrow: "Testimonial",
+            quoteText: "Monson's intuition for modern product design transformed our platform from functional to unforgettable. He doesn't just design interfaces; he shapes how customers feel about our brand.",
+            quoteAuthor: "Elena Rostova",
+            quoteRole: "Chief Product Officer, ScaleFlow",
+            inNav: false,
+            navLabel: "Quote",
+            bgColor: "amber",
+            bgAnimation: "aurora",
+          };
+          break;
+        case "cta":
+          newSection = {
+            id,
+            template: "cta",
+            title: "Ready to Build Something Extraordinary?",
+            eyebrow: "Next Steps",
+            subtitle: "Currently accepting select design engagements, system architectures, and advisory roles for Q3/Q4.",
+            ctaPrimaryText: "Schedule a Discovery Call",
+            ctaPrimaryHref: "#contact",
+            ctaSecondaryText: "View Case Studies",
+            ctaSecondaryHref: "#work",
+            inNav: false,
+            navLabel: "CTA",
+            bgColor: "rose",
+            bgAnimation: "pulse",
+          };
+          break;
+      }
+
+      patch((d) => {
+        d.customSections = d.customSections ?? [];
+        d.customSections.push(newSection);
+        d.sections = d.sections ?? { order: [], visible: {} };
+        d.sections.order = d.sections.order ?? [];
+        d.sections.visible = d.sections.visible ?? {};
+        d.sections.order.push(id);
+        d.sections.visible[id] = true;
+      });
+
+      setActiveCustomSectionId(id);
+      setTab("custom-section");
+      setShowTemplateModal(false);
     },
     []
   );
@@ -707,9 +849,20 @@ export function StudioApp({
   const revertKey = useCallback(
     (key: string) => {
       patch((d) => {
-        (d as Record<string, unknown>)[key] = structuredClone(
-          (publishedSnap as Record<string, unknown>)[key]
-        );
+        const liveVal = (publishedSnap as Record<string, unknown>)[key];
+        const defVal = (defaultContent as Record<string, unknown>)[key];
+        (d as Record<string, unknown>)[key] =
+          liveVal !== undefined ? structuredClone(liveVal) : structuredClone(defVal ?? []);
+
+        if (key === "sections") {
+          d.customSections = structuredClone(publishedSnap.customSections ?? []);
+        }
+        if (key === "customSections") {
+          const validIds = new Set((publishedSnap.customSections ?? []).map((s) => s.id));
+          d.sections.order = (d.sections?.order ?? []).filter(
+            (id) => (!id.startsWith("section-") && !id.startsWith("custom-")) || validIds.has(id)
+          );
+        }
       });
     },
     [publishedSnap]
@@ -718,10 +871,13 @@ export function StudioApp({
   const revertAll = useCallback(() => {
     patch((d) => {
       for (const key of TOP_KEYS) {
-        (d as Record<string, unknown>)[key] = structuredClone(
-          (publishedSnap as Record<string, unknown>)[key]
-        );
+        const liveVal = (publishedSnap as Record<string, unknown>)[key];
+        const defVal = (defaultContent as Record<string, unknown>)[key];
+        (d as Record<string, unknown>)[key] =
+          liveVal !== undefined ? structuredClone(liveVal) : structuredClone(defVal ?? []);
       }
+      d.customSections = structuredClone(publishedSnap.customSections ?? []);
+      d.sections = structuredClone(publishedSnap.sections ?? defaultContent.sections);
     });
   }, [publishedSnap]);
 
@@ -836,14 +992,13 @@ export function StudioApp({
     router.refresh();
   };
 
-  const order = draft.sections.order.filter((k): k is SectionKey =>
-    (SECTION_KEYS as readonly string[]).includes(k)
-  );
+  const order = draft.sections.order;
   const autoKeywords = useMemo(() => autoDerivedKeywords(draft), [draft]);
   const ownerFirst = (draft.site.name.split(" ")[0] || draft.site.name || "there");
 
   const sidebarTabs = useMemo(() => {
     return TABS.filter((t) => {
+      if (t.id === "custom-section") return false;
       const secKey = TAB_TO_SECTION_KEY[t.id];
       if (!secKey) return true;
       return draft.sections.order.includes(secKey);
@@ -955,6 +1110,49 @@ export function StudioApp({
             )}
           </button>
         ))}
+
+        {/* Custom Sections dynamic sidebar links */}
+        {(draft.customSections || []).length > 0 && (
+          <div className="pt-2.5 mt-2 border-t border-stone-200/60">
+            <p className="px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-stone-400">
+              Custom Sections ({draft.customSections.length})
+            </p>
+            {draft.customSections.map((cs) => {
+              const isSelected = tab === "custom-section" && activeCustomSectionId === cs.id;
+              return (
+                <button
+                  key={cs.id}
+                  onClick={() => {
+                    setActiveCustomSectionId(cs.id);
+                    setTab("custom-section");
+                  }}
+                  className={`flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[12.5px] font-medium transition ${
+                    isSelected
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "text-stone-600 hover:bg-black/5 hover:text-stone-900"
+                  }`}
+                >
+                  <span
+                    className={`size-2 rounded-full shrink-0 ${
+                      cs.bgColor === "emerald" ? "bg-emerald-400" :
+                      cs.bgColor === "blue" ? "bg-blue-400" :
+                      cs.bgColor === "cyan" ? "bg-cyan-400" :
+                      cs.bgColor === "amber" ? "bg-amber-400" :
+                      cs.bgColor === "rose" ? "bg-rose-400" :
+                      cs.bgColor === "none" ? "bg-stone-400" : "bg-purple-400"
+                    }`}
+                  />
+                  <span className="truncate">{cs.title || "Custom Section"}</span>
+                  {cs.inNav && (
+                    <span className="ml-auto text-[9.5px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                      Nav
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="mt-auto hidden border-t border-stone-200/90 pt-3 lg:block">
@@ -1367,25 +1565,34 @@ export function StudioApp({
 
               <div className="space-y-2.5">
                 {order.map((key, i) => {
-                  const count = sectionCount(key, draft);
+                  const isCustom = (draft.customSections || []).some((s) => s.id === key);
+                  const customSec = isCustom ? draft.customSections.find((s) => s.id === key) : null;
+                  const label = isCustom
+                    ? customSec?.title || "Custom Section"
+                    : SECTION_LABELS[key as SectionKey] || key;
+                  const count = isCustom
+                    ? customSec?.template
+                      ? `${CUSTOM_SECTION_TEMPLATES.find((t) => t.template === customSec.template)?.name || customSec.template}`
+                      : "Custom Section"
+                    : sectionCount(key as SectionKey, draft);
                   const visible = draft.sections.visible[key] !== false;
-                  const targetTab = sectionKeyToTab(key);
+                  const targetTab = isCustom ? "custom-section" : sectionKeyToTab(key as SectionKey);
                   return (
                     <div key={key} className={`${cardCls} flex items-center gap-2.5 transition hover:border-stone-300`}>
                       <div className="flex shrink-0 flex-col">
                         <button
-                          aria-label={`Move ${SECTION_LABELS[key]} up`}
+                          aria-label={`Move ${label} up`}
                           disabled={i === 0}
                           onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, -1); })}
-                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20"
+                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20 cursor-pointer"
                         >
                           ▲
                         </button>
                         <button
-                          aria-label={`Move ${SECTION_LABELS[key]} down`}
+                          aria-label={`Move ${label} down`}
                           disabled={i === order.length - 1}
                           onClick={() => patch((d) => { d.sections.order = move(d.sections.order, i, 1); })}
-                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20"
+                          className="px-1 text-[11px] text-stone-400 hover:text-stone-900 disabled:opacity-20 cursor-pointer"
                         >
                           ▼
                         </button>
@@ -1396,7 +1603,28 @@ export function StudioApp({
                       </span>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-semibold text-stone-900">{SECTION_LABELS[key]}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[14px] font-semibold text-stone-900">{label}</p>
+                          {isCustom && customSec?.inNav && (
+                            <span className="rounded-full bg-blue-50 border border-blue-200 px-2 py-0.2 text-[10px] font-bold text-blue-700">
+                              Nav: {customSec.navLabel || "Link"}
+                            </span>
+                          )}
+                          {isCustom && customSec?.bgColor && customSec.bgColor !== "none" && (
+                            <span
+                              title={`Ambient glow: ${customSec.bgColor}`}
+                              className="size-2 rounded-full"
+                              style={{
+                                backgroundColor:
+                                  customSec.bgColor === "emerald" ? "#10b981" :
+                                  customSec.bgColor === "blue" ? "#2563eb" :
+                                  customSec.bgColor === "cyan" ? "#06b6d4" :
+                                  customSec.bgColor === "amber" ? "#f59e0b" :
+                                  customSec.bgColor === "rose" ? "#e11d48" : "#7c3aed"
+                              }}
+                            />
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 text-[12px] text-stone-400">
                           {count && <span>{count}</span>}
                           {count && <span>·</span>}
@@ -1409,8 +1637,15 @@ export function StudioApp({
                       {/* Quick jump to edit this section */}
                       <button
                         type="button"
-                        onClick={() => setTab(targetTab)}
-                        className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition"
+                        onClick={() => {
+                          if (isCustom && customSec) {
+                            setActiveCustomSectionId(customSec.id);
+                            setTab("custom-section");
+                          } else {
+                            setTab(targetTab);
+                          }
+                        }}
+                        className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition cursor-pointer"
                       >
                         <span>Edit</span>
                         <ChevronRight size={13} className="text-stone-400" />
@@ -1418,11 +1653,11 @@ export function StudioApp({
 
                       {/* Toggle visibility */}
                       <button
-                        aria-label={visible ? `Hide ${SECTION_LABELS[key]}` : `Show ${SECTION_LABELS[key]}`}
+                        aria-label={visible ? `Hide ${label}` : `Show ${label}`}
                         aria-pressed={visible}
                         title={visible ? "Hide section on public site" : "Show section on public site"}
                         onClick={() => patch((d) => { d.sections.visible[key] = !visible; })}
-                        className={`grid size-9 shrink-0 place-items-center rounded-xl border ${
+                        className={`grid size-9 shrink-0 place-items-center rounded-xl border cursor-pointer ${
                           visible ? "border-stone-200 bg-white text-stone-700 hover:bg-stone-50" : "border-stone-200 bg-stone-100 text-stone-400 hover:bg-stone-200"
                         }`}
                       >
@@ -1432,10 +1667,10 @@ export function StudioApp({
                       {/* Delete / Remove section */}
                       <button
                         type="button"
-                        aria-label={`Delete ${SECTION_LABELS[key]} from portfolio`}
-                        title={`Delete ${SECTION_LABELS[key]} from portfolio`}
+                        aria-label={`Delete ${label} from portfolio`}
+                        title={`Delete ${label} from portfolio`}
                         onClick={() => deleteSection(key)}
-                        className="grid size-9 shrink-0 place-items-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition shadow-sm"
+                        className="grid size-9 shrink-0 place-items-center rounded-xl border border-stone-200 bg-white text-stone-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition shadow-sm cursor-pointer"
                       >
                         <Trash2 size={15} />
                       </button>
@@ -2943,6 +3178,762 @@ export function StudioApp({
               ))}
             </section>
           )}
+
+          {tab === "custom-section" && (() => {
+            const customSec = (draft.customSections || []).find((s) => s.id === activeCustomSectionId);
+
+            if (!customSec) {
+              return (
+                <div className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setTab("sections")}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-600 hover:text-purple-700"
+                  >
+                    ← Back to Sections & Nav
+                  </button>
+                  <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center">
+                    <p className="text-[14px] text-stone-600">No custom section currently selected.</p>
+                    <button
+                      type="button"
+                      onClick={() => setTab("sections")}
+                      className="mt-3 rounded-xl bg-black px-4 py-2 text-[12px] font-semibold text-white cursor-pointer"
+                    >
+                      Go to Sections & Nav
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
+            const tmplInfo = CUSTOM_SECTION_TEMPLATES.find((t) => t.template === customSec.template);
+
+            return (
+              <section className="space-y-5">
+                {/* Top Header Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200">
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => setTab("sections")}
+                      className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-stone-500 hover:text-stone-900 transition cursor-pointer"
+                    >
+                      ← Back to Sections & Nav
+                    </button>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-[17px] font-bold text-stone-900">{customSec.title || "Custom Section"}</h3>
+                      <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-700">
+                        {tmplInfo?.name || customSec.template}
+                      </span>
+                      <span className="text-[11px] font-mono text-stone-400">#{customSec.id}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patch((d) => {
+                          d.sections.visible[customSec.id] = draft.sections.visible[customSec.id] === false ? true : false;
+                        })
+                      }
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-medium transition cursor-pointer ${
+                        draft.sections.visible[customSec.id] !== false
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-stone-200 bg-stone-100 text-stone-400"
+                      }`}
+                    >
+                      {draft.sections.visible[customSec.id] !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+                      <span>{draft.sections.visible[customSec.id] !== false ? "Visible on site" : "Hidden"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteSection(customSec.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-medium text-red-600 hover:bg-red-100 transition cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Navigation Settings Card */}
+                <div className={`${cardCls} space-y-3.5 border-purple-200/80 bg-purple-50/20`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs">
+                        <Layers size={14} />
+                      </span>
+                      <div>
+                        <h4 className="text-[14px] font-bold text-stone-900">Header Navigation Integration</h4>
+                        <p className="text-[12px] text-stone-500">Automatically display this section in the floating site navigation header.</p>
+                      </div>
+                    </div>
+
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={customSec.inNav ?? false}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) {
+                              sec.inNav = e.target.checked;
+                              if (e.target.checked && !sec.navLabel) {
+                                sec.navLabel = tmplInfo?.defaultNavLabel || "Section";
+                              }
+                            }
+                          })
+                        }
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-stone-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-purple-600 peer-checked:after:translate-x-full peer-focus:outline-none" />
+                    </label>
+                  </div>
+
+                  {customSec.inNav && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-200/50">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Navbar Link Label</label>
+                        <input
+                          type="text"
+                          value={customSec.navLabel || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.navLabel = e.target.value;
+                            })
+                          }
+                          placeholder="e.g. Story, Principles, Impact"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                        <p className="mt-1 text-[11px] text-stone-400">Visible label in the floating navbar</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Anchor Target</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={`#${customSec.id}`}
+                          className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-100 px-3 py-2 text-[12px] font-mono text-stone-500 cursor-not-allowed"
+                        />
+                        <p className="mt-1 text-[11px] text-stone-400">Smooth-scrolls to this section with active scroll spy</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Background Color & Animation Atmosphere Card */}
+                <div className={`${cardCls} space-y-4`}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-stone-900 text-white shadow-xs">
+                      <Sparkles size={14} />
+                    </span>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-stone-900">Background Atmosphere & Animation</h4>
+                      <p className="text-[12px] text-stone-500">Curate the ambient background glow color and dynamic breathing/aurora motion effect.</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12.5px] font-semibold text-stone-700 mb-2">Ambient Color Glow</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                      {[
+                        { id: "violet", label: "Violet Glow", hex: "#7c3aed" },
+                        { id: "blue", label: "Electric Blue", hex: "#2563eb" },
+                        { id: "emerald", label: "Emerald Mint", hex: "#10b981" },
+                        { id: "amber", label: "Warm Amber", hex: "#f59e0b" },
+                        { id: "rose", label: "Coral Rose", hex: "#e11d48" },
+                        { id: "cyan", label: "Cyber Cyan", hex: "#06b6d4" },
+                        { id: "none", label: "Pure Dark", hex: "#262626" },
+                      ].map((col) => {
+                        const isSelected = (customSec.bgColor || "violet") === col.id;
+                        return (
+                          <button
+                            key={col.id}
+                            type="button"
+                            onClick={() =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.bgColor = col.id as any;
+                              })
+                            }
+                            className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition text-center cursor-pointer ${
+                              isSelected
+                                ? "border-black bg-stone-50 ring-2 ring-black shadow-xs"
+                                : "border-stone-200 bg-white hover:bg-stone-50"
+                            }`}
+                          >
+                            <span
+                              className="size-5 rounded-full shadow-xs"
+                              style={{ backgroundColor: col.hex }}
+                            />
+                            <span className="text-[11px] font-medium text-stone-800 leading-tight">
+                              {col.label.split(" ")[0]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12.5px] font-semibold text-stone-700 mb-1.5">Animation Motion Style</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: "aurora", label: "Aurora Drift", desc: "Fluid floating aurora wave" },
+                        { id: "pulse", label: "Breathing Pulse", desc: "Rhythmic glow expand & contract" },
+                        { id: "drift", label: "Horizontal Drift", desc: "Slow sweeping ambient light" },
+                        { id: "none", label: "Static Glow", desc: "Constant ambient illumination" },
+                      ].map((anim) => {
+                        const isSelected = (customSec.bgAnimation || "aurora") === anim.id;
+                        return (
+                          <button
+                            key={anim.id}
+                            type="button"
+                            onClick={() =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.bgAnimation = anim.id as any;
+                              })
+                            }
+                            className={`rounded-xl border p-2.5 text-left transition cursor-pointer ${
+                              isSelected
+                                ? "border-purple-600 bg-purple-50/50 ring-2 ring-purple-600"
+                                : "border-stone-200 bg-white hover:bg-stone-50"
+                            }`}
+                          >
+                            <p className="text-[12px] font-bold text-stone-900">{anim.label}</p>
+                            <p className="text-[10.5px] text-stone-500 leading-tight mt-0.5">{anim.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Content Fields */}
+                <div className={`${cardCls} space-y-4`}>
+                  <h4 className="text-[14px] font-bold text-stone-900">Headlines & Narrative</h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[12.5px] font-semibold text-stone-700">Eyebrow / Badge</label>
+                      <input
+                        type="text"
+                        value={customSec.eyebrow || ""}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.eyebrow = e.target.value;
+                          })
+                        }
+                        placeholder="e.g. Our Story, Highlights"
+                        className={`mt-1 ${inputCls}`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[12.5px] font-semibold text-stone-700">Section Title</label>
+                      <input
+                        type="text"
+                        value={customSec.title || ""}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.title = e.target.value;
+                          })
+                        }
+                        placeholder="Main headline"
+                        className={`mt-1 ${inputCls}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12.5px] font-semibold text-stone-700">Subtitle / Lead-in</label>
+                    <textarea
+                      rows={2}
+                      value={customSec.subtitle || ""}
+                      onChange={(e) =>
+                        patch((d) => {
+                          const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                          if (sec) sec.subtitle = e.target.value;
+                        })
+                      }
+                      placeholder="High-level introductory phrase or supporting statement"
+                      className={`mt-1 ${inputCls}`}
+                    />
+                  </div>
+
+                  {(customSec.template === "text-story" || customSec.template === "image-text") && (
+                    <div>
+                      <label className="block text-[12.5px] font-semibold text-stone-700">Narrative Body Text</label>
+                      <textarea
+                        rows={5}
+                        value={customSec.body || ""}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.body = e.target.value;
+                          })
+                        }
+                        placeholder="Paragraphs describing your narrative, philosophy, or framework. Separate paragraphs with double newlines."
+                        className={`mt-1 ${inputCls}`}
+                      />
+                      <p className="mt-1 text-[11px] text-stone-400">Separate paragraphs with double Enter/newlines.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Template-specific details */}
+                {/* 1. Image + Text */}
+                {customSec.template === "image-text" && (
+                  <div className={`${cardCls} space-y-4`}>
+                    <h4 className="text-[14px] font-bold text-stone-900">Featured Image & Layout</h4>
+
+                    <Field label="Featured Photo / Graphic">
+                      <ImageField
+                        value={customSec.image || ""}
+                        onChange={(url) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.image = url;
+                          })
+                        }
+                      />
+                    </Field>
+
+                    <div>
+                      <label className="block text-[12.5px] font-semibold text-stone-700 mb-1.5">Image Position</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.imagePosition = "right";
+                            })
+                          }
+                          className={`rounded-xl border px-4 py-2 text-[12.5px] font-medium transition cursor-pointer ${
+                            customSec.imagePosition !== "left"
+                              ? "border-black bg-black text-white"
+                              : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+                          }`}
+                        >
+                          Image on Right
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.imagePosition = "left";
+                            })
+                          }
+                          className={`rounded-xl border px-4 py-2 text-[12.5px] font-medium transition cursor-pointer ${
+                            customSec.imagePosition === "left"
+                              ? "border-black bg-black text-white"
+                              : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+                          }`}
+                        >
+                          Image on Left
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-100">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Label</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaPrimaryText || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaPrimaryText = e.target.value;
+                            })
+                          }
+                          placeholder="e.g. Explore Process"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Link</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaPrimaryHref || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaPrimaryHref = e.target.value;
+                            })
+                          }
+                          placeholder="#contact or https://..."
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Cards / Grid */}
+                {customSec.template === "cards-grid" && (
+                  <div className={`${cardCls} space-y-4`}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[14px] font-bold text-stone-900">Grid Cards ({(customSec.cards || []).length})</h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) {
+                              if (!sec.cards) sec.cards = [];
+                              sec.cards.push({
+                                id: `card-${Date.now().toString(36)}`,
+                                title: "New Principle / Offering",
+                                description: "Brief description of this core capability or principle.",
+                                tag: "Capability",
+                              });
+                            }
+                          })
+                        }
+                        className={addBtnCls}
+                      >
+                        + Add Card
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(customSec.cards || []).map((card, idx) => {
+                        const cardId = card.id;
+                        return (
+                          <div key={cardId || idx} className="rounded-xl border border-stone-200 bg-stone-50/50 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] font-bold text-stone-600">Card #{idx + 1}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec && sec.cards) {
+                                      sec.cards = sec.cards.filter((c, i) => cardId ? c.id !== cardId : i !== idx);
+                                    }
+                                  })
+                                }
+                                className="text-[11.5px] font-medium text-red-600 hover:underline cursor-pointer"
+                              >
+                                Delete Card
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[12px] font-semibold text-stone-700">Card Title</label>
+                                <input
+                                  type="text"
+                                  value={card.title || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.cards?.[idx]) sec.cards[idx].title = e.target.value;
+                                    })
+                                  }
+                                  placeholder="Card Title"
+                                  className={`mt-1 ${inputCls}`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[12px] font-semibold text-stone-700">Tag / Category</label>
+                                <input
+                                  type="text"
+                                  value={card.tag || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.cards?.[idx]) sec.cards[idx].tag = e.target.value;
+                                    })
+                                  }
+                                  placeholder="e.g. UX Strategy"
+                                  className={`mt-1 ${inputCls}`}
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[12px] font-semibold text-stone-700">Description</label>
+                              <textarea
+                                rows={2}
+                                value={card.description || ""}
+                                onChange={(e) =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec && sec.cards?.[idx]) sec.cards[idx].description = e.target.value;
+                                  })
+                                }
+                                placeholder="Card description"
+                                className={`mt-1 ${inputCls}`}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[12px] font-semibold text-stone-700">Optional Link URL</label>
+                              <input
+                                type="text"
+                                value={card.link || ""}
+                                onChange={(e) =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec && sec.cards?.[idx]) sec.cards[idx].link = e.target.value;
+                                  })
+                                }
+                                placeholder="https://... or #contact"
+                                className={`mt-1 ${inputCls}`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Metrics / Highlights */}
+                {customSec.template === "metrics" && (
+                  <div className={`${cardCls} space-y-4`}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[14px] font-bold text-stone-900">Key Statistics ({(customSec.metrics || []).length})</h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) {
+                              if (!sec.metrics) sec.metrics = [];
+                              sec.metrics.push({
+                                id: `metric-${Date.now().toString(36)}`,
+                                value: "100%",
+                                label: "Deliverable Quality",
+                              });
+                            }
+                          })
+                        }
+                        className={addBtnCls}
+                      >
+                        + Add Metric
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {(customSec.metrics || []).map((m, idx) => {
+                        const metricId = m.id;
+                        return (
+                          <div key={metricId || idx} className="rounded-xl border border-stone-200 bg-stone-50/50 p-4 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] font-bold text-stone-600">Metric #{idx + 1}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec && sec.metrics) {
+                                      sec.metrics = sec.metrics.filter((item, i) => metricId ? item.id !== metricId : i !== idx);
+                                    }
+                                  })
+                                }
+                                className="text-[11.5px] font-medium text-red-600 hover:underline cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[11.5px] font-semibold text-stone-700">Value Number</label>
+                                <input
+                                  type="text"
+                                  value={m.value || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.metrics?.[idx]) sec.metrics[idx].value = e.target.value;
+                                    })
+                                  }
+                                  placeholder="e.g. 98.4%"
+                                  className={`mt-1 ${inputCls}`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11.5px] font-semibold text-stone-700">Suffix (Optional)</label>
+                                <input
+                                  type="text"
+                                  value={m.suffix || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.metrics?.[idx]) sec.metrics[idx].suffix = e.target.value;
+                                    })
+                                  }
+                                  placeholder="e.g. +"
+                                  className={`mt-1 ${inputCls}`}
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11.5px] font-semibold text-stone-700">Metric Label</label>
+                              <input
+                                type="text"
+                                value={m.label || ""}
+                                onChange={(e) =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec && sec.metrics?.[idx]) sec.metrics[idx].label = e.target.value;
+                                  })
+                                }
+                                placeholder="e.g. Client Satisfaction"
+                                className={`mt-1 ${inputCls}`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Quote / Testimonial */}
+                {customSec.template === "quote-testimonial" && (
+                  <div className={`${cardCls} space-y-4`}>
+                    <h4 className="text-[14px] font-bold text-stone-900">Featured Quote & Attribution</h4>
+
+                    <div>
+                      <label className="block text-[12.5px] font-semibold text-stone-700">Quote Text</label>
+                      <textarea
+                        rows={4}
+                        value={customSec.quoteText || ""}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.quoteText = e.target.value;
+                          })
+                        }
+                        placeholder="The customer recommendation or personal thesis statement..."
+                        className={`mt-1 ${inputCls}`}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Author Name</label>
+                        <input
+                          type="text"
+                          value={customSec.quoteAuthor || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.quoteAuthor = e.target.value;
+                            })
+                          }
+                          placeholder="e.g. Elena Rostova"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Role & Organization</label>
+                        <input
+                          type="text"
+                          value={customSec.quoteRole || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.quoteRole = e.target.value;
+                            })
+                          }
+                          placeholder="e.g. Chief Product Officer, ScaleFlow"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. CTA / Callout */}
+                {customSec.template === "cta" && (
+                  <div className={`${cardCls} space-y-4`}>
+                    <h4 className="text-[14px] font-bold text-stone-900">Call-To-Action Actions</h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Text</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaPrimaryText || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaPrimaryText = e.target.value;
+                            })
+                          }
+                          placeholder="Schedule a Discovery Call"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Link</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaPrimaryHref || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaPrimaryHref = e.target.value;
+                            })
+                          }
+                          placeholder="#contact or URL"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Secondary Button Text</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaSecondaryText || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaSecondaryText = e.target.value;
+                            })
+                          }
+                          placeholder="Download Portfolio PDF"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Secondary Button Link</label>
+                        <input
+                          type="text"
+                          value={customSec.ctaSecondaryHref || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.ctaSecondaryHref = e.target.value;
+                            })
+                          }
+                          placeholder="#"
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
         </main>
 
         {/* live preview — 1/3rd of screen column at right side */}
@@ -3160,6 +4151,7 @@ export function StudioApp({
         onClose={() => setShowTemplateModal(false)}
         order={order}
         onAddSection={addSection}
+        onAddCustomSection={addCustomSection}
         onNavigateToSection={(sectionKey) => setTab(sectionKeyToTab(sectionKey))}
       />
     </div>

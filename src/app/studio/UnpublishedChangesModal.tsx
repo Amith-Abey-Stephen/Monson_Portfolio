@@ -41,6 +41,7 @@ const KEY_INFO: Record<string, { label: string; tab: TabId; iconName?: string }>
   socials: { label: "Social Media Links", tab: "contact" },
   seo: { label: "SEO & Social Sharing", tab: "seo" },
   sections: { label: "Sections Order & Visibility", tab: "sections" },
+  customSections: { label: "Custom Modular Sections", tab: "sections" },
 };
 
 export type ChangeDiffItem = {

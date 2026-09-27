@@ -57,7 +57,7 @@ export function Pricing({
           {tiers.map((tier, idx) => {
             const isPopular = tier.popular;
             return (
-              <ScrollReveal key={tier.name || idx} delay={Math.min(idx * 0.08, 0.25)}>
+              <ScrollReveal key={`${tier.name}-${idx}`} delay={Math.min(idx * 0.08, 0.25)}>
                 <div
                   className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 ${
                     isPopular

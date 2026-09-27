@@ -15,6 +15,7 @@ import { Faq } from "@/components/Faq";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { SiteCanvas } from "@/components/SiteCanvas";
+import { CustomSection } from "@/components/CustomSection";
 import { getPublishedContent } from "@/lib/content";
 import { FALLBACK_ORDER, type SectionKey } from "@/lib/schema";
 
@@ -28,6 +29,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const content = await getPublishedContent();
   const visible = content.sections?.visible;
+  const customMap = new Map((content.customSections ?? []).map((s) => [s.id, s]));
 
   const blocks: Record<SectionKey, React.ReactNode> = {
     hero: <Hero key="hero" data={content} />,
@@ -47,8 +49,8 @@ export default async function HomePage() {
     contact: <Contact key="contact" data={content} />,
   };
 
-  const order = (content.sections?.order ?? FALLBACK_ORDER).filter((k): k is SectionKey =>
-    k in blocks
+  const order = (content.sections?.order ?? FALLBACK_ORDER).filter(
+    (k) => k in blocks || customMap.has(k)
   );
 
   return (
@@ -57,7 +59,13 @@ export default async function HomePage() {
       <SiteCanvas />
       <div className="relative">
         <Navbar data={content} />
-        {order.map((k) => (visible && visible[k] === false ? null : blocks[k]))}
+        {order.map((k) => {
+          if (visible && visible[k] === false) return null;
+          if (k in blocks) return blocks[k as SectionKey];
+          const customSec = customMap.get(k);
+          if (customSec) return <CustomSection key={k} section={customSec} />;
+          return null;
+        })}
         <Footer data={content} />
       </div>
     </main>

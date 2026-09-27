@@ -57,7 +57,7 @@ export function Awards({
           {honors.map((award, idx) => {
             const ContentWrapper = award.link ? "a" : "div";
             return (
-              <ScrollReveal key={award.title || idx} delay={Math.min(idx * 0.05, 0.25)}>
+              <ScrollReveal key={`${award.title}-${idx}`} delay={Math.min(idx * 0.05, 0.25)}>
                 <ContentWrapper
                   {...(award.link
                     ? {

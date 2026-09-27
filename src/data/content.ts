@@ -489,5 +489,6 @@ export const defaultContent: SiteContent = {
   faqs,
   socials,
   seo,
+  customSections: [],
   sections,
 };
