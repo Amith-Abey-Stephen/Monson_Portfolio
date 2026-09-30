@@ -7,9 +7,20 @@ export function Footer({
   data?: Pick<SiteContent, "site" | "about">;
 } = {}) {
   const site = data?.site ?? fallbackSite;
-  const notice =
-    site.copyrightNotice.trim() ||
-    `© ${new Date().getFullYear()} ${site.name} — Built with Next.js${site.email ? ` • ${site.email}` : ""}`;
+  const currentYear = new Date().getFullYear();
+  const rawNotice = site.copyrightNotice?.trim();
+  let notice: string;
+  if (rawNotice) {
+    if (rawNotice.includes("{year}")) {
+      notice = rawNotice.replace(/\{year\}/gi, String(currentYear));
+    } else if (/\b(19\d\d|20\d\d)\b/.test(rawNotice)) {
+      notice = rawNotice.replace(/\b(19\d\d|20\d\d)\b/g, String(currentYear));
+    } else {
+      notice = `© ${currentYear} ${rawNotice}`;
+    }
+  } else {
+    notice = `© ${currentYear} ${site.name} — Built with Next.js${site.email ? ` • ${site.email}` : ""}`;
+  }
   return (
     <footer className="relative overflow-hidden bg-transparent pb-6 pt-10 md:pb-8">
       <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-5 font-heading text-[13px] text-white/45 sm:px-6 sm:text-[14px] md:justify-between md:px-12">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 
 /**
@@ -15,10 +16,15 @@ export function Preloader({
   name?: string;
   role?: string;
 } = {}) {
+  const pathname = usePathname();
+  const isStudio = pathname?.startsWith("/studio");
+
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    if (isStudio) return;
+
     let raf = 0;
     const start = performance.now();
     const DURATION = 1400;
@@ -41,11 +47,13 @@ export function Preloader({
       cancelAnimationFrame(raf);
       document.documentElement.style.overflow = "";
     };
-  }, []);
+  }, [isStudio]);
 
   useEffect(() => {
     if (done) document.documentElement.style.overflow = "";
   }, [done]);
+
+  if (isStudio) return null;
 
   return (
     <AnimatePresence>

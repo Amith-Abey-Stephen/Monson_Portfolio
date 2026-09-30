@@ -47,6 +47,15 @@ export function PreviewRenderer({ initialContent }: { initialContent: SiteConten
           localStorage.setItem("studio_active_draft", JSON.stringify(event.data.draft));
         } catch {}
       }
+      if (event.data?.type === "STUDIO_SCROLL_TO_SECTION" && event.data.id) {
+        const id = event.data.id;
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      }
     };
 
     const onStorage = (e: StorageEvent) => {

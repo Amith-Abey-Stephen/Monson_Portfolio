@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { ChevronDown, Link2, Trash2, Upload } from "lucide-react";
+import { ChevronDown, Link2, Trash2, Upload, RefreshCw } from "lucide-react";
 
 export const inputCls =
   "mt-1.5 w-full rounded-xl border border-stone-200/90 bg-white px-3.5 py-2.5 text-[14px] text-stone-900 placeholder:text-stone-400 transition-all focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 focus:outline-none shadow-2xs";
@@ -277,6 +277,192 @@ export function ImageField({
         <p role="alert" className="text-[12px] font-medium text-red-600">
           {error}
         </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Dedicated Hero Portrait Manager:
+ * Shows the active cutout preview (defaults to /hero-person.png when empty),
+ * offers direct file upload or image URL input, and provides a 1-click
+ * reset back to the default Monson portrait cutout.
+ */
+export function HeroPortraitField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const isUrl = Boolean(value && /^https?:\/\//i.test(value));
+  const [mode, setMode] = useState<"upload" | "link">(isUrl ? "link" : "upload");
+  const [linkInput, setLinkInput] = useState(isUrl ? value : "");
+
+  const activeSrc = value.trim() || "/hero-person.png";
+  const isCustom = Boolean(value.trim() && value.trim() !== "/hero-person.png");
+
+  const upload = async (f: File) => {
+    setUploading(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("file", f);
+      const res = await fetch("/api/uploads", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Upload failed.");
+      onChange(json.url as string);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleApplyLink = () => {
+    if (linkInput.trim()) {
+      onChange(linkInput.trim());
+    }
+  };
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-stone-200/90 bg-stone-50/50 p-4">
+      {/* Active Status Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-stone-200/70">
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[12.5px] font-bold text-stone-900">
+            {isCustom ? "Custom Cutout Photo Active" : "Default Cutout Active (/hero-person.png)"}
+          </span>
+        </div>
+        {isCustom && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setLinkInput("");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:bg-stone-100 transition shadow-2xs cursor-pointer"
+          >
+            <RefreshCw size={11} />
+            <span>Reset to Default Portrait</span>
+          </button>
+        )}
+      </div>
+
+      {/* Visual Live Cutout Preview */}
+      <div className="relative flex flex-col items-center justify-center rounded-xl border border-stone-800 bg-[#070709] p-4 overflow-hidden">
+        {/* subtle atmospheric glow matching hero */}
+        <div className="pointer-events-none absolute -bottom-10 size-48 rounded-full bg-purple-600/20 blur-3xl" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={activeSrc}
+          alt="Hero Portrait Preview"
+          className="relative z-10 h-48 w-auto max-w-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
+        />
+        <div className="relative z-10 mt-2.5 flex items-center justify-between w-full px-2 text-[11px] text-stone-400">
+          <span className="truncate max-w-[75%] font-mono text-[10.5px]">
+            {isCustom ? activeSrc : "Default Portrait: /hero-person.png"}
+          </span>
+          {isCustom && (
+            <a
+              href={activeSrc}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-300 hover:text-white underline cursor-pointer"
+            >
+              View original ↗
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Mode Selector */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5 text-[12px] font-medium">
+          <button
+            type="button"
+            onClick={() => setMode("upload")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 transition-colors cursor-pointer ${
+              mode === "upload"
+                ? "bg-white text-stone-900 shadow-xs font-semibold"
+                : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            <Upload size={13} />
+            <span>Upload New Cutout</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("link")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 transition-colors cursor-pointer ${
+              mode === "link"
+                ? "bg-white text-stone-900 shadow-xs font-semibold"
+                : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            <Link2 size={13} />
+            <span>Paste Image URL</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mode 1: Upload */}
+      {mode === "upload" && (
+        <div className="rounded-xl border border-dashed border-stone-300 bg-white p-4 text-center">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void upload(f);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800 disabled:opacity-50 transition cursor-pointer"
+          >
+            <Upload size={14} />
+            <span>{uploading ? "Uploading Image..." : "Choose New Portrait Cutout"}</span>
+          </button>
+          <p className="mt-2 text-[11.5px] text-stone-500">
+            Upload transparent PNG, JPG, or WebP. Transparent cutout is recommended for best look.
+          </p>
+          {error && <p className="mt-2 text-[12px] text-red-600 font-medium">{error}</p>}
+        </div>
+      )}
+
+      {/* Mode 2: Link */}
+      {mode === "link" && (
+        <div className="rounded-xl border border-stone-200 bg-white p-3 space-y-2">
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={linkInput}
+              onChange={(e) => setLinkInput(e.target.value)}
+              placeholder="https://images.unsplash.com/... or https://..."
+              className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[13px] text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleApplyLink}
+              className="rounded-lg bg-black px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-stone-800 transition cursor-pointer"
+            >
+              Apply
+            </button>
+          </div>
+          <p className="text-[11px] text-stone-400">
+            Paste a public direct URL to any portrait photo or transparent PNG cutout.
+          </p>
+        </div>
       )}
     </div>
   );

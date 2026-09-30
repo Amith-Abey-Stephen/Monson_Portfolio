@@ -24,7 +24,7 @@ export type CustomSectionTemplateInfo = {
   template: CustomSectionTemplate;
   name: string;
   description: string;
-  defaultBgColor: "violet" | "blue" | "emerald" | "amber" | "rose" | "cyan";
+  defaultBgColor: "violet" | "blue" | "emerald" | "amber" | "rose" | "cyan" | "monochrome";
   defaultNavLabel: string;
 };
 

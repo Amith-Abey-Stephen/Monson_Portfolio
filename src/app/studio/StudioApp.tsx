@@ -35,6 +35,7 @@ import {
   ChevronRight,
   ChevronDown,
   Plus,
+  Copy,
   Trash2,
   Check,
   GitBranch,
@@ -46,7 +47,7 @@ import type { SectionKey, SiteContent, CustomSection, CustomSectionTemplate } fr
 import { LIMITS, MAX_COUNT, SECTION_LABELS } from "@/lib/schema";
 import { defaultContent } from "@/data/content";
 import { autoDerivedKeywords } from "@/lib/seo";
-import { Area, Field, ImageField, ItemCard, RowButtons, Text, move, inputCls } from "./fields";
+import { Area, Field, ImageField, HeroPortraitField, ItemCard, RowButtons, Text, move, inputCls } from "./fields";
 import { UnpublishedChangesModal } from "./UnpublishedChangesModal";
 import { TemplateLibraryModal, CUSTOM_SECTION_TEMPLATES } from "./TemplateLibraryModal";
 
@@ -191,15 +192,26 @@ export const DEVICE_MODELS: DeviceModel[] = [
 function ScaledPreview({
   device,
   draft,
+  activeSectionId,
   onScale,
 }: {
   device: DeviceModel;
   draft: SiteContent;
+  activeSectionId?: string | null;
   onScale?: (pct: number) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [box, setBox] = useState({ w: 400, h: 500 });
+
+  useEffect(() => {
+    if (activeSectionId && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: "STUDIO_SCROLL_TO_SECTION", id: activeSectionId },
+        "*"
+      );
+    }
+  }, [activeSectionId]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -693,6 +705,9 @@ export function StudioApp({
 
   const deleteSection = useCallback(
     (key: string) => {
+      if (typeof window !== "undefined" && !window.confirm("Are you sure you want to remove this section from your portfolio?")) {
+        return;
+      }
       patch((d) => {
         d.sections = d.sections ?? { order: [], visible: {} };
         d.sections.order = (d.sections.order ?? []).filter((k) => k !== key);
@@ -709,6 +724,39 @@ export function StudioApp({
       }
     },
     [tab, activeCustomSectionId]
+  );
+
+  const duplicateCustomSection = useCallback(
+    (sourceId: string) => {
+      const source = (draft.customSections || []).find((s) => s.id === sourceId);
+      if (!source) return;
+      const newId = `section-${Date.now().toString(36)}`;
+      const duplicated: CustomSection = {
+        ...structuredClone(source),
+        id: newId,
+        title: `${source.title || "Custom Section"} (Copy)`,
+        inNav: false,
+      };
+
+      patch((d) => {
+        d.customSections = d.customSections ?? [];
+        d.customSections.push(duplicated);
+        d.sections = d.sections ?? { order: [], visible: {} };
+        d.sections.order = d.sections.order ?? [];
+        d.sections.visible = d.sections.visible ?? {};
+        const sourceIdx = d.sections.order.indexOf(sourceId);
+        if (sourceIdx !== -1) {
+          d.sections.order.splice(sourceIdx + 1, 0, newId);
+        } else {
+          d.sections.order.push(newId);
+        }
+        d.sections.visible[newId] = true;
+      });
+
+      setActiveCustomSectionId(newId);
+      setTab("custom-section");
+    },
+    [draft.customSections]
   );
 
   const addSection = useCallback(
@@ -849,7 +897,14 @@ export function StudioApp({
         d.sections = d.sections ?? { order: [], visible: {} };
         d.sections.order = d.sections.order ?? [];
         d.sections.visible = d.sections.visible ?? {};
-        d.sections.order.push(id);
+        
+        // Smart placement: insert before contact if present, else append
+        const contactIdx = d.sections.order.indexOf("contact");
+        if (contactIdx !== -1) {
+          d.sections.order.splice(contactIdx, 0, id);
+        } else {
+          d.sections.order.push(id);
+        }
         d.sections.visible[id] = true;
       });
 
@@ -879,6 +934,25 @@ export function StudioApp({
   const dirtyTabs = TABS.filter(
     (t) => !["overview", "history"].includes(t.id) && tabDirty(t.id)
   );
+
+  const previewTargetSectionId = useMemo(() => {
+    if (tab === "custom-section") return activeCustomSectionId;
+    if (tab === "hero") return "hero";
+    if (tab === "intro") return "intro";
+    if (tab === "work") return "projects";
+    if (tab === "journey") return "skills";
+    if (tab === "services") return "services";
+    if (tab === "process") return "process";
+    if (tab === "techstack") return "techstack";
+    if (tab === "pricing") return "pricing";
+    if (tab === "awards") return "awards";
+    if (tab === "gallery") return "gallery";
+    if (tab === "about") return "about";
+    if (tab === "testimonials") return "testimonials";
+    if (tab === "faq") return "faq";
+    if (tab === "contact") return "contact";
+    return null;
+  }, [tab, activeCustomSectionId]);
 
   const revertKey = useCallback(
     (key: string) => {
@@ -1787,13 +1861,12 @@ export function StudioApp({
               <Field label="Quote" value={draft.hero.quote} max={LIMITS.hero.quote}>
                 <Text value={draft.hero.quote} max={LIMITS.hero.quote} onChange={(v) => patch((d) => { d.hero.quote = v; })} />
               </Field>
-              <Field
-                label="Hero Portrait Cutout / Image"
-                value={draft.hero.personImage || draft.site.heroImage}
-                hint="Upload or paste an image URL (transparent PNG cutout recommended). Defaults to /hero-person.png when empty."
-              >
-                <ImageField
-                  value={draft.hero.personImage || draft.site.heroImage}
+              <div>
+                <label className="block text-[13px] font-semibold text-stone-800 mb-1.5">
+                  Hero Portrait Cutout / Image
+                </label>
+                <HeroPortraitField
+                  value={draft.hero.personImage || draft.site.heroImage || ""}
                   onChange={(v) =>
                     patch((d) => {
                       d.hero.personImage = v;
@@ -1801,7 +1874,7 @@ export function StudioApp({
                     })
                   }
                 />
-              </Field>
+              </div>
               <Field
                 label="Signature Image (Optional)"
                 value={draft.hero.signatureImage}
@@ -2921,13 +2994,12 @@ export function StudioApp({
               <Field label="Tagline" value={draft.site.tagline} max={LIMITS.site.tagline}>
                 <Text value={draft.site.tagline} max={LIMITS.site.tagline} onChange={(v) => patch((d) => { d.site.tagline = v; })} />
               </Field>
-              <Field
-                label="Hero Portrait Cutout / Image"
-                value={draft.hero.personImage || draft.site.heroImage}
-                hint="Transparent PNG cutout or portrait photo. Defaults to /hero-person.png when empty."
-              >
-                <ImageField
-                  value={draft.hero.personImage || draft.site.heroImage}
+              <div>
+                <label className="block text-[13px] font-semibold text-stone-800 mb-1.5">
+                  Hero Portrait Cutout / Image
+                </label>
+                <HeroPortraitField
+                  value={draft.hero.personImage || draft.site.heroImage || ""}
                   onChange={(v) =>
                     patch((d) => {
                       d.hero.personImage = v;
@@ -2935,7 +3007,7 @@ export function StudioApp({
                     })
                   }
                 />
-              </Field>
+              </div>
               <Field label="About portrait" value={draft.site.aboutImage} hint="Cropped to 4:5. Empty hides the portrait.">
                 <ImageField value={draft.site.aboutImage} aspect="4/5" onChange={(v) => patch((d) => { d.site.aboutImage = v; })} />
               </Field>
@@ -3250,10 +3322,10 @@ export function StudioApp({
             const tmplInfo = CUSTOM_SECTION_TEMPLATES.find((t) => t.template === customSec.template);
 
             return (
-              <section className="space-y-5">
-                {/* Top Header Bar */}
+              <section className="space-y-4">
+                {/* Header: Clean & unburdened */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200">
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <button
                       type="button"
                       onClick={() => setTab("sections")}
@@ -3262,15 +3334,24 @@ export function StudioApp({
                       ← Back to Sections & Nav
                     </button>
                     <div className="flex items-center gap-2.5">
-                      <h3 className="text-[17px] font-bold text-stone-900">{customSec.title || "Custom Section"}</h3>
-                      <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-bold text-stone-800">
+                      <h3 className="truncate text-[18px] font-bold text-stone-900">
+                        {customSec.title || "Custom Section"}
+                      </h3>
+                      <span className="shrink-0 rounded-full border border-stone-200 bg-stone-100 px-2.5 py-0.5 text-[11px] font-semibold text-stone-700">
                         {tmplInfo?.name || customSec.template}
                       </span>
-                      <span className="text-[11px] font-mono text-stone-400">#{customSec.id}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => duplicateCustomSection(customSec.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-700 hover:bg-stone-50 transition cursor-pointer"
+                    >
+                      <Copy size={13} />
+                      <span>Duplicate</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() =>
@@ -3285,7 +3366,7 @@ export function StudioApp({
                       }`}
                     >
                       {draft.sections.visible[customSec.id] !== false ? <Eye size={14} /> : <EyeOff size={14} />}
-                      <span>{draft.sections.visible[customSec.id] !== false ? "Visible on site" : "Hidden"}</span>
+                      <span>{draft.sections.visible[customSec.id] !== false ? "Visible" : "Hidden"}</span>
                     </button>
                     <button
                       type="button"
@@ -3298,169 +3379,18 @@ export function StudioApp({
                   </div>
                 </div>
 
-                {/* Navigation Settings Card */}
-                <div className={`${cardCls} space-y-3.5 border-stone-200/90 bg-white`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-black text-white shadow-xs">
-                        <Layers size={14} />
-                      </span>
-                      <div>
-                        <h4 className="text-[14px] font-bold text-stone-900">Header Navigation Integration</h4>
-                        <p className="text-[12px] text-stone-500">Automatically display this section in the floating site navigation header.</p>
-                      </div>
-                    </div>
-
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        type="checkbox"
-                        checked={customSec.inNav ?? false}
-                        onChange={(e) =>
-                          patch((d) => {
-                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                            if (sec) {
-                              sec.inNav = e.target.checked;
-                              if (e.target.checked && !sec.navLabel) {
-                                sec.navLabel = tmplInfo?.defaultNavLabel || "Section";
-                              }
-                            }
-                          })
-                        }
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-6 w-11 rounded-full bg-stone-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-black peer-checked:after:translate-x-full peer-focus:outline-none" />
-                    </label>
-                  </div>
-
-                  {customSec.inNav && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-200">
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Navbar Link Label</label>
-                        <input
-                          type="text"
-                          value={customSec.navLabel || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.navLabel = e.target.value;
-                            })
-                          }
-                          placeholder="e.g. Story, Principles, Impact"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                        <p className="mt-1 text-[11px] text-stone-400">Visible label in the floating navbar</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Anchor Target</label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={`#${customSec.id}`}
-                          className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-100 px-3 py-2 text-[12px] font-mono text-stone-500 cursor-not-allowed"
-                        />
-                        <p className="mt-1 text-[11px] text-stone-400">Smooth-scrolls to this section with active scroll spy</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Background Color & Animation Atmosphere Card */}
+                {/* 1. Main Content Card (Immediate focus!) */}
                 <div className={`${cardCls} space-y-4`}>
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-stone-900 text-white shadow-xs">
-                      <Sparkles size={14} />
-                    </span>
+                  <div className="flex items-center justify-between pb-1 border-b border-stone-100">
                     <div>
-                      <h4 className="text-[14px] font-bold text-stone-900">Background Atmosphere & Animation</h4>
-                      <p className="text-[12px] text-stone-500">Curate the ambient background glow color and dynamic breathing/aurora motion effect.</p>
+                      <h4 className="text-[14.5px] font-bold text-stone-900">Content</h4>
+                      <p className="text-[12px] text-stone-400">Headlines and message text for this section.</p>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[12.5px] font-semibold text-stone-700 mb-2">Ambient Color Glow</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                      {[
-                        { id: "violet", label: "Violet Glow", hex: "#7c3aed" },
-                        { id: "blue", label: "Electric Blue", hex: "#2563eb" },
-                        { id: "emerald", label: "Emerald Mint", hex: "#10b981" },
-                        { id: "amber", label: "Warm Amber", hex: "#f59e0b" },
-                        { id: "rose", label: "Coral Rose", hex: "#e11d48" },
-                        { id: "cyan", label: "Cyber Cyan", hex: "#06b6d4" },
-                        { id: "none", label: "Pure Dark", hex: "#262626" },
-                      ].map((col) => {
-                        const isSelected = (customSec.bgColor || "violet") === col.id;
-                        return (
-                          <button
-                            key={col.id}
-                            type="button"
-                            onClick={() =>
-                              patch((d) => {
-                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                if (sec) sec.bgColor = col.id as any;
-                              })
-                            }
-                            className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition text-center cursor-pointer ${
-                              isSelected
-                                ? "border-black bg-stone-50 ring-2 ring-black shadow-xs"
-                                : "border-stone-200 bg-white hover:bg-stone-50"
-                            }`}
-                          >
-                            <span
-                              className="size-5 rounded-full shadow-xs"
-                              style={{ backgroundColor: col.hex }}
-                            />
-                            <span className="text-[11px] font-medium text-stone-800 leading-tight">
-                              {col.label.split(" ")[0]}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[12.5px] font-semibold text-stone-700 mb-1.5">Animation Motion Style</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                      {[
-                        { id: "aurora", label: "Aurora Drift", desc: "Fluid floating aurora wave" },
-                        { id: "pulse", label: "Breathing Pulse", desc: "Rhythmic glow expand & contract" },
-                        { id: "drift", label: "Horizontal Drift", desc: "Slow sweeping ambient light" },
-                        { id: "none", label: "Static Glow", desc: "Constant ambient illumination" },
-                      ].map((anim) => {
-                        const isSelected = (customSec.bgAnimation || "aurora") === anim.id;
-                        return (
-                          <button
-                            key={anim.id}
-                            type="button"
-                            onClick={() =>
-                              patch((d) => {
-                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                if (sec) sec.bgAnimation = anim.id as any;
-                              })
-                            }
-                            className={`rounded-xl border p-2.5 text-left transition cursor-pointer ${
-                              isSelected
-                                ? "border-black bg-stone-100 ring-2 ring-black"
-                                : "border-stone-200 bg-white hover:bg-stone-50"
-                            }`}
-                          >
-                            <p className="text-[12px] font-bold text-stone-900">{anim.label}</p>
-                            <p className="text-[10.5px] text-stone-500 leading-tight mt-0.5">{anim.desc}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main Content Fields */}
-                <div className={`${cardCls} space-y-4`}>
-                  <h4 className="text-[14px] font-bold text-stone-900">Headlines & Narrative</h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[12.5px] font-semibold text-stone-700">Eyebrow / Badge</label>
+                      <label className="block text-[12.5px] font-semibold text-stone-700">Eyebrow Tag</label>
                       <input
                         type="text"
                         value={customSec.eyebrow || ""}
@@ -3470,12 +3400,12 @@ export function StudioApp({
                             if (sec) sec.eyebrow = e.target.value;
                           })
                         }
-                        placeholder="e.g. Our Story, Highlights"
+                        placeholder="e.g. Visual Focus"
                         className={`mt-1 ${inputCls}`}
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-[12.5px] font-semibold text-stone-700">Section Title</label>
                       <input
                         type="text"
@@ -3512,7 +3442,7 @@ export function StudioApp({
                     <div>
                       <label className="block text-[12.5px] font-semibold text-stone-700">Narrative Body Text</label>
                       <textarea
-                        rows={5}
+                        rows={4}
                         value={customSec.body || ""}
                         onChange={(e) =>
                           patch((d) => {
@@ -3520,458 +3450,594 @@ export function StudioApp({
                             if (sec) sec.body = e.target.value;
                           })
                         }
-                        placeholder="Paragraphs describing your narrative, philosophy, or framework. Separate paragraphs with double newlines."
+                        placeholder="Paragraphs describing your narrative, philosophy, or framework..."
                         className={`mt-1 ${inputCls}`}
                       />
-                      <p className="mt-1 text-[11px] text-stone-400">Separate paragraphs with double Enter/newlines.</p>
+                    </div>
+                  )}
+
+                  {/* Template-specific details inside Content */}
+                  {/* Template 2: Image + Text */}
+                  {customSec.template === "image-text" && (
+                    <div className="pt-3 border-t border-stone-100 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[12.5px] font-semibold text-stone-700 mb-1">Featured Photo / Graphic</label>
+                          <ImageField
+                            value={customSec.image || ""}
+                            onChange={(url) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.image = url;
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[12.5px] font-semibold text-stone-700 mb-1.5">Image Layout</label>
+                            <div className="inline-flex rounded-xl border border-stone-200 bg-stone-100 p-0.5 text-[12px] font-medium">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec) sec.imagePosition = "right";
+                                  })
+                                }
+                                className={`rounded-lg px-3 py-1.5 transition cursor-pointer ${
+                                  customSec.imagePosition !== "left"
+                                    ? "bg-white text-stone-900 shadow-2xs font-semibold"
+                                    : "text-stone-600 hover:text-stone-900"
+                                }`}
+                              >
+                                Image on Right
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec) sec.imagePosition = "left";
+                                  })
+                                }
+                                className={`rounded-lg px-3 py-1.5 transition cursor-pointer ${
+                                  customSec.imagePosition === "left"
+                                    ? "bg-white text-stone-900 shadow-2xs font-semibold"
+                                    : "text-stone-600 hover:text-stone-900"
+                                }`}
+                              >
+                                Image on Left
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[12px] font-semibold text-stone-700">Button Text</label>
+                              <input
+                                type="text"
+                                value={customSec.ctaPrimaryText || ""}
+                                onChange={(e) =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec) sec.ctaPrimaryText = e.target.value;
+                                  })
+                                }
+                                placeholder="e.g. Explore"
+                                className={`mt-1 ${inputCls}`}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[12px] font-semibold text-stone-700">Button Link</label>
+                              <input
+                                type="text"
+                                value={customSec.ctaPrimaryHref || ""}
+                                onChange={(e) =>
+                                  patch((d) => {
+                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                    if (sec) sec.ctaPrimaryHref = e.target.value;
+                                  })
+                                }
+                                placeholder="#contact"
+                                className={`mt-1 ${inputCls}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Template 3: Cards / Grid */}
+                  {customSec.template === "cards-grid" && (
+                    <div className="pt-3 border-t border-stone-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[13px] font-bold text-stone-900">Grid Cards ({(customSec.cards || []).length})</label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) {
+                                if (!sec.cards) sec.cards = [];
+                                sec.cards.push({
+                                  id: `card-${Date.now().toString(36)}`,
+                                  title: "New Principle / Offering",
+                                  description: "Brief description of this core capability or principle.",
+                                  tag: "Capability",
+                                });
+                              }
+                            })
+                          }
+                          className={addBtnCls}
+                        >
+                          + Add Card
+                        </button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {(customSec.cards || []).map((card, idx) => {
+                          const cardId = card.id;
+                          return (
+                            <div key={cardId || idx} className="rounded-xl border border-stone-200 bg-stone-50/70 p-3.5 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[12px] font-bold text-stone-700">Card #{idx + 1}</span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.cards) {
+                                        sec.cards = sec.cards.filter((c, i) => cardId ? c.id !== cardId : i !== idx);
+                                      }
+                                    })
+                                  }
+                                  className="text-[11.5px] font-medium text-red-600 hover:underline cursor-pointer"
+                                >
+                                  Delete Card
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[11.5px] font-semibold text-stone-600">Card Title</label>
+                                  <input
+                                    type="text"
+                                    value={card.title || ""}
+                                    onChange={(e) =>
+                                      patch((d) => {
+                                        const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                        if (sec && sec.cards?.[idx]) sec.cards[idx].title = e.target.value;
+                                      })
+                                    }
+                                    placeholder="Title"
+                                    className={`mt-0.5 ${inputCls}`}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11.5px] font-semibold text-stone-600">Tag / Badge</label>
+                                  <input
+                                    type="text"
+                                    value={card.tag || ""}
+                                    onChange={(e) =>
+                                      patch((d) => {
+                                        const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                        if (sec && sec.cards?.[idx]) sec.cards[idx].tag = e.target.value;
+                                      })
+                                    }
+                                    placeholder="e.g. UX Strategy"
+                                    className={`mt-0.5 ${inputCls}`}
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11.5px] font-semibold text-stone-600">Description</label>
+                                <textarea
+                                  rows={2}
+                                  value={card.description || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.cards?.[idx]) sec.cards[idx].description = e.target.value;
+                                    })
+                                  }
+                                  placeholder="Description..."
+                                  className={`mt-0.5 ${inputCls}`}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[11.5px] font-semibold text-stone-600">Optional Link URL</label>
+                                <input
+                                  type="text"
+                                  value={card.link || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.cards?.[idx]) sec.cards[idx].link = e.target.value;
+                                    })
+                                  }
+                                  placeholder="https://... or #contact"
+                                  className={`mt-0.5 ${inputCls}`}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Template 4: Metrics / Highlights */}
+                  {customSec.template === "metrics" && (
+                    <div className="pt-3 border-t border-stone-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[13px] font-bold text-stone-900">Key Statistics ({(customSec.metrics || []).length})</label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) {
+                                if (!sec.metrics) sec.metrics = [];
+                                sec.metrics.push({
+                                  id: `metric-${Date.now().toString(36)}`,
+                                  value: "100%",
+                                  label: "Quality Score",
+                                });
+                              }
+                            })
+                          }
+                          className={addBtnCls}
+                        >
+                          + Add Metric
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {(customSec.metrics || []).map((m, idx) => {
+                          const metricId = m.id;
+                          return (
+                            <div key={metricId || idx} className="rounded-xl border border-stone-200 bg-stone-50/70 p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11.5px] font-bold text-stone-700">Metric #{idx + 1}</span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.metrics) {
+                                        sec.metrics = sec.metrics.filter((item, i) => metricId ? item.id !== metricId : i !== idx);
+                                      }
+                                    })
+                                  }
+                                  className="text-[11px] font-medium text-red-600 hover:underline cursor-pointer"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-stone-600">Value</label>
+                                  <input
+                                    type="text"
+                                    value={m.value || ""}
+                                    onChange={(e) =>
+                                      patch((d) => {
+                                        const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                        if (sec && sec.metrics?.[idx]) sec.metrics[idx].value = e.target.value;
+                                      })
+                                    }
+                                    placeholder="e.g. 98.4%"
+                                    className={`mt-0.5 ${inputCls}`}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-stone-600">Suffix</label>
+                                  <input
+                                    type="text"
+                                    value={m.suffix || ""}
+                                    onChange={(e) =>
+                                      patch((d) => {
+                                        const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                        if (sec && sec.metrics?.[idx]) sec.metrics[idx].suffix = e.target.value;
+                                      })
+                                    }
+                                    placeholder="e.g. +"
+                                    className={`mt-0.5 ${inputCls}`}
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-stone-600">Label</label>
+                                <input
+                                  type="text"
+                                  value={m.label || ""}
+                                  onChange={(e) =>
+                                    patch((d) => {
+                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                      if (sec && sec.metrics?.[idx]) sec.metrics[idx].label = e.target.value;
+                                    })
+                                  }
+                                  placeholder="e.g. Client Satisfaction"
+                                  className={`mt-0.5 ${inputCls}`}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Template 5: Quote / Testimonial */}
+                  {customSec.template === "quote-testimonial" && (
+                    <div className="pt-3 border-t border-stone-100 space-y-3">
+                      <div>
+                        <label className="block text-[12.5px] font-semibold text-stone-700">Quote Text</label>
+                        <textarea
+                          rows={3}
+                          value={customSec.quoteText || ""}
+                          onChange={(e) =>
+                            patch((d) => {
+                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                              if (sec) sec.quoteText = e.target.value;
+                            })
+                          }
+                          placeholder="Client quote or statement..."
+                          className={`mt-1 ${inputCls}`}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Author Name</label>
+                          <input
+                            type="text"
+                            value={customSec.quoteAuthor || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.quoteAuthor = e.target.value;
+                              })
+                            }
+                            placeholder="e.g. Elena Rostova"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Role & Company</label>
+                          <input
+                            type="text"
+                            value={customSec.quoteRole || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.quoteRole = e.target.value;
+                              })
+                            }
+                            placeholder="e.g. CPO, ScaleFlow"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Template 6: CTA / Callout */}
+                  {customSec.template === "cta" && (
+                    <div className="pt-3 border-t border-stone-100 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Primary Button Text</label>
+                          <input
+                            type="text"
+                            value={customSec.ctaPrimaryText || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.ctaPrimaryText = e.target.value;
+                              })
+                            }
+                            placeholder="e.g. Get in touch"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Primary Button Link</label>
+                          <input
+                            type="text"
+                            value={customSec.ctaPrimaryHref || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.ctaPrimaryHref = e.target.value;
+                              })
+                            }
+                            placeholder="#contact"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Secondary Button Text</label>
+                          <input
+                            type="text"
+                            value={customSec.ctaSecondaryText || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.ctaSecondaryText = e.target.value;
+                              })
+                            }
+                            placeholder="Optional secondary action"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[12px] font-semibold text-stone-700">Secondary Button Link</label>
+                          <input
+                            type="text"
+                            value={customSec.ctaSecondaryHref || ""}
+                            onChange={(e) =>
+                              patch((d) => {
+                                const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                if (sec) sec.ctaSecondaryHref = e.target.value;
+                              })
+                            }
+                            placeholder="#"
+                            className={`mt-1 ${inputCls}`}
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Template-specific details */}
-                {/* 1. Image + Text */}
-                {customSec.template === "image-text" && (
-                  <div className={`${cardCls} space-y-4`}>
-                    <h4 className="text-[14px] font-bold text-stone-900">Featured Image & Layout</h4>
+                {/* 2. Atmosphere & Style (Compact, clean bar) */}
+                <div className={`${cardCls} space-y-3`}>
+                  <div className="flex items-center gap-2 pb-1 border-b border-stone-100">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-stone-900 text-white shadow-2xs">
+                      <Sparkles size={12} />
+                    </span>
+                    <div>
+                      <h4 className="text-[13.5px] font-bold text-stone-900">Atmosphere & Glow Theme</h4>
+                      <p className="text-[11.5px] text-stone-400">Ambient background lighting and motion effect.</p>
+                    </div>
+                  </div>
 
-                    <Field label="Featured Photo / Graphic">
-                      <ImageField
-                        value={customSec.image || ""}
-                        onChange={(url) =>
-                          patch((d) => {
-                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                            if (sec) sec.image = url;
-                          })
-                        }
-                      />
-                    </Field>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[12px] font-semibold text-stone-700 mb-1.5">Accent Glow</label>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {[
+                          { id: "violet", label: "Violet", hex: "#7c3aed" },
+                          { id: "blue", label: "Blue", hex: "#2563eb" },
+                          { id: "emerald", label: "Emerald", hex: "#10b981" },
+                          { id: "amber", label: "Amber", hex: "#f59e0b" },
+                          { id: "rose", label: "Rose", hex: "#e11d48" },
+                          { id: "cyan", label: "Cyan", hex: "#06b6d4" },
+                          { id: "monochrome", label: "Stealth", hex: "#1c1917" },
+                          { id: "none", label: "None", hex: "#44403c" },
+                        ].map((col) => {
+                          const isSelected = (customSec.bgColor || "violet") === col.id;
+                          return (
+                            <button
+                              key={col.id}
+                              type="button"
+                              onClick={() =>
+                                patch((d) => {
+                                  const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                  if (sec) sec.bgColor = col.id as any;
+                                })
+                              }
+                              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition cursor-pointer ${
+                                isSelected
+                                  ? "border-black bg-black text-white shadow-xs font-semibold"
+                                  : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+                              }`}
+                            >
+                              <span className="size-2 rounded-full" style={{ backgroundColor: col.hex }} />
+                              <span>{col.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
                     <div>
-                      <label className="block text-[12.5px] font-semibold text-stone-700 mb-1.5">Image Position</label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.imagePosition = "right";
-                            })
-                          }
-                          className={`rounded-xl border px-4 py-2 text-[12.5px] font-medium transition cursor-pointer ${
-                            customSec.imagePosition !== "left"
-                              ? "border-black bg-black text-white"
-                              : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
-                          }`}
-                        >
-                          Image on Right
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.imagePosition = "left";
-                            })
-                          }
-                          className={`rounded-xl border px-4 py-2 text-[12.5px] font-medium transition cursor-pointer ${
-                            customSec.imagePosition === "left"
-                              ? "border-black bg-black text-white"
-                              : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
-                          }`}
-                        >
-                          Image on Left
-                        </button>
+                      <label className="block text-[12px] font-semibold text-stone-700 mb-1.5">Motion Style</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { id: "aurora", label: "Aurora Drift" },
+                          { id: "pulse", label: "Breathing Pulse" },
+                          { id: "drift", label: "Horizontal Drift" },
+                          { id: "none", label: "Static (No Motion)" },
+                        ].map((anim) => {
+                          const isSelected = (customSec.bgAnimation || "aurora") === anim.id;
+                          return (
+                            <button
+                              key={anim.id}
+                              type="button"
+                              onClick={() =>
+                                patch((d) => {
+                                  const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                                  if (sec) sec.bgAnimation = anim.id as any;
+                                })
+                              }
+                              className={`rounded-lg border px-2.5 py-1.5 text-center text-[11.5px] font-medium transition cursor-pointer ${
+                                isSelected
+                                  ? "border-black bg-black text-white shadow-2xs font-semibold"
+                                  : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+                              }`}
+                            >
+                              {anim.label}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-100">
+                {/* 3. Header Navigation (Compact 1-line setting, zero jargon) */}
+                <div className={`${cardCls} space-y-2.5`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-6 items-center justify-center rounded-lg bg-stone-900 text-white shadow-2xs">
+                        <Layers size={12} />
+                      </span>
                       <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Label</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaPrimaryText || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaPrimaryText = e.target.value;
-                            })
-                          }
-                          placeholder="e.g. Explore Process"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Link</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaPrimaryHref || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaPrimaryHref = e.target.value;
-                            })
-                          }
-                          placeholder="#contact or https://..."
-                          className={`mt-1 ${inputCls}`}
-                        />
+                        <h4 className="text-[13.5px] font-bold text-stone-900">Navigation Menu Link</h4>
+                        <p className="text-[11.5px] text-stone-400">Show this section in the site header navigation.</p>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                {/* 2. Cards / Grid */}
-                {customSec.template === "cards-grid" && (
-                  <div className={`${cardCls} space-y-4`}>
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[14px] font-bold text-stone-900">Grid Cards ({(customSec.cards || []).length})</h4>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          patch((d) => {
-                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                            if (sec) {
-                              if (!sec.cards) sec.cards = [];
-                              sec.cards.push({
-                                id: `card-${Date.now().toString(36)}`,
-                                title: "New Principle / Offering",
-                                description: "Brief description of this core capability or principle.",
-                                tag: "Capability",
-                              });
-                            }
-                          })
-                        }
-                        className={addBtnCls}
-                      >
-                        + Add Card
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {(customSec.cards || []).map((card, idx) => {
-                        const cardId = card.id;
-                        return (
-                          <div key={cardId || idx} className="rounded-xl border border-stone-200 bg-stone-50/50 p-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] font-bold text-stone-600">Card #{idx + 1}</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  patch((d) => {
-                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                    if (sec && sec.cards) {
-                                      sec.cards = sec.cards.filter((c, i) => cardId ? c.id !== cardId : i !== idx);
-                                    }
-                                  })
-                                }
-                                className="text-[11.5px] font-medium text-red-600 hover:underline cursor-pointer"
-                              >
-                                Delete Card
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div>
-                                <label className="block text-[12px] font-semibold text-stone-700">Card Title</label>
-                                <input
-                                  type="text"
-                                  value={card.title || ""}
-                                  onChange={(e) =>
-                                    patch((d) => {
-                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                      if (sec && sec.cards?.[idx]) sec.cards[idx].title = e.target.value;
-                                    })
-                                  }
-                                  placeholder="Card Title"
-                                  className={`mt-1 ${inputCls}`}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[12px] font-semibold text-stone-700">Tag / Category</label>
-                                <input
-                                  type="text"
-                                  value={card.tag || ""}
-                                  onChange={(e) =>
-                                    patch((d) => {
-                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                      if (sec && sec.cards?.[idx]) sec.cards[idx].tag = e.target.value;
-                                    })
-                                  }
-                                  placeholder="e.g. UX Strategy"
-                                  className={`mt-1 ${inputCls}`}
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-[12px] font-semibold text-stone-700">Description</label>
-                              <textarea
-                                rows={2}
-                                value={card.description || ""}
-                                onChange={(e) =>
-                                  patch((d) => {
-                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                    if (sec && sec.cards?.[idx]) sec.cards[idx].description = e.target.value;
-                                  })
-                                }
-                                placeholder="Card description"
-                                className={`mt-1 ${inputCls}`}
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[12px] font-semibold text-stone-700">Optional Link URL</label>
-                              <input
-                                type="text"
-                                value={card.link || ""}
-                                onChange={(e) =>
-                                  patch((d) => {
-                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                    if (sec && sec.cards?.[idx]) sec.cards[idx].link = e.target.value;
-                                  })
-                                }
-                                placeholder="https://... or #contact"
-                                className={`mt-1 ${inputCls}`}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Metrics / Highlights */}
-                {customSec.template === "metrics" && (
-                  <div className={`${cardCls} space-y-4`}>
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[14px] font-bold text-stone-900">Key Statistics ({(customSec.metrics || []).length})</h4>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          patch((d) => {
-                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                            if (sec) {
-                              if (!sec.metrics) sec.metrics = [];
-                              sec.metrics.push({
-                                id: `metric-${Date.now().toString(36)}`,
-                                value: "100%",
-                                label: "Deliverable Quality",
-                              });
-                            }
-                          })
-                        }
-                        className={addBtnCls}
-                      >
-                        + Add Metric
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(customSec.metrics || []).map((m, idx) => {
-                        const metricId = m.id;
-                        return (
-                          <div key={metricId || idx} className="rounded-xl border border-stone-200 bg-stone-50/50 p-4 space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[12px] font-bold text-stone-600">Metric #{idx + 1}</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  patch((d) => {
-                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                    if (sec && sec.metrics) {
-                                      sec.metrics = sec.metrics.filter((item, i) => metricId ? item.id !== metricId : i !== idx);
-                                    }
-                                  })
-                                }
-                                className="text-[11.5px] font-medium text-red-600 hover:underline cursor-pointer"
-                              >
-                                Delete
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-[11.5px] font-semibold text-stone-700">Value Number</label>
-                                <input
-                                  type="text"
-                                  value={m.value || ""}
-                                  onChange={(e) =>
-                                    patch((d) => {
-                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                      if (sec && sec.metrics?.[idx]) sec.metrics[idx].value = e.target.value;
-                                    })
-                                  }
-                                  placeholder="e.g. 98.4%"
-                                  className={`mt-1 ${inputCls}`}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[11.5px] font-semibold text-stone-700">Suffix (Optional)</label>
-                                <input
-                                  type="text"
-                                  value={m.suffix || ""}
-                                  onChange={(e) =>
-                                    patch((d) => {
-                                      const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                      if (sec && sec.metrics?.[idx]) sec.metrics[idx].suffix = e.target.value;
-                                    })
-                                  }
-                                  placeholder="e.g. +"
-                                  className={`mt-1 ${inputCls}`}
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-[11.5px] font-semibold text-stone-700">Metric Label</label>
-                              <input
-                                type="text"
-                                value={m.label || ""}
-                                onChange={(e) =>
-                                  patch((d) => {
-                                    const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                                    if (sec && sec.metrics?.[idx]) sec.metrics[idx].label = e.target.value;
-                                  })
-                                }
-                                placeholder="e.g. Client Satisfaction"
-                                className={`mt-1 ${inputCls}`}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Quote / Testimonial */}
-                {customSec.template === "quote-testimonial" && (
-                  <div className={`${cardCls} space-y-4`}>
-                    <h4 className="text-[14px] font-bold text-stone-900">Featured Quote & Attribution</h4>
-
-                    <div>
-                      <label className="block text-[12.5px] font-semibold text-stone-700">Quote Text</label>
-                      <textarea
-                        rows={4}
-                        value={customSec.quoteText || ""}
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={customSec.inNav ?? false}
                         onChange={(e) =>
                           patch((d) => {
                             const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                            if (sec) sec.quoteText = e.target.value;
+                            if (sec) {
+                              sec.inNav = e.target.checked;
+                              if (e.target.checked && !sec.navLabel) {
+                                sec.navLabel = tmplInfo?.defaultNavLabel || "Section";
+                              }
+                            }
                           })
                         }
-                        placeholder="The customer recommendation or personal thesis statement..."
-                        className={`mt-1 ${inputCls}`}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-5 w-9 rounded-full bg-stone-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-black peer-checked:after:translate-x-full peer-focus:outline-none" />
+                    </label>
+                  </div>
+
+                  {customSec.inNav && (
+                    <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center gap-2">
+                      <label className="text-[12px] font-semibold text-stone-700">Navbar Link Text:</label>
+                      <input
+                        type="text"
+                        value={customSec.navLabel || ""}
+                        onChange={(e) =>
+                          patch((d) => {
+                            const sec = (d.customSections || []).find((s) => s.id === customSec.id);
+                            if (sec) sec.navLabel = e.target.value;
+                          })
+                        }
+                        placeholder="e.g. Focus"
+                        className="max-w-[200px] rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12.5px] text-stone-900 focus:border-stone-900 focus:outline-none"
                       />
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Author Name</label>
-                        <input
-                          type="text"
-                          value={customSec.quoteAuthor || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.quoteAuthor = e.target.value;
-                            })
-                          }
-                          placeholder="e.g. Elena Rostova"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Role & Organization</label>
-                        <input
-                          type="text"
-                          value={customSec.quoteRole || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.quoteRole = e.target.value;
-                            })
-                          }
-                          placeholder="e.g. Chief Product Officer, ScaleFlow"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. CTA / Callout */}
-                {customSec.template === "cta" && (
-                  <div className={`${cardCls} space-y-4`}>
-                    <h4 className="text-[14px] font-bold text-stone-900">Call-To-Action Actions</h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Text</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaPrimaryText || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaPrimaryText = e.target.value;
-                            })
-                          }
-                          placeholder="Schedule a Discovery Call"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Primary Button Link</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaPrimaryHref || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaPrimaryHref = e.target.value;
-                            })
-                          }
-                          placeholder="#contact or URL"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Secondary Button Text</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaSecondaryText || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaSecondaryText = e.target.value;
-                            })
-                          }
-                          placeholder="Download Portfolio PDF"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[12.5px] font-semibold text-stone-700">Secondary Button Link</label>
-                        <input
-                          type="text"
-                          value={customSec.ctaSecondaryHref || ""}
-                          onChange={(e) =>
-                            patch((d) => {
-                              const sec = (d.customSections || []).find((s) => s.id === customSec.id);
-                              if (sec) sec.ctaSecondaryHref = e.target.value;
-                            })
-                          }
-                          placeholder="#"
-                          className={`mt-1 ${inputCls}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </section>
             );
           })()}
@@ -4108,7 +4174,7 @@ export function StudioApp({
             {/* Dotted Canvas Card with Centered Floating Mockup */}
             <div className="flex-1 min-h-0 px-4 pb-4 pt-1">
               <div className="studio-preview-dots h-full w-full rounded-2xl sm:rounded-3xl border border-stone-200/90 shadow-sm p-4 flex items-center justify-center overflow-hidden">
-                <ScaledPreview device={selectedDevice} draft={draft} onScale={setZoom} />
+                <ScaledPreview device={selectedDevice} draft={draft} activeSectionId={previewTargetSectionId} onScale={setZoom} />
               </div>
             </div>
           </div>

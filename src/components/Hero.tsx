@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Quote, Sparkles } from "lucide-react";
 import { hero as fallbackHero, site as fallbackSite } from "@/data/content";
 import type { SiteContent } from "@/lib/schema";
@@ -51,10 +51,15 @@ function Wipe({
 export function Hero({ data }: { data?: HeroData } = {}) {
   const hero = data?.hero ?? fallbackHero;
   const site = data?.site ?? fallbackSite;
-  const heroPersonSrc =
+  const rawPersonSrc =
     (hero as { personImage?: string }).personImage?.trim() ||
     site.heroImage?.trim() ||
     "/hero-person.png";
+  const [heroPersonSrc, setHeroPersonSrc] = useState(rawPersonSrc);
+
+  useEffect(() => {
+    setHeroPersonSrc(rawPersonSrc);
+  }, [rawPersonSrc]);
   const signatureSrc = (hero as { signatureImage?: string }).signatureImage?.trim();
   const reduceMotion = useReducedMotion();
   const entrance = (props: { opacity: number; y: number; scale?: number }) =>
@@ -139,7 +144,8 @@ export function Hero({ data }: { data?: HeroData } = {}) {
             width={1536}
             height={1024}
             priority
-            unoptimized={heroPersonSrc.startsWith("http") || heroPersonSrc.startsWith("/uploads")}
+            unoptimized={true}
+            onError={() => setHeroPersonSrc("/hero-person.png")}
             className="h-full w-auto object-contain object-bottom select-none"
           />
         </motion.div>
