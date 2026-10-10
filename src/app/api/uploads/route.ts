@@ -1,8 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { getSession } from "@/lib/auth";
+import { storeUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -40,32 +39,31 @@ export async function POST(req: Request) {
   const buf = Buffer.from(await file.arrayBuffer());
   const stamp = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
-  // Stored outside public/ (Next's prod server snapshots public/ at build
-  // time) and served via GET /uploads/[...path].
-  const dir = join(process.cwd(), "uploads");
-  await mkdir(dir, { recursive: true });
 
-  // SVG: store as-is (sharp rasterization would lose vectors).
-  if (mime === "image/svg+xml") {
-    const name = `${stamp}-${rand}.svg`;
-    await writeFile(join(dir, name), buf);
-    return NextResponse.json({ url: `/uploads/${name}` });
-  }
-
-  let pipeline = sharp(buf).rotate();
-  const m = aspectRaw.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
-  if (m) {
-    const w = Number(m[1]);
-    const h = Number(m[2]);
-    if (w > 0 && h > 0) {
-      const height = Math.round((OUT_W * h) / w);
-      pipeline = pipeline.resize(OUT_W, height, { fit: "cover", position: "attention" });
+  try {
+    // SVG: store as-is (sharp rasterization would lose vectors).
+    if (mime === "image/svg+xml") {
+      const url = await storeUpload(`${stamp}-${rand}.svg`, buf, mime);
+      return NextResponse.json({ url });
     }
-  } else {
-    pipeline = pipeline.resize({ width: OUT_W, withoutEnlargement: true });
+
+    let pipeline = sharp(buf).rotate();
+    const m = aspectRaw.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+    if (m) {
+      const w = Number(m[1]);
+      const h = Number(m[2]);
+      if (w > 0 && h > 0) {
+        const height = Math.round((OUT_W * h) / w);
+        pipeline = pipeline.resize(OUT_W, height, { fit: "cover", position: "attention" });
+      }
+    } else {
+      pipeline = pipeline.resize({ width: OUT_W, withoutEnlargement: true });
+    }
+    const out = await pipeline.webp({ quality: 82 }).toBuffer();
+    const url = await storeUpload(`${stamp}-${rand}.webp`, out, "image/webp");
+    return NextResponse.json({ url });
+  } catch (err) {
+    console.error("[uploads] failed:", err);
+    return NextResponse.json({ error: "Upload failed." }, { status: 500 });
   }
-  const name = `${stamp}-${rand}.webp`;
-  const out = await pipeline.webp({ quality: 82 }).toBuffer();
-  await writeFile(join(dir, name), out);
-  return NextResponse.json({ url: `/uploads/${name}` });
 }

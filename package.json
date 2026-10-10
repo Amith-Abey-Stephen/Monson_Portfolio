@@ -12,6 +12,7 @@
     "studio:hash": "node db/hash-password.ts"
   },
   "dependencies": {
+    "aws4fetch": "^1.0.20",
     "dotenv": "^18.0.1",
     "lenis": "^1.3.26",
     "lucide-react": "^1.45.0",

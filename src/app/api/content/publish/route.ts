@@ -16,7 +16,13 @@ export async function POST() {
   const pool = getPool();
   if (!pool) return NextResponse.json({ error: "DATABASE_URL is not configured." }, { status: 500 });
 
-  const client = await pool.connect();
+  let client;
+  try {
+    client = await pool.connect();
+  } catch (err) {
+    console.error("[publish] DB connect failed:", err);
+    return NextResponse.json({ error: "Database unavailable." }, { status: 503 });
+  }
   try {
     await client.query("BEGIN");
     const cur = await client.query(
@@ -48,7 +54,8 @@ export async function POST() {
     );
     await client.query("COMMIT");
     return NextResponse.json({ ok: true, message: "Published.", version: next });
-  } catch {
+  } catch (err) {
+    console.error("[publish] failed:", err);
     await client.query("ROLLBACK");
     return NextResponse.json({ error: "Publish failed." }, { status: 500 });
   } finally {

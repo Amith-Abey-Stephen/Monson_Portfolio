@@ -27,7 +27,8 @@ async function readRow(): Promise<Row | null> {
       [PAGE_ID]
     );
     return rows[0] ?? null;
-  } catch {
+  } catch (err) {
+    console.error("[content] DB read failed, serving defaults:", err);
     return null;
   }
 }
